@@ -68,3 +68,41 @@
 .animate-pulse-subtle {
     animation: pulseSubtle 3s ease-in-out infinite;
 }
+
+/* Floating Card Animations for Native Onboarding */
+@keyframes floatCardLeft {
+    0%, 100% { transform: translateY(0px) rotate(-8deg); }
+    50% { transform: translateY(-7px) rotate(-5deg); }
+}
+
+@keyframes floatCardRight {
+    0%, 100% { transform: translateY(0px) rotate(8deg); }
+    50% { transform: translateY(-7px) rotate(5deg); }
+}
+
+@keyframes floatCardCenter {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-6px) scale(1.03); }
+}
+
+@keyframes floatBadgePlus {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-5px) scale(1.08); }
+}
+
+.animate-card-left {
+    animation: floatCardLeft 3.6s ease-in-out infinite;
+}
+
+.animate-card-right {
+    animation: floatCardRight 4.2s ease-in-out infinite;
+}
+
+.animate-card-center {
+    animation: floatCardCenter 3.2s ease-in-out infinite;
+}
+
+.animate-badge-plus {
+    animation: floatBadgePlus 2.8s ease-in-out infinite;
+}
+

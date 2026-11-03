@@ -66,26 +66,27 @@ export default function Login({ status, canResetPassword }) {
             {/* NATIVE APP FRAME (Matches Reference Screenshot Layout) */}
             <div className="w-full max-w-[420px] h-screen sm:h-[840px] sm:max-h-[92vh] bg-white sm:rounded-[44px] shadow-[0_25px_70px_-15px_rgba(112,38,56,0.22)] sm:border-[8px] sm:border-slate-900/90 sm:ring-1 sm:ring-black/10 relative flex flex-col justify-between overflow-hidden">
                 
-                {/* 1. NATIVE STATUS BAR (iOS Style) */}
-                <div className="w-full bg-gradient-to-r from-[#881337] via-[#BE123C] to-[#E11D48] text-white px-6 pt-3 pb-1 flex items-center justify-between text-xs font-semibold select-none shrink-0 z-20">
-                    <span className="font-bold tracking-tight text-[11px]">{currentTime}</span>
+                {/* 1. TOP SOLID COLOR LOGO & NOTIFICATION BAR SECTION (Continuous Solid Color) */}
+                <div className="bg-[#BE123C] text-white shrink-0 relative pb-18 pt-3 select-none">
                     
-                    {/* Native Pill Dynamic Island */}
-                    <div className="w-20 h-4 bg-slate-950/80 rounded-full flex items-center justify-center shadow-inner">
-                        <div className="w-2 h-2 rounded-full bg-slate-900 mr-2" />
-                        <div className="w-2.5 h-1 rounded-full bg-slate-800" />
+                    {/* Integrated Phone Notification Bar (Seamless Solid Background) */}
+                    <div className="w-full px-6 pb-2 flex items-center justify-between text-xs font-semibold">
+                        <span className="font-bold tracking-tight text-[11px] text-white">{currentTime}</span>
+                        
+                        {/* Native Pill Dynamic Island */}
+                        <div className="w-20 h-4 bg-slate-950/75 rounded-full flex items-center justify-center shadow-inner">
+                            <div className="w-2 h-2 rounded-full bg-slate-900 mr-2" />
+                            <div className="w-2.5 h-1 rounded-full bg-slate-800" />
+                        </div>
+
+                        <div className="flex items-center space-x-1.5 text-white/95">
+                            <Wifi className="w-3.5 h-3.5" />
+                            <BatteryMedium className="w-4 h-4 text-emerald-300" />
+                        </div>
                     </div>
 
-                    <div className="flex items-center space-x-1.5 text-white/90">
-                        <Wifi className="w-3.5 h-3.5" />
-                        <BatteryMedium className="w-4 h-4 text-emerald-300" />
-                    </div>
-                </div>
-
-                {/* 2. TOP COLORED HERO HEADER WITH BRAND */}
-                <div className="bg-gradient-to-b from-[#881337] via-[#BE123C] to-[#E11D48] text-white px-5 pt-2 pb-14 shrink-0 relative">
                     {/* Top Action Navigation Bar */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between px-5 pt-1">
                         <Link 
                             href="/" 
                             className="p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition active:scale-95"
@@ -100,27 +101,27 @@ export default function Login({ status, canResetPassword }) {
                             </span>
                             <Link 
                                 href="/register" 
-                                className="px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold border border-white/30 backdrop-blur-sm shadow-xs transition active:scale-95"
+                                className="px-3 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold border border-white/20 backdrop-blur-sm shadow-xs transition active:scale-95"
                             >
                                 Get Started
                             </Link>
                         </div>
                     </div>
 
-                    {/* Centered Brand Title */}
-                    <div className="text-center pt-2 pb-1">
-                        <div className="inline-flex items-center space-x-2">
-                            <span className="text-lg">🌙</span>
-                            <span className="font-black text-2xl tracking-tight text-white font-sans">
+                    {/* Centered Brand Title with Spacious Room */}
+                    <div className="text-center pt-4 pb-2">
+                        <div className="inline-flex items-center space-x-2.5">
+                            <span className="text-2xl drop-shadow-sm">🌙</span>
+                            <span className="font-black text-3xl tracking-tight text-white font-sans drop-shadow-xs">
                                 Mwezi
                             </span>
                         </div>
                     </div>
                 </div>
 
-                {/* 3. FLOATING WHITE CARD (Rounded Sheet from Reference) */}
-                <div className="bg-white rounded-t-[36px] -mt-8 pt-6 px-6 pb-4 flex-1 flex flex-col justify-between overflow-y-auto hide-scrollbar relative z-10 shadow-2xl">
-                    <div className="space-y-4">
+                {/* 2. FLOATING WHITE CARD (Slightly less height to give room to the top logo section) */}
+                <div className="bg-white rounded-t-[36px] -mt-8 pt-5 px-6 pb-4 flex-1 flex flex-col justify-between overflow-y-auto hide-scrollbar relative z-10 shadow-2xl">
+                    <div className="space-y-3.5">
                         {/* Title and Subtitle */}
                         <div className="text-center space-y-0.5">
                             <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
@@ -138,7 +139,7 @@ export default function Login({ status, canResetPassword }) {
                         )}
 
                         {/* Login Form */}
-                        <form onSubmit={submit} className="space-y-3 pt-1">
+                        <form onSubmit={submit} className="space-y-2.5 pt-0.5">
                             {/* Email Input Field with Top Micro-Label */}
                             <div className="border border-slate-200/90 rounded-2xl p-2.5 px-3.5 bg-white focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-100 transition shadow-2xs">
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
@@ -206,7 +207,7 @@ export default function Login({ status, canResetPassword }) {
                         </form>
 
                         {/* Divider */}
-                        <div className="flex items-center my-2">
+                        <div className="flex items-center my-1.5">
                             <div className="flex-1 border-t border-slate-200/80"></div>
                             <span className="px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                                 Or sign in with
@@ -241,36 +242,51 @@ export default function Login({ status, canResetPassword }) {
                         </div>
                     </div>
 
-                    {/* 4. BOTTOM NATIVE HOME INDICATOR */}
-                    <div className="pt-3 pb-1 text-center shrink-0">
+                    {/* Bottom Home Indicator */}
+                    <div className="pt-2 text-center shrink-0">
                         <div className="w-32 h-1 bg-slate-300 rounded-full opacity-60 mx-auto" />
                     </div>
                 </div>
             </div>
 
-            {/* Quick Demo Roles Modal */}
+            {/* Quick Demo Login Modal */}
             {showDemoModal && (
-                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-                    <div className="bg-white rounded-3xl p-5 max-w-xs w-full shadow-2xl space-y-3 border border-slate-100">
-                        <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                            <h3 className="font-bold text-xs text-slate-900">Choose a Demo Role</h3>
-                            <button onClick={() => setShowDemoModal(false)} className="text-slate-400 hover:text-slate-600 text-xs">✕</button>
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+                    <div className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl border border-rose-100 space-y-3">
+                        <div className="flex justify-between items-center border-b border-rose-100 pb-2.5">
+                            <div className="flex items-center space-x-2">
+                                <Sparkles className="w-4 h-4 text-rose-600" />
+                                <h3 className="font-bold text-sm text-slate-900">Select Demo Account</h3>
+                            </div>
+                            <button
+                                onClick={() => setShowDemoModal(false)}
+                                className="text-slate-400 hover:text-slate-600 text-sm font-bold p-1"
+                            >
+                                ✕
+                            </button>
                         </div>
-                        <div className="space-y-1.5">
-                            {demoAccounts.map((acc, idx) => (
+
+                        <div className="space-y-2">
+                            {demoAccounts.map((account, idx) => (
                                 <button
                                     key={idx}
                                     type="button"
-                                    onClick={() => selectDemo(acc.email)}
-                                    className="w-full p-2.5 rounded-2xl text-left bg-rose-50/60 hover:bg-rose-100/70 border border-rose-100 transition flex items-center justify-between"
+                                    onClick={() => selectDemo(account.email)}
+                                    className="w-full text-left p-2.5 rounded-2xl border border-rose-100 hover:border-rose-400 hover:bg-rose-50/70 transition flex items-center justify-between group"
                                 >
                                     <div>
-                                        <span className="text-xs font-bold text-slate-800 block">{acc.label}</span>
-                                        <span className="text-[10px] text-slate-500 block">{acc.desc}</span>
+                                        <p className="font-bold text-xs text-slate-800 group-hover:text-rose-700">{account.label}</p>
+                                        <p className="text-[10px] text-slate-500">{account.desc} • {account.email}</p>
                                     </div>
-                                    <span className="text-[10px] font-bold text-rose-600">Select →</span>
+                                    <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/50">
+                                        Use
+                                    </span>
                                 </button>
                             ))}
+                        </div>
+
+                        <div className="pt-1 text-center">
+                            <span className="text-[10px] text-slate-400">All demo accounts share password: <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-slate-600">password</code></span>
                         </div>
                     </div>
                 </div>

@@ -5,23 +5,21 @@ import {
     BookOpen, 
     Sparkles, 
     MapPin, 
-    Users, 
     ChevronRight, 
     ChevronLeft, 
-    ShieldCheck, 
     HeartHandshake, 
     ArrowRight, 
     Lock, 
     Wifi, 
     BatteryMedium,
     Plus,
-    Smile,
-    Heart
+    ShieldCheck
 } from 'lucide-react';
 
 export default function Onboarding() {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [currentTime, setCurrentTime] = useState('09:41');
+    const [isPaused, setIsPaused] = useState(false);
 
     useEffect(() => {
         const updateClock = () => {
@@ -35,92 +33,155 @@ export default function Onboarding() {
         return () => clearInterval(timer);
     }, []);
 
+    // 5 Mwezi Core Pillars with the previous verified icons
     const slides = [
         {
-            category: "Mwezi Dignity Hub",
-            title: "Stigma-free menstrual health for every girl",
-            desc: "Confidential cycle tracking, certified health guidance, and emergency hygiene kits for schools across Zambia.",
-            badge: "Dignity",
-            icon: Heart,
+            category: "Welcome to Mwezi",
+            title: "Dignity in Every Cycle",
+            desc: "Your confidential companion for every Zambian girl and young woman to track, learn, and access menstrual dignity without stigma.",
+            tag: "Dignity",
+            icon: HeartHandshake,
+            accentBg: "bg-rose-50",
+            accentText: "text-rose-600",
+            iconBg: "bg-rose-500",
+            previewLabel: "Care & Dignity",
         },
         {
-            category: "Private Tracking",
-            title: "Encrypted cycle calendar & symptom logs",
-            desc: "Predict your rhythm safely with discreet PIN protection. Know your flow dates without fear or embarrassment.",
-            badge: "Encrypted",
+            category: "Encrypted Health",
+            title: "Private Cycle Tracking",
+            desc: "Predict your rhythm safely with discreet PIN protection. Log daily symptoms, flow, and moods with field-level encryption.",
+            tag: "Encrypted",
             icon: Calendar,
+            accentBg: "bg-pink-50",
+            accentText: "text-pink-600",
+            iconBg: "bg-pink-500",
+            previewLabel: "Day 14 • Flow",
         },
         {
-            category: "Illustrated Guidance",
-            title: "Learn, wash, and dry reusable pads with dignity",
-            desc: "Culturally rooted healthcare guides in local languages. Medically reviewed and safe for continuous school attendance.",
-            badge: "Verified",
+            category: "Medically Verified",
+            title: "Learn & Bust Myths",
+            desc: "Explore verified, illustrated guides on reusable pad care, washing, and dignified sun drying in your language.",
+            tag: "Verified",
             icon: BookOpen,
+            accentBg: "bg-purple-50",
+            accentText: "text-purple-600",
+            iconBg: "bg-purple-500",
+            previewLabel: "Care Guides",
         },
         {
             category: "Luna AI Assistant",
-            title: "24/7 private answers for your cycle & body",
-            desc: "Ask confidential questions about cramps, flow, or hygiene with zero judgment and immediate clinic escalation if needed.",
-            badge: "AI Guide",
+            title: "Ask Luna AI Safely 24/7",
+            desc: "Got private questions about cramps, flow, or hygiene? Luna provides medically verified answers and connects you to nearby clinics.",
+            tag: "24/7 AI",
             icon: Sparkles,
+            accentBg: "bg-amber-50",
+            accentText: "text-amber-600",
+            iconBg: "bg-rose-600",
+            previewLabel: "Safe Companion",
+        },
+        {
+            category: "Community Access",
+            title: "Emergency Supplies & Hubs",
+            desc: "Locate verified school and community hubs like Play It Forward for free emergency kits and subsidized reusable pads in your area.",
+            tag: "Free Hubs",
+            icon: MapPin,
+            accentBg: "bg-emerald-50",
+            accentText: "text-emerald-700",
+            iconBg: "bg-emerald-500",
+            previewLabel: "Find Pads",
         },
     ];
 
+    // Smooth auto-slide transition (pauses on user interaction)
+    useEffect(() => {
+        if (isPaused) return;
+        const interval = setInterval(() => {
+            setCurrentSlide((prev) => (prev + 1) % slides.length);
+        }, 5500);
+        return () => clearInterval(interval);
+    }, [isPaused, slides.length]);
+
     const nextSlide = () => {
-        if (currentSlide < slides.length - 1) {
-            setCurrentSlide(currentSlide + 1);
-        }
+        setCurrentSlide((prev) => (prev + 1) % slides.length);
     };
 
     const prevSlide = () => {
-        if (currentSlide > 0) {
-            setCurrentSlide(currentSlide - 1);
-        }
+        setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
     };
 
     const slide = slides[currentSlide];
+    const prevIndex = (currentSlide - 1 + slides.length) % slides.length;
+    const nextIndex = (currentSlide + 1) % slides.length;
+    const PrevIcon = slides[prevIndex].icon;
+    const ActiveIcon = slide.icon;
+    const NextIcon = slides[nextIndex].icon;
 
     return (
         <div className="min-h-screen bg-gradient-to-tr from-[#FBECEF] via-[#F4F1F4] to-[#EBF3F5] flex items-center justify-center p-0 sm:py-6 sm:px-4 font-sans selection:bg-rose-100 selection:text-rose-900">
             <Head title="Welcome to Mwezi - Stigma-Free Health & Dignity" />
 
-            {/* NATIVE APP FRAME (Matches Center Onboarding Screen in Reference) */}
-            <div className="w-full max-w-[420px] h-screen sm:h-[840px] sm:max-h-[92vh] bg-white sm:rounded-[44px] shadow-[0_25px_70px_-15px_rgba(112,38,56,0.22)] sm:border-[8px] sm:border-slate-900/90 sm:ring-1 sm:ring-black/10 relative flex flex-col justify-between overflow-hidden">
-                
-                {/* 1. NATIVE STATUS BAR (iOS Style) */}
-                <div className="w-full bg-gradient-to-r from-[#881337] via-[#BE123C] to-[#E11D48] text-white px-6 pt-3 pb-1 flex items-center justify-between text-xs font-semibold select-none shrink-0 z-20">
-                    <span className="font-bold tracking-tight text-[11px]">{currentTime}</span>
+            {/* NATIVE APP FRAME */}
+            <div 
+                className="w-full max-w-[420px] h-screen sm:h-[840px] sm:max-h-[92vh] bg-white sm:rounded-[44px] shadow-[0_25px_70px_-15px_rgba(112,38,56,0.22)] sm:border-[8px] sm:border-slate-900/90 sm:ring-1 sm:ring-black/10 relative flex flex-col justify-between overflow-hidden"
+                onMouseEnter={() => setIsPaused(true)}
+                onMouseLeave={() => setIsPaused(false)}
+                onTouchStart={() => setIsPaused(true)}
+                onTouchEnd={() => setIsPaused(false)}
+            >
+                {/* 1. TOP SOLID COLOR LOGO & NOTIFICATION BAR SECTION (Continuous Solid Color) */}
+                <div className="bg-[#BE123C] text-white shrink-0 relative pb-16 pt-3 select-none">
                     
-                    {/* Native Pill Dynamic Island */}
-                    <div className="w-20 h-4 bg-slate-950/80 rounded-full flex items-center justify-center shadow-inner">
-                        <div className="w-2 h-2 rounded-full bg-slate-900 mr-2" />
-                        <div className="w-2.5 h-1 rounded-full bg-slate-800" />
+                    {/* Integrated Phone Notification Bar (Seamless Solid Background) */}
+                    <div className="w-full px-6 pb-2 flex items-center justify-between text-xs font-semibold">
+                        <span className="font-bold tracking-tight text-[11px] text-white">{currentTime}</span>
+                        
+                        {/* Native Pill Dynamic Island */}
+                        <div className="w-20 h-4 bg-slate-950/75 rounded-full flex items-center justify-center shadow-inner">
+                            <div className="w-2 h-2 rounded-full bg-slate-900 mr-2" />
+                            <div className="w-2.5 h-1 rounded-full bg-slate-800" />
+                        </div>
+
+                        <div className="flex items-center space-x-1.5 text-white/95">
+                            <Wifi className="w-3.5 h-3.5" />
+                            <BatteryMedium className="w-4 h-4 text-emerald-300" />
+                        </div>
                     </div>
 
-                    <div className="flex items-center space-x-1.5 text-white/90">
-                        <Wifi className="w-3.5 h-3.5" />
-                        <BatteryMedium className="w-4 h-4 text-emerald-300" />
-                    </div>
-                </div>
-
-                {/* 2. TOP COLORED HERO HEADER (Brand + Pill Slide Indicators) */}
-                <div className="bg-gradient-to-b from-[#881337] via-[#BE123C] to-[#E11D48] text-white px-5 pt-3 pb-10 shrink-0 text-center relative">
-                    <div className="inline-flex items-center space-x-2">
-                        <span className="text-lg">🌙</span>
-                        <span className="font-black text-2xl tracking-tight text-white font-sans">
-                            Mwezi
+                    {/* Top Right Quick Skip/Login Pill */}
+                    <div className="px-5 pt-1 flex justify-between items-center">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-rose-200/80">
+                            Zambia • 24/7
                         </span>
+                        <Link 
+                            href="/login" 
+                            className="px-3 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold border border-white/20 backdrop-blur-sm transition active:scale-95"
+                        >
+                            Sign in
+                        </Link>
+                    </div>
+
+                    {/* Centered Brand Title with Spacious Room */}
+                    <div className="text-center pt-3 pb-2">
+                        <div className="inline-flex items-center space-x-2.5">
+                            <span className="text-2xl drop-shadow-sm">🌙</span>
+                            <span className="font-black text-3xl tracking-tight text-white font-sans drop-shadow-xs">
+                                Mwezi
+                            </span>
+                        </div>
+                        <p className="text-[11px] text-rose-100 font-medium tracking-wide mt-0.5">
+                            Menstrual Health & Dignity
+                        </p>
                     </div>
 
                     {/* Pagination Indicator (Elongated Pill + Dots matching Reference Screenshot) */}
-                    <div className="flex items-center justify-center space-x-1.5 mt-2.5">
+                    <div className="flex items-center justify-center space-x-1.5 mt-2">
                         {slides.map((_, idx) => (
                             <button
                                 key={idx}
                                 onClick={() => setCurrentSlide(idx)}
                                 className={`transition-all duration-300 rounded-full ${
                                     currentSlide === idx 
-                                        ? 'w-7 h-1.5 bg-white' 
+                                        ? 'w-7 h-1.5 bg-white shadow-xs' 
                                         : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
                                 }`}
                                 aria-label={`Slide ${idx + 1}`}
@@ -129,107 +190,160 @@ export default function Onboarding() {
                     </div>
                 </div>
 
-                {/* 3. FLOATING WHITE SHEET WITH GRAPHIC & HEADLINE (Matches Reference) */}
-                <div className="bg-white rounded-t-[38px] -mt-6 pt-6 px-6 pb-4 flex-1 flex flex-col justify-between overflow-y-auto hide-scrollbar relative z-10 shadow-2xl">
-                    <div className="space-y-4 text-center">
-                        {/* Playful Floating Cards Graphic (Matches Reference Illustration with Glowing Floating Button) */}
-                        <div className="w-full max-w-[280px] h-40 mx-auto relative flex items-center justify-center">
-                            {/* Soft glowing backdrop */}
-                            <div className="absolute inset-0 bg-rose-100/50 rounded-full blur-2xl transform scale-90" />
+                {/* 2. FLOATING WHITE CONTENT SECTION (More compact to give room to top logo section) */}
+                <div className="bg-white rounded-t-[36px] -mt-8 pt-5 px-6 pb-4 flex-1 flex flex-col justify-between overflow-y-auto hide-scrollbar relative z-10 shadow-2xl">
+                    <div className="space-y-3.5 text-center">
+                        
+                        {/* Dynamic Floating Cards Illustration with Moving Icons to Match Content */}
+                        <div className="w-full max-w-[290px] h-36 mx-auto relative flex items-center justify-center select-none">
+                            {/* Soft glowing ambient backdrop */}
+                            <div className="absolute inset-0 bg-rose-100/60 rounded-full blur-2xl transform scale-90" />
 
-                            {/* Card 1 (Left Tilted) */}
-                            <div className="absolute left-6 w-20 h-28 bg-white border border-rose-150/80 rounded-2xl shadow-md -rotate-8 flex flex-col justify-between p-2.5 transform hover:-rotate-4 transition duration-300">
+                            {/* Left Card (Tilted & Floating, Showing Previous Pillar Icon) */}
+                            <button
+                                onClick={prevSlide}
+                                aria-label="Previous Feature"
+                                className="absolute left-4 w-18 h-26 sm:w-20 sm:h-28 bg-white border border-rose-150/80 rounded-2xl shadow-md flex flex-col justify-between p-2.5 transform animate-card-left transition-all duration-500 hover:scale-105 active:scale-95"
+                            >
                                 <div className="flex justify-between items-center text-[10px] text-rose-500 font-bold">
-                                    <span>Care</span>
-                                    <Smile className="w-3.5 h-3.5 text-rose-500" />
+                                    <span className="truncate max-w-[50px]">{slides[prevIndex].tag}</span>
+                                    <div className="w-4 h-4 rounded-full bg-rose-50 flex items-center justify-center">
+                                        <PrevIcon className="w-2.5 h-2.5 text-rose-600" />
+                                    </div>
                                 </div>
-                                <div className="space-y-1">
+                                <div className="space-y-1 my-auto">
                                     <div className="w-full h-1 bg-rose-100 rounded-full" />
                                     <div className="w-3/4 h-1 bg-rose-100 rounded-full" />
                                     <div className="w-1/2 h-1 bg-rose-100 rounded-full" />
                                 </div>
-                                <span className="text-[9px] font-bold text-rose-700">Pads Kit</span>
-                            </div>
+                                <span className="text-[9px] font-bold text-slate-500 truncate block text-left">
+                                    {slides[prevIndex].previewLabel}
+                                </span>
+                            </button>
 
-                            {/* Card 3 (Right Tilted) */}
-                            <div className="absolute right-6 w-20 h-28 bg-white border border-rose-150/80 rounded-2xl shadow-md rotate-8 flex flex-col justify-between p-2.5 transform hover:rotate-4 transition duration-300">
+                            {/* Right Card (Tilted & Floating, Showing Next Pillar Icon) */}
+                            <button
+                                onClick={nextSlide}
+                                aria-label="Next Feature"
+                                className="absolute right-4 w-18 h-26 sm:w-20 sm:h-28 bg-white border border-rose-150/80 rounded-2xl shadow-md flex flex-col justify-between p-2.5 transform animate-card-right transition-all duration-500 hover:scale-105 active:scale-95"
+                            >
                                 <div className="flex justify-between items-center text-[10px] text-pink-500 font-bold">
-                                    <span>Learn</span>
-                                    <BookOpen className="w-3.5 h-3.5 text-pink-500" />
+                                    <span className="truncate max-w-[50px]">{slides[nextIndex].tag}</span>
+                                    <div className="w-4 h-4 rounded-full bg-pink-50 flex items-center justify-center">
+                                        <NextIcon className="w-2.5 h-2.5 text-pink-600" />
+                                    </div>
                                 </div>
-                                <div className="grid grid-cols-3 gap-1 py-1">
+                                <div className="grid grid-cols-3 gap-1 py-1 my-auto">
                                     {[...Array(6)].map((_, i) => (
-                                        <div key={i} className="w-3 h-2.5 bg-pink-100 rounded-xs" />
+                                        <div key={i} className="w-2.5 h-2 bg-pink-100 rounded-xs" />
                                     ))}
                                 </div>
-                                <span className="text-[9px] font-bold text-pink-700">Verified</span>
-                            </div>
+                                <span className="text-[9px] font-bold text-slate-500 truncate block text-left">
+                                    {slides[nextIndex].previewLabel}
+                                </span>
+                            </button>
 
-                            {/* Card 2 (Center Upright) */}
-                            <div className="relative z-10 w-24 h-32 bg-white border border-rose-200/90 rounded-2xl shadow-lg flex flex-col justify-between p-3 transform transition hover:scale-105">
+                            {/* Center Upright Card (Animated, Dynamically Matches Current Active Slide's Icon) */}
+                            <div 
+                                key={currentSlide}
+                                className="relative z-10 w-24 h-32 bg-white border-2 border-rose-200/90 rounded-2xl shadow-xl flex flex-col justify-between p-3 transform animate-card-center transition-all duration-500 ease-out"
+                            >
                                 <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-extrabold text-rose-600">Cycle</span>
-                                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                                    <span className={`text-[10px] font-black ${slide.accentText}`}>
+                                        {slide.tag}
+                                    </span>
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                                 </div>
-                                <div className="py-2 text-center">
-                                    <div className="w-9 h-9 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-1">
-                                        <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
+                                
+                                <div className="py-1 text-center my-auto">
+                                    {/* Active Moving Icon */}
+                                    <div className={`w-10 h-10 rounded-2xl ${slide.accentBg} ${slide.accentText} flex items-center justify-center mx-auto mb-1.5 shadow-xs border border-rose-100 transform transition-transform duration-500 hover:scale-110`}>
+                                        <ActiveIcon className="w-5 h-5 transition-transform duration-500" />
                                     </div>
-                                    <span className="text-[10px] font-bold text-slate-700">Day 14</span>
+                                    <span className="text-[10px] font-bold text-slate-800 block truncate">
+                                        {slide.previewLabel}
+                                    </span>
                                 </div>
+
                                 <div className="w-full h-1.5 bg-rose-100 rounded-full overflow-hidden">
-                                    <div className="w-2/3 h-full bg-rose-500 rounded-full" />
+                                    <div 
+                                        className="h-full bg-gradient-to-r from-rose-500 to-pink-500 rounded-full transition-all duration-500" 
+                                        style={{ width: `${((currentSlide + 1) / slides.length) * 100}%` }}
+                                    />
                                 </div>
                             </div>
 
-                            {/* Glowing Central Floating Gradient Button (Matches '+' button in reference) */}
-                            <div className="absolute -bottom-2 z-20 w-11 h-11 rounded-full bg-gradient-to-tr from-[#E11D48] via-rose-500 to-[#FB7185] text-white flex items-center justify-center shadow-lg shadow-rose-500/40 border-2 border-white transform transition hover:scale-110 active:scale-95">
-                                <Plus className="w-5 h-5 font-bold" />
-                            </div>
+                            {/* Glowing Central Floating Gradient Button with '+' (Matches Reference) */}
+                            <button
+                                onClick={nextSlide}
+                                aria-label="Next slide"
+                                className="absolute -bottom-2 z-20 w-10 h-10 rounded-full bg-gradient-to-tr from-[#E11D48] via-rose-500 to-[#FB7185] text-white flex items-center justify-center shadow-lg shadow-rose-500/40 border-2 border-white transform animate-badge-plus transition hover:scale-110 active:scale-90"
+                            >
+                                <Plus className="w-4 h-4 font-bold" />
+                            </button>
                         </div>
 
                         {/* Category Label */}
-                        <div className="pt-2">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        <div className="pt-1">
+                            <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-100">
                                 {slide.category}
                             </span>
                         </div>
 
-                        {/* Bold Punchy Headline (Matches Reference Typography) */}
-                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight max-w-[300px] mx-auto tracking-tight">
+                        {/* Bold Headline (Updates seamlessly with Moving Content) */}
+                        <h1 
+                            key={`title-${currentSlide}`}
+                            className="text-lg sm:text-xl font-black text-slate-900 leading-snug max-w-[300px] mx-auto tracking-tight transition-all duration-300"
+                        >
                             {slide.title}
                         </h1>
 
                         {/* Supportive Description */}
-                        <p className="text-xs text-slate-500 leading-relaxed max-w-[310px] mx-auto font-medium">
+                        <p 
+                            key={`desc-${currentSlide}`}
+                            className="text-xs text-slate-500 leading-relaxed max-w-[300px] mx-auto font-medium transition-all duration-300"
+                        >
                             {slide.desc}
                         </p>
                     </div>
 
-                    {/* Bottom Action Area (Matches Reference Button Style) */}
-                    <div className="space-y-3 pt-4">
-                        {currentSlide < slides.length - 1 ? (
-                            <button
-                                onClick={nextSlide}
-                                className="w-full py-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100/80 active:scale-98 text-rose-700 font-extrabold text-xs sm:text-sm border border-rose-200/70 shadow-xs transition flex items-center justify-center space-x-2"
-                            >
-                                <span>Get Started</span>
-                                <ChevronRight className="w-4 h-4" />
-                            </button>
-                        ) : (
-                            <Link
-                                href="/register"
-                                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#E11D48] via-rose-500 to-[#FB7185] hover:opacity-95 active:scale-98 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-500/25 transition flex items-center justify-center space-x-2 text-center"
-                            >
-                                <span>Get Started Free</span>
-                                <ArrowRight className="w-4 h-4" />
-                            </Link>
-                        )}
+                    {/* Bottom Action Area (Compact & Native Pill Buttons) */}
+                    <div className="space-y-2.5 pt-3">
+                        <div className="flex items-center space-x-2">
+                            {currentSlide > 0 && (
+                                <button
+                                    onClick={prevSlide}
+                                    className="p-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition active:scale-95"
+                                    aria-label="Previous slide"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+                            )}
 
-                        <div className="flex items-center justify-between text-xs px-2 pt-1">
+                            {currentSlide < slides.length - 1 ? (
+                                <button
+                                    onClick={nextSlide}
+                                    className="flex-1 py-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100/80 active:scale-98 text-rose-700 font-extrabold text-xs sm:text-sm border border-rose-200/70 shadow-xs transition flex items-center justify-center space-x-2"
+                                >
+                                    <span>Get Started</span>
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            ) : (
+                                <Link
+                                    href="/register"
+                                    className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-[#E11D48] via-rose-500 to-[#FB7185] hover:opacity-95 active:scale-98 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-500/25 transition flex items-center justify-center space-x-2 text-center"
+                                >
+                                    <span>Get Started Free</span>
+                                    <ArrowRight className="w-4 h-4" />
+                                </Link>
+                            )}
+                        </div>
+
+                        {/* Secondary Links: Sponsor & Already have an account */}
+                        <div className="flex items-center justify-between text-xs px-2 pt-0.5">
                             <Link
                                 href="/sponsor"
-                                className="text-[11px] font-bold text-rose-600 hover:text-rose-700"
+                                className="text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline"
                             >
                                 Sponsor a Girl
                             </Link>
@@ -243,7 +357,7 @@ export default function Onboarding() {
                         </div>
 
                         {/* Native Home Indicator */}
-                        <div className="pt-2 text-center shrink-0">
+                        <div className="pt-1.5 text-center shrink-0">
                             <div className="w-32 h-1 bg-slate-300 rounded-full opacity-60 mx-auto" />
                         </div>
                     </div>

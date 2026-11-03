@@ -63,26 +63,27 @@ export default function Register({ initialInviteCode = '' }) {
             {/* NATIVE APP FRAME (Matches Screen 3 Right in Reference) */}
             <div className="w-full max-w-[420px] h-screen sm:h-[840px] sm:max-h-[92vh] bg-white sm:rounded-[44px] shadow-[0_25px_70px_-15px_rgba(112,38,56,0.22)] sm:border-[8px] sm:border-slate-900/90 sm:ring-1 sm:ring-black/10 relative flex flex-col justify-between overflow-hidden">
                 
-                {/* 1. NATIVE STATUS BAR (iOS Style) */}
-                <div className="w-full bg-gradient-to-r from-[#881337] via-[#BE123C] to-[#E11D48] text-white px-6 pt-3 pb-1 flex items-center justify-between text-xs font-semibold select-none shrink-0 z-20">
-                    <span className="font-bold tracking-tight text-[11px]">{currentTime}</span>
+                {/* 1. TOP SOLID COLOR LOGO & NOTIFICATION BAR SECTION (Continuous Solid Color) */}
+                <div className="bg-[#BE123C] text-white shrink-0 relative pb-18 pt-3 select-none">
                     
-                    {/* Native Pill Dynamic Island */}
-                    <div className="w-20 h-4 bg-slate-950/80 rounded-full flex items-center justify-center shadow-inner">
-                        <div className="w-2 h-2 rounded-full bg-slate-900 mr-2" />
-                        <div className="w-2.5 h-1 rounded-full bg-slate-800" />
+                    {/* Integrated Phone Notification Bar (Seamless Solid Background) */}
+                    <div className="w-full px-6 pb-2 flex items-center justify-between text-xs font-semibold">
+                        <span className="font-bold tracking-tight text-[11px] text-white">{currentTime}</span>
+                        
+                        {/* Native Pill Dynamic Island */}
+                        <div className="w-20 h-4 bg-slate-950/75 rounded-full flex items-center justify-center shadow-inner">
+                            <div className="w-2 h-2 rounded-full bg-slate-900 mr-2" />
+                            <div className="w-2.5 h-1 rounded-full bg-slate-800" />
+                        </div>
+
+                        <div className="flex items-center space-x-1.5 text-white/95">
+                            <Wifi className="w-3.5 h-3.5" />
+                            <BatteryMedium className="w-4 h-4 text-emerald-300" />
+                        </div>
                     </div>
 
-                    <div className="flex items-center space-x-1.5 text-white/90">
-                        <Wifi className="w-3.5 h-3.5" />
-                        <BatteryMedium className="w-4 h-4 text-emerald-300" />
-                    </div>
-                </div>
-
-                {/* 2. TOP COLORED HERO HEADER WITH BRAND */}
-                <div className="bg-gradient-to-b from-[#881337] via-[#BE123C] to-[#E11D48] text-white px-5 pt-2 pb-14 shrink-0 relative">
                     {/* Top Action Navigation Bar */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between px-5 pt-1">
                         <Link 
                             href="/" 
                             className="p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition active:scale-95"
@@ -97,27 +98,27 @@ export default function Register({ initialInviteCode = '' }) {
                             </span>
                             <Link 
                                 href="/login" 
-                                className="px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold border border-white/30 backdrop-blur-sm shadow-xs transition active:scale-95"
+                                className="px-3 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold border border-white/20 backdrop-blur-sm shadow-xs transition active:scale-95"
                             >
                                 Sign in
                             </Link>
                         </div>
                     </div>
 
-                    {/* Centered Brand Title */}
-                    <div className="text-center pt-2 pb-1">
-                        <div className="inline-flex items-center space-x-2">
-                            <span className="text-lg">🌙</span>
-                            <span className="font-black text-2xl tracking-tight text-white font-sans">
+                    {/* Centered Brand Title with Spacious Room */}
+                    <div className="text-center pt-4 pb-2">
+                        <div className="inline-flex items-center space-x-2.5">
+                            <span className="text-2xl drop-shadow-sm">🌙</span>
+                            <span className="font-black text-3xl tracking-tight text-white font-sans drop-shadow-xs">
                                 Mwezi
                             </span>
                         </div>
                     </div>
                 </div>
 
-                {/* 3. FLOATING WHITE SHEET (Rounded Sheet from Reference) */}
-                <div className="bg-white rounded-t-[36px] -mt-8 pt-6 px-6 pb-4 flex-1 flex flex-col justify-between overflow-y-auto hide-scrollbar relative z-10 shadow-2xl">
-                    <div className="space-y-3.5">
+                {/* 2. FLOATING WHITE SHEET (Slightly less height to give room to the top logo section) */}
+                <div className="bg-white rounded-t-[36px] -mt-8 pt-5 px-6 pb-4 flex-1 flex flex-col justify-between overflow-y-auto hide-scrollbar relative z-10 shadow-2xl">
+                    <div className="space-y-3">
                         {/* Title and Subtitle */}
                         <div className="text-center space-y-0.5">
                             <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
@@ -129,7 +130,7 @@ export default function Register({ initialInviteCode = '' }) {
                         </div>
 
                         {/* Registration Form */}
-                        <form onSubmit={submit} className="space-y-2.5 pt-1">
+                        <form onSubmit={submit} className="space-y-2 pt-0.5">
                             {/* Email Address Field with Micro-Label */}
                             <div className="border border-slate-200/90 rounded-2xl p-2.5 px-3.5 bg-white focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-100 transition shadow-2xs">
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
@@ -246,7 +247,7 @@ export default function Register({ initialInviteCode = '' }) {
                         </form>
 
                         {/* Divider */}
-                        <div className="flex items-center my-1.5">
+                        <div className="flex items-center my-1">
                             <div className="flex-1 border-t border-slate-200/80"></div>
                             <span className="px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                                 Or sign up with
