@@ -5,11 +5,12 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\File;
+use App\Services\ZambianTranslator;
 
 class TranslateUiCommand extends Command
 {
-    protected $signature = 'mwezi:translate-ui';
-    protected $description = 'Generate full-app translations into Bemba, Nyanja, Tonga, and Lozi using Gemini AI';
+    protected $signature = 'mwezi:translate-ui {--driver=gemini : Translation driver (gemini or zedtranslate)}';
+    protected $description = 'Generate full-app translations into Bemba, Nyanja, Tonga, and Lozi using Gemini AI or ZedTranslate';
 
     protected array $languages = [
         'bem' => [

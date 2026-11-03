@@ -57,4 +57,9 @@ return [
         'timeout' => env('GEMINI_TIMEOUT', 30),
     ],
 
+    'zedtranslate' => [
+        'api_key' => env('ZEDTRANSLATE_API_KEY', 'ZED_d26c1753d45849c9a02777ef46b0951d'),
+        'base_url' => env('ZEDTRANSLATE_BASE_URL', 'https://api.zedtranslate.com/v1'),
+    ],
+
 ];

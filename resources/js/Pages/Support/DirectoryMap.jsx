@@ -2,23 +2,23 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
 import { useTranslation } from '@/i18n/LanguageContext';
-import { 
-    ArrowLeft, 
-    MapPin, 
-    Phone, 
-    Clock, 
-    CheckCircle2, 
-    AlertTriangle, 
-    Building2, 
+import {
+    ArrowLeft,
+    MapPin,
+    Phone,
+    Clock,
+    CheckCircle2,
+    AlertTriangle,
+    Building2,
     Filter,
     Navigation
 } from 'lucide-react';
 import L from 'leaflet';
 
-export default function DirectoryMap({ 
-    hubs = [], 
-    selectedProvince = '', 
-    selectedHubType = '' 
+export default function DirectoryMap({
+    hubs = [],
+    selectedProvince = '',
+    selectedHubType = ''
 }) {
     const { t } = useTranslation();
     const mapContainerRef = useRef(null);
@@ -94,7 +94,7 @@ export default function DirectoryMap({
             <Head title="Service Directory & Free Pad Map - Mwezi" />
 
             <div className="space-y-3">
-                
+
                 {/* Header Back & Filters */}
                 <div className="flex items-center justify-between">
                     <Link
@@ -152,11 +152,10 @@ export default function DirectoryMap({
                                 <p className="text-xs text-gray-600 mt-0.5">{activeHub.address}</p>
                             </div>
 
-                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                                activeHub.free_pad_stock_level === 'in_stock' 
-                                    ? 'bg-emerald-100 text-emerald-800' 
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${activeHub.free_pad_stock_level === 'in_stock'
+                                    ? 'bg-emerald-100 text-emerald-800'
                                     : 'bg-amber-100 text-amber-800'
-                            }`}>
+                                }`}>
                                 {activeHub.free_pad_stock_level === 'in_stock' ? 'Pads In Stock' : 'Low Stock'}
                             </span>
                         </div>
@@ -205,20 +204,18 @@ export default function DirectoryMap({
                                     mapInstanceRef.current.setView([hub.latitude, hub.longitude], 14);
                                 }
                             }}
-                            className={`p-3 rounded-[16px] border transition cursor-pointer flex items-center justify-between ${
-                                activeHub?.id === hub.id 
-                                    ? 'bg-mwezi-primary/30 border-mwezi-tertiary' 
+                            className={`p-3 rounded-[16px] border transition cursor-pointer flex items-center justify-between ${activeHub?.id === hub.id
+                                    ? 'bg-mwezi-primary/30 border-mwezi-tertiary'
                                     : 'bg-white border-gray-100 hover:bg-gray-50'
-                            }`}
+                                }`}
                         >
                             <div>
                                 <h4 className="font-bold text-xs text-gray-800">{hub.organization_name}</h4>
                                 <p className="text-[10px] text-gray-500">{hub.district}, {hub.province}</p>
                             </div>
 
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                hub.free_pad_stock_level === 'in_stock' ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50'
-                            }`}>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${hub.free_pad_stock_level === 'in_stock' ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50'
+                                }`}>
                                 {hub.free_pad_stock_level === 'in_stock' ? 'In Stock' : 'Low Stock'}
                             </span>
                         </div>
