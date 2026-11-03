@@ -1,0 +1,19 @@
+{
+  "name": "Mwezi - Menstrual Health & Dignity",
+  "short_name": "Mwezi",
+  "description": "Menstrual health tracking, stigma-free education, emergency supply support & community dignity.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#B8E3E9",
+  "theme_color": "#F98B88",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
+

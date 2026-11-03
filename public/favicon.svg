@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="mweziGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F98B88"/>
+      <stop offset="50%" stop-color="#EDC8FF"/>
+      <stop offset="100%" stop-color="#89F6FA"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="24" fill="#B8E3E9"/>
+  <!-- Stylized Crescent Moon (Mwezi = Moon) & Health Drop -->
+  <path d="M 50 16 A 34 34 0 1 0 84 50 A 28 28 0 0 1 50 16 Z" fill="#F98B88" />
+  <circle cx="56" cy="46" r="14" fill="#89F6FA" opacity="0.85"/>
+  <circle cx="62" cy="54" r="8" fill="#EDC8FF" />
+</svg>
+
