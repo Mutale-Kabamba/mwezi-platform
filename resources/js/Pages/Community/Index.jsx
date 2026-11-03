@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { 
     MessageSquare, 
     Heart, 
@@ -20,6 +21,7 @@ export default function CommunityIndex({
     posts = [], 
     selectedTopicSlug = null 
 }) {
+    const { t } = useTranslation();
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [activeCommentPostId, setActiveCommentPostId] = useState(null);
 
@@ -63,10 +65,10 @@ export default function CommunityIndex({
     };
 
     return (
-        <MobileAppLayout title="Community" subtitle="Safe • Stigma-Free • Supportive">
+        <MobileAppLayout title={t('drawer_community', 'Community')} subtitle="Safe • Stigma-Free • Supportive">
             <Head title="Community Forums - Mwezi" />
 
-            <div className="space-y-4">
+            <div className="space-y-4 relative pb-16">
                 
                 {/* 1. SAFE SPACE & ANONYMITY BANNER */}
                 <div className="bg-white rounded-[20px] p-3.5 shadow-sm border border-mwezi-secondary flex items-center justify-between text-xs">
@@ -91,7 +93,7 @@ export default function CommunityIndex({
                                 : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                         }`}
                     >
-                        All Channels
+                        {t('learn_all_topics', 'All Channels')}
                     </Link>
                     {topics.map((t) => {
                         const isActive = selectedTopicSlug === t.slug;
@@ -237,26 +239,30 @@ export default function CommunityIndex({
                     ))}
                 </div>
 
-                {/* 4. FLOATING ACTION BUTTON (FAB in #F98B88 Peach Pink) */}
+                {/* 4. FLOATING ACTION BUTTON (Contained inside layout) */}
                 <button
                     onClick={() => setShowCreateModal(true)}
-                    className="fixed bottom-28 right-6 w-14 h-14 rounded-full bg-mwezi-accent text-white shadow-xl hover:scale-105 active:scale-95 transition flex items-center justify-center z-40"
+                    className="absolute bottom-4 right-4 w-12 h-12 rounded-full bg-rose-600 text-white shadow-xl hover:scale-105 active:scale-95 transition flex items-center justify-center z-30"
                     aria-label="Create New Community Post"
                 >
-                    <Plus className="w-7 h-7" />
+                    <Plus className="w-6 h-6" />
                 </button>
             </div>
 
-            {/* CREATE POST MODAL WITH ANONYMOUS TOGGLE */}
+            {/* CREATE POST MODAL WITH ANONYMOUS TOGGLE (Contained within mobile frame) */}
             {showCreateModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-[24px] max-w-sm w-full p-5 shadow-2xl space-y-4">
-                        <div className="flex justify-between items-center pb-2 border-b">
-                            <h3 className="font-heading font-bold text-base text-mwezi-tertiary flex items-center space-x-2">
-                                <MessageSquare className="w-5 h-5 text-mwezi-accent" />
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fadeIn rounded-[40px] overflow-hidden">
+                    <div 
+                        className="absolute inset-0 bg-transparent"
+                        onClick={() => setShowCreateModal(false)}
+                    />
+                    <div className="relative bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-rose-100 z-10 max-h-[90%] overflow-y-auto hide-scrollbar">
+                        <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                            <h3 className="font-heading font-bold text-base text-slate-900 flex items-center space-x-2">
+                                <MessageSquare className="w-5 h-5 text-rose-600" />
                                 <span>Create Safe Post</span>
                             </h3>
-                            <button onClick={() => setShowCreateModal(false)} className="text-gray-400">
+                            <button onClick={() => setShowCreateModal(false)} className="text-slate-400 p-1">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>

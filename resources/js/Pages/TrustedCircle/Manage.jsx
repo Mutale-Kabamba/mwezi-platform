@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { 
     Users, 
     UserPlus, 
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 
 export default function TrustedCircleManage({ connections = [], inviteUrlTemplate = '' }) {
+    const { t } = useTranslation();
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [copiedCode, setCopiedCode] = useState(null);
 
@@ -49,31 +51,31 @@ export default function TrustedCircleManage({ connections = [], inviteUrlTemplat
     };
 
     return (
-        <MobileAppLayout title="Trusted Circle" subtitle="Safe Family & Partner Sharing">
+        <MobileAppLayout title={t('trusted_title', 'Trusted Circle')} subtitle={t('trusted_subtitle', 'Safe Family & Partner Sharing')}>
             <Head title="Trusted Circle - Family & Partner Sharing - Mwezi" />
 
             <div className="space-y-4">
                 
                 {/* 1. HERO EXPLANATION CONTAINER */}
-                <div className="bg-mwezi-secondary/50 rounded-[20px] p-5 shadow-sm border border-white space-y-2">
+                <div className="bg-rose-50/70 rounded-2xl p-4 shadow-2xs border border-rose-100 space-y-2">
                     <div className="flex items-center space-x-2">
-                        <HeartHandshake className="w-5 h-5 text-mwezi-tertiary" />
-                        <h2 className="font-heading font-bold text-sm text-mwezi-tertiary uppercase tracking-wider">
-                            You Are Always in Control
+                        <HeartHandshake className="w-5 h-5 text-rose-600" />
+                        <h2 className="font-heading font-bold text-xs text-rose-800 uppercase tracking-wider">
+                            {t('trusted_title', 'You Are Always in Control')}
                         </h2>
                     </div>
-                    <p className="text-xs text-gray-700 leading-relaxed font-body">
-                        Invite a parent, sister, guardian, or trusted partner to support you. They will only see general phase tips and arrival windows you explicitly choose to share. <strong>Your private diary notes are never shared.</strong>
+                    <p className="text-xs text-slate-700 leading-relaxed font-body">
+                        {t('trusted_safety_notice', 'Invite a parent, sister, guardian, or trusted partner to support you. They will only see general phase tips and arrival windows you explicitly choose to share. Your private diary notes are never shared.')}
                     </p>
                 </div>
 
                 {/* 2. INVITE NEW COMPANION BUTTON */}
                 <button
                     onClick={() => setShowInviteModal(true)}
-                    className="w-full py-3.5 bg-mwezi-accent hover:bg-mwezi-accent/95 text-white font-bold rounded-[20px] text-xs shadow-md transition flex items-center justify-center space-x-2"
+                    className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-2xl text-xs shadow-md shadow-rose-200/50 transition flex items-center justify-center space-x-2 active:scale-98"
                 >
                     <UserPlus className="w-4 h-4" />
-                    <span>Invite Family Member or Partner</span>
+                    <span>{t('trusted_invite_btn', 'Invite Family Member or Partner')}</span>
                 </button>
 
                 {/* 3. ACTIVE CONNECTIONS LIST */}
@@ -146,16 +148,20 @@ export default function TrustedCircleManage({ connections = [], inviteUrlTemplat
                 </div>
             </div>
 
-            {/* INVITE COMPANION MODAL */}
+            {/* INVITE COMPANION MODAL (Contained within mobile frame) */}
             {showInviteModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-[24px] max-w-sm w-full p-5 shadow-2xl space-y-4">
-                        <div className="flex justify-between items-center pb-2 border-b">
-                            <h3 className="font-heading font-bold text-base text-mwezi-tertiary flex items-center space-x-2">
-                                <UserPlus className="w-5 h-5 text-mwezi-accent" />
-                                <span>Invite Trusted Companion</span>
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fadeIn rounded-[40px] overflow-hidden">
+                    <div 
+                        className="absolute inset-0 bg-transparent"
+                        onClick={() => setShowInviteModal(false)}
+                    />
+                    <div className="relative bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-rose-100 z-10 max-h-[90%] overflow-y-auto hide-scrollbar">
+                        <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                            <h3 className="font-heading font-bold text-base text-slate-900 flex items-center space-x-2">
+                                <UserPlus className="w-5 h-5 text-rose-600" />
+                                <span>{t('trusted_invite_btn', 'Invite Trusted Companion')}</span>
                             </h3>
-                            <button onClick={() => setShowInviteModal(false)} className="text-gray-400">
+                            <button onClick={() => setShowInviteModal(false)} className="text-slate-400 p-1">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>

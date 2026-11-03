@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { 
     Calendar as CalendarIcon, 
     Droplet, 
@@ -26,6 +27,7 @@ export default function CycleIndex({
     availableSymptoms = [], 
     availableMoods = [] 
 }) {
+    const { t } = useTranslation();
     // Helper to format dates cleanly (e.g. "Tue, 3 Nov 2026")
     const formatDisplayDate = (d) => {
         if (!d) return '';
@@ -195,13 +197,13 @@ export default function CycleIndex({
 
     return (
         <MobileAppLayout 
-            title="Cycle Tracker" 
-            subtitle="Encrypted • Private • Medically Informed"
+            title={t('cycle_title', 'Cycle Tracker')} 
+            subtitle={t('cycle_subtitle', 'Private • Encrypted • Natural')}
             actionButton={
                 <button
                     onClick={() => setShowExportModal(true)}
                     className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/50 flex items-center justify-center transition active:scale-90"
-                    title="Export Medical Visit Summary"
+                    title={t('cycle_summary_btn', 'Healthcare Summary')}
                     aria-label="Export Summary"
                 >
                     <FileText className="w-4 h-4 text-rose-600" />
@@ -413,7 +415,7 @@ export default function CycleIndex({
                         
                         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                             <div>
-                                <h3 className="font-bold text-base text-slate-900">Log Symptoms & Flow</h3>
+                                <h3 className="font-bold text-base text-slate-900">{t('cycle_log_symptoms', 'Log Symptoms & Flow')}</h3>
                                 <p className="text-xs text-rose-600 font-semibold">{formatDisplayDate(data.logged_date)}</p>
                             </div>
                             <button 
@@ -429,7 +431,7 @@ export default function CycleIndex({
                             {/* Flow Intensity Selection */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                                    Flow Intensity
+                                    {t('cycle_flow_intensity', 'Flow Intensity')}
                                 </label>
                                 <div className="grid grid-cols-5 gap-1 text-center">
                                     {['none', 'spotting', 'light', 'medium', 'heavy'].map((flow) => (
@@ -443,7 +445,7 @@ export default function CycleIndex({
                                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                             }`}
                                         >
-                                            {flow}
+                                            {t(`cycle_flow_${flow}`, flow)}
                                         </button>
                                     ))}
                                 </div>
@@ -452,7 +454,7 @@ export default function CycleIndex({
                             {/* Pad Changes Stepper */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-800 mb-1">
-                                    Pads or Liners Changed
+                                    {t('cycle_pads_changed', 'Pads or Liners Changed')}
                                 </label>
                                 <div className="flex items-center space-x-3 p-1.5 rounded-2xl bg-slate-50 border border-slate-200/60 max-w-xs">
                                     <button
@@ -463,7 +465,7 @@ export default function CycleIndex({
                                         -
                                     </button>
                                     <span className="font-extrabold text-sm text-slate-900 flex-1 text-center">
-                                        {data.pad_changes_count} pads
+                                        {data.pad_changes_count} {t('cycle_pads_count', 'pads')}
                                     </span>
                                     <button
                                         type="button"
@@ -478,11 +480,12 @@ export default function CycleIndex({
                             {/* Symptoms Chips */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                                    Symptoms Felt
+                                    {t('cycle_symptoms_felt', 'Symptoms Felt')}
                                 </label>
                                 <div className="flex flex-wrap gap-1.5">
                                     {availableSymptoms.map((sym) => {
                                         const selected = data.symptoms.includes(sym);
+                                        const symKey = `symptom_${sym.toLowerCase().replace(/[\s\/]/g, '_')}`;
                                         return (
                                             <button
                                                 key={sym}
@@ -494,7 +497,7 @@ export default function CycleIndex({
                                                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent'
                                                 }`}
                                             >
-                                                {sym}
+                                                {t(symKey, sym)}
                                             </button>
                                         );
                                     })}
@@ -504,11 +507,12 @@ export default function CycleIndex({
                             {/* Mood Chips */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                                    Mood & Energy
+                                    {t('cycle_mood_energy', 'Mood & Energy')}
                                 </label>
                                 <div className="flex flex-wrap gap-1.5">
                                     {availableMoods.map((mood) => {
                                         const selected = data.moods.includes(mood);
+                                        const moodKey = `mood_${mood.toLowerCase()}`;
                                         return (
                                             <button
                                                 key={mood}
@@ -520,7 +524,7 @@ export default function CycleIndex({
                                                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent'
                                                 }`}
                                             >
-                                                {mood}
+                                                {t(moodKey, mood)}
                                             </button>
                                         );
                                     })}
@@ -530,10 +534,10 @@ export default function CycleIndex({
                             {/* Private Notes */}
                             <div>
                                 <div className="flex items-center justify-between mb-1">
-                                    <label className="text-xs font-bold text-slate-800">Private Notes</label>
+                                    <label className="text-xs font-bold text-slate-800">{t('cycle_private_notes', 'Private Notes')}</label>
                                     <span className="text-[10px] text-emerald-700 font-bold flex items-center space-x-1">
                                         <Lock className="w-3 h-3 text-emerald-600" />
-                                        <span>Encrypted</span>
+                                        <span>{t('luna_encrypted', 'Encrypted')}</span>
                                     </span>
                                 </div>
                                 <textarea
@@ -541,7 +545,7 @@ export default function CycleIndex({
                                     onChange={(e) => setData('private_notes', e.target.value)}
                                     rows="2"
                                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:ring-2 focus:ring-rose-500 focus:bg-white transition"
-                                    placeholder="Add any private observations or medication notes..."
+                                    placeholder={t('cycle_notes_placeholder', 'Add any private observations or medication notes...')}
                                 />
                             </div>
 
@@ -550,7 +554,7 @@ export default function CycleIndex({
                                 disabled={processing}
                                 className="w-full py-3 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold rounded-2xl text-xs shadow-md shadow-rose-200/60 transition disabled:opacity-50"
                             >
-                                {processing ? 'Saving...' : 'Save Record'}
+                                {processing ? t('loading', 'Saving...') : t('cycle_save_record', 'Save Record')}
                             </button>
                         </form>
                     </div>
@@ -570,7 +574,7 @@ export default function CycleIndex({
                                 <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
                                     <HeartPulse className="w-4 h-4 text-rose-600" />
                                 </div>
-                                <h3 className="font-bold text-sm text-slate-900">Healthcare Summary</h3>
+                                <h3 className="font-bold text-sm text-slate-900">{t('cycle_export_title', 'Healthcare Summary')}</h3>
                             </div>
                             <button onClick={() => setShowExportModal(false)} className="text-slate-400 p-1">
                                 <X className="w-4 h-4" />
@@ -578,15 +582,15 @@ export default function CycleIndex({
                         </div>
 
                         <p className="text-xs text-slate-600 leading-relaxed">
-                            Confidential medical summary to present to your clinic or school nurse:
+                            {t('cycle_export_desc', 'Confidential medical summary to present to your clinic or school nurse:')}
                         </p>
 
                         <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1.5 text-slate-800">
-                            <p><strong>Cycle Rhythm:</strong> Regular {profile.average_cycle_length || 28}-day cycle</p>
-                            <p><strong>Period Duration:</strong> ~{profile.average_period_length || 5} days average</p>
-                            <p><strong>Last Recorded:</strong> {profile.last_period_start || 'Recent cycle'}</p>
-                            <p><strong>Pad Changes:</strong> Standard frequency logged</p>
-                            <p><strong>Recorded Symptoms:</strong> Mild cramps, fatigue</p>
+                            <p><strong>{t('cycle_export_rhythm', 'Cycle Rhythm:')}</strong> Regular {profile.average_cycle_length || 28}-day cycle</p>
+                            <p><strong>{t('cycle_export_duration', 'Period Duration:')}</strong> ~{profile.average_period_length || 5} days average</p>
+                            <p><strong>{t('cycle_export_last', 'Last Recorded:')}</strong> {profile.last_period_start || 'Recent cycle'}</p>
+                            <p><strong>{t('cycle_export_pads', 'Pad Changes:')}</strong> Standard frequency logged</p>
+                            <p><strong>{t('cycle_export_symptoms', 'Recorded Symptoms:')}</strong> Mild cramps, fatigue</p>
                         </div>
 
                         <div className="flex items-center space-x-2 pt-1">
@@ -594,13 +598,13 @@ export default function CycleIndex({
                                 onClick={() => { window.print(); setShowExportModal(false); }}
                                 className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-rose-200/60 transition"
                             >
-                                Print / PDF
+                                {t('cycle_export_print', 'Print / PDF')}
                             </button>
                             <button
                                 onClick={() => setShowExportModal(false)}
                                 className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-semibold transition"
                             >
-                                Close
+                                {t('close', 'Close')}
                             </button>
                         </div>
                     </div>

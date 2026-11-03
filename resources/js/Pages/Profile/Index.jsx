@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { 
     User, 
     Shield, 
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 
 export default function ProfileIndex({ auth, privacy, stats = {} }) {
+    const { locale, setLocale, t } = useTranslation();
     const user = auth.user;
 
     // Profile Details Form
@@ -59,7 +61,7 @@ export default function ProfileIndex({ auth, privacy, stats = {} }) {
     };
 
     return (
-        <MobileAppLayout title="Profile & Privacy" subtitle="Security & Preferences">
+        <MobileAppLayout title={t('profile_title', 'Profile & Privacy')} subtitle={t('profile_subtitle', 'Manage Identity & Security')}>
             <Head title="Profile & Privacy Center - Mwezi" />
 
             <div className="space-y-4">
@@ -115,14 +117,18 @@ export default function ProfileIndex({ auth, privacy, stats = {} }) {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">Preferred Language</label>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">{t('language_label', 'App Language')}</label>
                             <select
-                                value={profileData.preferred_language}
-                                onChange={(e) => setProfileData('preferred_language', e.target.value)}
+                                value={profileData.preferred_language || locale}
+                                onChange={(e) => {
+                                    const newL = e.target.value;
+                                    setProfileData('preferred_language', newL);
+                                    setLocale(newL);
+                                }}
                                 className="w-full p-2.5 bg-gray-50 border rounded-xl text-xs font-medium"
                             >
-                                <option value="en">English</option>
-                                <option value="bem">Ichibemba (Bemba)</option>
+                                <option value="en">English (English)</option>
+                                <option value="bem">Icibemba (Bemba)</option>
                                 <option value="nya">Chinyanja (Nyanja)</option>
                                 <option value="toi">Chitonga (Tonga)</option>
                                 <option value="loz">Silozi (Lozi)</option>

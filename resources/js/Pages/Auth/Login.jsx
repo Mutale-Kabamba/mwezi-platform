@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { 
     ChevronLeft, 
     Eye, 
@@ -9,10 +10,13 @@ import {
     Sparkles, 
     ShieldCheck, 
     UserCheck,
-    Lock
+    Lock,
+    Globe
 } from 'lucide-react';
 
 export default function Login({ status, canResetPassword }) {
+    const { t, locale, setLocale, languages } = useTranslation();
+    const [showLangMenu, setShowLangMenu] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
@@ -96,14 +100,51 @@ export default function Login({ status, canResetPassword }) {
                         </Link>
 
                         <div className="flex items-center space-x-2 text-xs">
+                            {/* Header Language Selector */}
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowLangMenu(!showLangMenu)}
+                                    className="p-1 px-2 rounded-full bg-white/15 hover:bg-white/25 text-white text-[10px] font-bold border border-white/20 backdrop-blur-sm shadow-xs transition flex items-center space-x-1"
+                                    title="Choose Language"
+                                >
+                                    <Globe className="w-3 h-3 text-rose-200" />
+                                    <span className="uppercase">{locale}</span>
+                                </button>
+
+                                {showLangMenu && (
+                                    <>
+                                        <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setShowLangMenu(false)} />
+                                        <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-2xl shadow-xl border border-rose-100 py-1 z-50 text-slate-800">
+                                            {languages.map((lang) => (
+                                                <button
+                                                    key={lang.code}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setLocale(lang.code);
+                                                        setShowLangMenu(false);
+                                                    }}
+                                                    className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between transition ${
+                                                        locale === lang.code ? 'bg-rose-50 text-rose-700 font-bold' : 'hover:bg-slate-50'
+                                                    }`}
+                                                >
+                                                    <span>{lang.name}</span>
+                                                    <span className="text-[10px] text-slate-400">{lang.localName}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
                             <span className="text-[11px] text-rose-100 font-medium hidden xs:inline">
-                                Don't have an account?
+                                {t('auth_dont_have_account', "Don't have an account?")}
                             </span>
                             <Link 
                                 href="/register" 
                                 className="px-3 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold border border-white/20 backdrop-blur-sm shadow-xs transition active:scale-95"
                             >
-                                Get Started
+                                {t('onboarding_get_started', 'Get Started')}
                             </Link>
                         </div>
                     </div>
@@ -125,10 +166,10 @@ export default function Login({ status, canResetPassword }) {
                         {/* Title and Subtitle */}
                         <div className="text-center space-y-0.5">
                             <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                                Welcome Back
+                                {t('auth_login_title', 'Welcome Back')}
                             </h1>
                             <p className="text-xs text-slate-400 font-medium">
-                                Enter your details below
+                                {t('auth_login_desc', 'Enter your details below')}
                             </p>
                         </div>
 
@@ -143,7 +184,7 @@ export default function Login({ status, canResetPassword }) {
                             {/* Email Input Field with Top Micro-Label */}
                             <div className="border border-slate-200/90 rounded-2xl p-2.5 px-3.5 bg-white focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-100 transition shadow-2xs">
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-                                    Email Address
+                                    {t('auth_email', 'Email Address')}
                                 </label>
                                 <input
                                     type="email"
@@ -160,7 +201,7 @@ export default function Login({ status, canResetPassword }) {
                             <div className="border border-slate-200/90 rounded-2xl p-2.5 px-3.5 bg-white focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-100 transition shadow-2xs">
                                 <div className="flex justify-between items-center mb-0.5">
                                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                        Password
+                                        {t('auth_password', 'Password')}
                                     </label>
                                 </div>
                                 <div className="flex items-center justify-between">
@@ -190,7 +231,7 @@ export default function Login({ status, canResetPassword }) {
                                 disabled={processing}
                                 className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#E11D48] via-rose-500 to-[#FB7185] hover:opacity-95 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-500/25 transition active:scale-98 disabled:opacity-50 mt-1"
                             >
-                                {processing ? 'Signing In...' : 'Sign in'}
+                                {processing ? t('loading', 'Signing In...') : t('auth_sign_in_btn', 'Sign in')}
                             </button>
 
                             {/* Forgot Password Link */}
@@ -200,7 +241,7 @@ export default function Login({ status, canResetPassword }) {
                                         href={route('password.request')}
                                         className="text-xs text-slate-400 hover:text-rose-600 font-medium transition"
                                     >
-                                        Forgot your password?
+                                        {t('auth_forgot_password', 'Forgot your password?')}
                                     </Link>
                                 </div>
                             )}

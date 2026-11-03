@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { 
     ChevronLeft, 
     Eye, 
@@ -9,17 +10,20 @@ import {
     User, 
     Lock, 
     UserCheck,
-    Check
+    Check,
+    Globe
 } from 'lucide-react';
 
 export default function Register({ initialInviteCode = '' }) {
+    const { t, locale, setLocale, languages } = useTranslation();
+    const [showLangMenu, setShowLangMenu] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
         role: initialInviteCode ? 'trusted_contact' : 'primary_user',
-        preferred_language: 'en',
+        preferred_language: locale || 'en',
         invite_code: initialInviteCode,
     });
 
@@ -93,14 +97,52 @@ export default function Register({ initialInviteCode = '' }) {
                         </Link>
 
                         <div className="flex items-center space-x-2 text-xs">
+                            {/* Header Language Selector */}
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowLangMenu(!showLangMenu)}
+                                    className="p-1 px-2 rounded-full bg-white/15 hover:bg-white/25 text-white text-[10px] font-bold border border-white/20 backdrop-blur-sm shadow-xs transition flex items-center space-x-1"
+                                    title="Choose Language"
+                                >
+                                    <Globe className="w-3 h-3 text-rose-200" />
+                                    <span className="uppercase">{locale}</span>
+                                </button>
+
+                                {showLangMenu && (
+                                    <>
+                                        <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setShowLangMenu(false)} />
+                                        <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-2xl shadow-xl border border-rose-100 py-1 z-50 text-slate-800">
+                                            {languages.map((lang) => (
+                                                <button
+                                                    key={lang.code}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setLocale(lang.code);
+                                                        setData('preferred_language', lang.code);
+                                                        setShowLangMenu(false);
+                                                    }}
+                                                    className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between transition ${
+                                                        locale === lang.code ? 'bg-rose-50 text-rose-700 font-bold' : 'hover:bg-slate-50'
+                                                    }`}
+                                                >
+                                                    <span>{lang.name}</span>
+                                                    <span className="text-[10px] text-slate-400">{lang.localName}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
                             <span className="text-[11px] text-rose-100 font-medium hidden xs:inline">
-                                Already have an account?
+                                {t('auth_already_registered', 'Already have an account?')}
                             </span>
                             <Link 
                                 href="/login" 
                                 className="px-3 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold border border-white/20 backdrop-blur-sm shadow-xs transition active:scale-95"
                             >
-                                Sign in
+                                {t('onboarding_sign_in', 'Sign in')}
                             </Link>
                         </div>
                     </div>
@@ -122,10 +164,10 @@ export default function Register({ initialInviteCode = '' }) {
                         {/* Title and Subtitle */}
                         <div className="text-center space-y-0.5">
                             <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                                Get started free.
+                                {t('auth_register_title', 'Get started free.')}
                             </h1>
                             <p className="text-xs text-slate-400 font-medium">
-                                Free forever. No credit card needed.
+                                {t('auth_register_desc', 'Free forever. No credit card needed.')}
                             </p>
                         </div>
 
@@ -134,7 +176,7 @@ export default function Register({ initialInviteCode = '' }) {
                             {/* Email Address Field with Micro-Label */}
                             <div className="border border-slate-200/90 rounded-2xl p-2.5 px-3.5 bg-white focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-100 transition shadow-2xs">
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-                                    Email Address
+                                    {t('auth_email', 'Email Address')}
                                 </label>
                                 <input
                                     type="email"
@@ -150,13 +192,13 @@ export default function Register({ initialInviteCode = '' }) {
                             {/* Your Name Field with Micro-Label */}
                             <div className="border border-slate-200/90 rounded-2xl p-2.5 px-3.5 bg-white focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-100 transition shadow-2xs">
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-                                    Your Name
+                                    {t('auth_name', 'Your Name')}
                                 </label>
                                 <input
                                     type="text"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    placeholder="Nicholas Ergemla"
+                                    placeholder="Natasha Phiri"
                                     className="w-full p-0 border-0 text-xs font-semibold text-slate-900 placeholder-slate-300 focus:ring-0 bg-transparent"
                                     required
                                 />
@@ -167,7 +209,7 @@ export default function Register({ initialInviteCode = '' }) {
                             <div className="border border-slate-200/90 rounded-2xl p-2.5 px-3.5 bg-white focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-100 transition shadow-2xs">
                                 <div className="flex justify-between items-center mb-0.5">
                                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                        Password
+                                        {t('auth_password', 'Password')}
                                     </label>
 
                                     {/* Password Strength Gauge (Matches Reference Screenshot) */}
@@ -242,7 +284,7 @@ export default function Register({ initialInviteCode = '' }) {
                                 disabled={processing}
                                 className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#E11D48] via-rose-500 to-[#FB7185] hover:opacity-95 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-500/25 transition active:scale-98 disabled:opacity-50 mt-1"
                             >
-                                {processing ? 'Creating Account...' : 'Sign up'}
+                                {processing ? t('loading', 'Creating Account...') : t('auth_register_btn', 'Create Account')}
                             </button>
                         </form>
 

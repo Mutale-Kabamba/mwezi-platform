@@ -149,7 +149,7 @@ export default function LearnShow({
                     <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center space-x-2.5 text-xs text-emerald-900">
                         <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
                         <div>
-                            <span className="font-bold block">Reviewed by Verified Healthcare Partner</span>
+                            <span className="font-bold block">{t('learn_medically_verified', 'Reviewed by Verified Healthcare Partner')}</span>
                             <span className="text-[10px] text-emerald-700">Dr. Mwamba Tembo (Adolescent Health Specialist)</span>
                         </div>
                     </div>
@@ -161,7 +161,7 @@ export default function LearnShow({
                         <div className="flex items-center space-x-2">
                             <Sparkles className="w-4 h-4 text-mwezi-tertiary" />
                             <h3 className="font-heading font-bold text-xs text-mwezi-tertiary uppercase tracking-wider">
-                                Interactive Wash & Dry Checklist
+                                {t('learn_pad_care_title', 'Interactive Wash & Dry Checklist')}
                             </h3>
                         </div>
 
@@ -201,7 +201,7 @@ export default function LearnShow({
                 {/* Mark as Finished CTA */}
                 <div className="bg-white rounded-[20px] p-4 shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
-                        <h4 className="font-heading font-bold text-xs text-gray-900">Finished Reading?</h4>
+                        <h4 className="font-heading font-bold text-xs text-gray-900">{t('learn_finished_reading', 'Finished Reading?')}</h4>
                         <p className="text-[10px] text-gray-500">Track your learning streak for health dignity.</p>
                     </div>
 
@@ -215,7 +215,7 @@ export default function LearnShow({
                         }`}
                     >
                         <CheckCircle2 className="w-4 h-4" />
-                        <span>{isCompleted ? 'Completed' : 'Mark Completed'}</span>
+                        <span>{isCompleted ? t('learn_completed', 'Completed') : t('learn_mark_completed', 'Mark Completed')}</span>
                     </button>
                 </div>
 
@@ -223,7 +223,7 @@ export default function LearnShow({
                 {related.length > 0 && (
                     <div className="pt-2 space-y-2">
                         <h3 className="font-heading font-bold text-xs text-mwezi-tertiary uppercase tracking-wider px-1">
-                            More in this Category
+                            {t('learn_more_in_category', 'More in this Category')}
                         </h3>
                         {related.map((rel) => (
                             <Link

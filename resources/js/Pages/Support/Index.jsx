@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
+import { useTranslation } from '@/i18n/LanguageContext';
 import * as Accordion from '@radix-ui/react-accordion';
 import { 
     HelpCircle, 
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 
 export default function SupportIndex({ faqs = [], activeRequests = [], campaign }) {
+    const { t } = useTranslation();
     const [faqSearch, setFaqSearch] = useState('');
     const [showTicketModal, setShowTicketModal] = useState(false);
 
@@ -42,7 +44,7 @@ export default function SupportIndex({ faqs = [], activeRequests = [], campaign 
     };
 
     return (
-        <MobileAppLayout title="Support & Hubs" subtitle="Emergency Supplies & Care">
+        <MobileAppLayout title={t('support_title', 'Support & Hubs')} subtitle={t('support_subtitle', 'Emergency Supplies & Care')}>
             <Head title="Get Support & FAQ - Mwezi" />
 
             <div className="space-y-4">
@@ -52,11 +54,11 @@ export default function SupportIndex({ faqs = [], activeRequests = [], campaign 
                     <div className="flex items-center space-x-2">
                         <PhoneCall className="w-5 h-5 text-mwezi-brandText animate-pulse" />
                         <h2 className="font-heading font-bold text-sm text-mwezi-brandText uppercase tracking-wider">
-                            Zambian Emergency Helplines (Free & 24/7)
+                            {t('support_helplines_title', 'Zambian Emergency Helplines (Free & 24/7)')}
                         </h2>
                     </div>
                     <p className="text-xs text-white/90 leading-relaxed">
-                        If you are experiencing severe pain, crisis distress, or safeguarding concerns, call immediately free of charge:
+                        {t('support_helplines_desc', 'If you are experiencing severe pain, crisis distress, or safeguarding concerns, call immediately free of charge:')}
                     </p>
 
                     <div className="grid grid-cols-2 gap-2 pt-1">
@@ -65,7 +67,7 @@ export default function SupportIndex({ faqs = [], activeRequests = [], campaign 
                             className="p-3 rounded-[16px] bg-white/15 hover:bg-white/25 border border-white/20 transition flex flex-col items-center justify-center text-center group"
                         >
                             <span className="font-heading font-extrabold text-base text-mwezi-brandText">116</span>
-                            <span className="text-[10px] font-semibold text-white">Childline / Lifeline</span>
+                            <span className="text-[10px] font-semibold text-white">{t('support_childline_title', 'Childline / Lifeline')}</span>
                         </a>
 
                         <a
@@ -73,7 +75,7 @@ export default function SupportIndex({ faqs = [], activeRequests = [], campaign 
                             className="p-3 rounded-[16px] bg-white/15 hover:bg-white/25 border border-white/20 transition flex flex-col items-center justify-center text-center group"
                         >
                             <span className="font-heading font-extrabold text-base text-mwezi-brandText">992</span>
-                            <span className="text-[10px] font-semibold text-white">National GBV Helpline</span>
+                            <span className="text-[10px] font-semibold text-white">{t('support_gbv_title', 'National GBV Helpline')}</span>
                         </a>
                     </div>
                 </div>
@@ -87,8 +89,8 @@ export default function SupportIndex({ faqs = [], activeRequests = [], campaign 
                         <Heart className="w-6 h-6 text-white mb-2" />
                         <div>
                             <span className="bg-white/20 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase mb-1 inline-block">Free Packs</span>
-                            <h3 className="font-heading font-bold text-xs leading-tight">Request Emergency Supplies</h3>
-                            <p className="text-[10px] text-white/90 mt-0.5">Collect at local school or hub</p>
+                            <h3 className="font-heading font-bold text-xs leading-tight">{t('support_request_btn', 'Request Emergency Supplies')}</h3>
+                            <p className="text-[10px] text-white/90 mt-0.5">{t('support_request_card_desc', 'Discreet pickup at schools or local partner clinics.')}</p>
                         </div>
                     </Link>
 
@@ -99,8 +101,8 @@ export default function SupportIndex({ faqs = [], activeRequests = [], campaign 
                         <MapPin className="w-6 h-6 text-mwezi-tertiary mb-2" />
                         <div>
                             <span className="bg-white/80 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase mb-1 inline-block">Locator</span>
-                            <h3 className="font-heading font-bold text-xs leading-tight">Verified Hub Map</h3>
-                            <p className="text-[10px] text-gray-700 mt-0.5">Check real-time pad stocks</p>
+                            <h3 className="font-heading font-bold text-xs leading-tight">{t('support_map_btn', 'Find Free Pad Hubs & Clinics')}</h3>
+                            <p className="text-[10px] text-gray-700 mt-0.5">{t('support_map_card_desc', 'Check real-time pad stocks.')}</p>
                         </div>
                     </Link>
                 </div>

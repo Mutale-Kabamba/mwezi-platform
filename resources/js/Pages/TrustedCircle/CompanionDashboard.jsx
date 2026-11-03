@@ -1,6 +1,7 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { 
     Users, 
     Calendar, 
@@ -17,8 +18,9 @@ export default function CompanionDashboard({
     cycleSummary, 
     allyArticles = [] 
 }) {
+    const { t } = useTranslation();
     return (
-        <MobileAppLayout title="Companion View" subtitle="Supportive Family Ally">
+        <MobileAppLayout title={t('trusted_title', 'Companion View')} subtitle={t('trusted_subtitle', 'Supportive Family Ally')}>
             <Head title="Trusted Companion View - Mwezi" />
 
             <div className="space-y-4">

@@ -130,11 +130,11 @@ class LearnController extends Controller
             ]
         );
 
-        if ($request->header('X-Inertia') || !$request->expectsJson()) {
-            return back()->with('success', 'Progress updated.');
+        if ($request->wantsJson() && !$request->header('X-Inertia')) {
+            return response()->json(['success' => true, 'progress' => $progress]);
         }
 
-        return response()->json(['success' => true, 'progress' => $progress]);
+        return back()->with('success', 'Progress updated.');
     }
 
     public function toggleBookmark(Request $request)

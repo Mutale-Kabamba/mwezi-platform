@@ -340,14 +340,14 @@ export default function LunaChat({
                         <div className="w-5 h-5 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
                             <Sparkles className="w-3 h-3" />
                         </div>
-                        <span className="text-[10px] sm:text-[11px] font-medium text-slate-600 leading-tight truncate">
-                            {t('luna_disclaimer', 'Certified health guidance • Not medical diagnosis')}
+                        <span className="text-[10px] font-medium text-slate-600 leading-snug">
+                            {t('luna_disclaimer', 'Health guidance • Non-diagnostic')}
                         </span>
                     </div>
 
                     <div className="shrink-0">
-                        <span className="inline-flex items-center space-x-1 text-[9.5px] sm:text-[10px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-bold border border-emerald-200/50">
-                            <Lock className="w-2.5 h-2.5 text-emerald-600" />
+                        <span className="inline-flex items-center space-x-1 text-[9.5px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-bold border border-emerald-200/50 whitespace-nowrap">
+                            <Lock className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
                             <span>{t('luna_encrypted', 'Private & Encrypted')}</span>
                         </span>
                     </div>

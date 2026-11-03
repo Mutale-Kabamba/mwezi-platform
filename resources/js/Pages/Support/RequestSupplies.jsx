@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { 
     ArrowLeft, 
     Heart, 
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 
 export default function RequestSupplies({ hubs = [], products = [] }) {
+    const { t } = useTranslation();
     const [step, setStep] = useState(1);
 
     const { data, setData, post, processing, errors } = useForm({
@@ -56,7 +58,7 @@ export default function RequestSupplies({ hubs = [], products = [] }) {
     const selectedHub = hubs.find(h => h.id === parseInt(data.assigned_hub_id)) || hubs[0];
 
     return (
-        <MobileAppLayout title="Emergency Supplies" subtitle="Discreet • Free • Safe">
+        <MobileAppLayout title={t('request_supplies_title', 'Request Supplies')} subtitle={t('request_supplies_subtitle', 'Discreet • Free • Safe')}>
             <Head title="Request Emergency Supplies - Mwezi" />
 
             <div className="space-y-4">

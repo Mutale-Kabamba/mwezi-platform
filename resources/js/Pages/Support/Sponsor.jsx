@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { 
     ArrowLeft, 
     Heart, 
@@ -23,6 +24,7 @@ import {
 } from 'lucide-react';
 
 export default function SponsorPortal({ campaign, recentDonations = [], hubs = [], paymentResult: initialPaymentResult, lencoPublicKey }) {
+    const { t } = useTranslation();
     const { auth, flash } = usePage().props;
     const user = auth?.user;
 
@@ -573,14 +575,14 @@ export default function SponsorPortal({ campaign, recentDonations = [], hubs = [
                 </div>
             </div>
 
-            {/* LIVE LENCO PAYMENT BOTTOM-SHEET / MODAL */}
+            {/* LIVE LENCO PAYMENT BOTTOM-SHEET / MODAL (Contained within mobile frame) */}
             {activePayment && (
-                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end justify-center p-0 transition-all animate-fadeIn">
+                <div className="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end justify-center p-0 transition-all animate-fadeIn rounded-b-[40px] overflow-hidden">
                     <div 
-                        className="fixed inset-0 bg-transparent"
+                        className="absolute inset-0 bg-transparent"
                         onClick={() => setActivePayment(null)}
                     />
-                    <div className="relative bg-white w-full rounded-t-[32px] max-h-[88%] overflow-y-auto p-5 shadow-2xl space-y-4 border-t border-slate-100 animate-in slide-in-from-bottom duration-300 z-10">
+                    <div className="relative bg-white w-full rounded-t-[32px] max-h-[88%] overflow-y-auto p-5 shadow-2xl space-y-4 border-t border-slate-100 z-10 hide-scrollbar">
                         
                         {/* Header */}
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100">

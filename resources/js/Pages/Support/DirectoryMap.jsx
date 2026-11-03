@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { 
     ArrowLeft, 
     MapPin, 
@@ -19,6 +20,7 @@ export default function DirectoryMap({
     selectedProvince = '', 
     selectedHubType = '' 
 }) {
+    const { t } = useTranslation();
     const mapContainerRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markersRef = useRef([]);
@@ -88,7 +90,7 @@ export default function DirectoryMap({
     };
 
     return (
-        <MobileAppLayout title="Hub Locator" subtitle="Verified Free Pad Stocks">
+        <MobileAppLayout title={t('support_map_btn', 'Hub Locator')} subtitle={t('support_subtitle', 'Verified Free Pad Stocks')}>
             <Head title="Service Directory & Free Pad Map - Mwezi" />
 
             <div className="space-y-3">
@@ -100,7 +102,7 @@ export default function DirectoryMap({
                         className="p-2 rounded-xl bg-white text-gray-700 hover:bg-gray-100 transition shadow-sm flex items-center space-x-1 text-xs font-semibold"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                        <span>Support</span>
+                        <span>{t('back', 'Support')}</span>
                     </Link>
 
                     <div className="flex items-center space-x-1.5">
