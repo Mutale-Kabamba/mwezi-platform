@@ -190,8 +190,8 @@ export default function Onboarding() {
                     </div>
                 </div>
 
-                {/* 2. WHITE CONTENT SECTION (Corner spaces filled up flush edge-to-edge) */}
-                <div className="bg-white pt-5 px-6 pb-4 flex-1 min-h-0 flex flex-col justify-between overflow-y-auto hide-scrollbar relative z-10 shadow-lg">
+                {/* 2. WHITE CONTENT SECTION (With sleek rounded corners) */}
+                <div className="bg-white rounded-t-[24px] -mt-3 pt-5 px-6 pb-4 flex-1 min-h-0 flex flex-col justify-between overflow-y-auto hide-scrollbar relative z-10 shadow-lg">
                     <div className="space-y-3.5 text-center">
                         
                         {/* Dynamic Floating Cards Illustration with Moving Icons to Match Content */}
