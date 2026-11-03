@@ -130,6 +130,10 @@ class LearnController extends Controller
             ]
         );
 
+        if ($request->header('X-Inertia')) {
+            return back()->with('success', 'Progress updated.');
+        }
+
         return response()->json(['success' => true, 'progress' => $progress]);
     }
 
