@@ -24,9 +24,11 @@ Route::get('/onboarding', function () {
     return Inertia::render('Onboarding');
 })->name('onboarding');
 
-// Public Donation Portal Entry
+// Public Donation Portal Entry & BroadPay Lenco Gateway
 Route::get('/sponsor', [SupportController::class, 'sponsorView'])->name('public.sponsor');
 Route::post('/sponsor', [SupportController::class, 'storeDonation'])->name('public.sponsor.store');
+Route::get('/sponsor/verify/{reference}', [SupportController::class, 'verifyDonationStatus'])->name('public.sponsor.verify');
+Route::post('/webhooks/broadpay', [SupportController::class, 'handleBroadPayWebhook'])->name('webhook.broadpay');
 
 // Authenticated Core Application Routes
 Route::middleware(['auth'])->group(function () {

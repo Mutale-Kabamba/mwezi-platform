@@ -15,12 +15,15 @@ class Donation extends Model
         'donor_user_id',
         'donor_name',
         'donor_email',
+        'donor_phone',
         'donation_type',
         'amount_zmw',
         'girls_supported_count',
         'target_hub_id',
         'payment_reference',
+        'payment_method',
         'payment_status',
+        'gateway_transaction_id',
         'allocated_count',
     ];
 
@@ -48,4 +51,3 @@ class Donation extends Model
         return $this->belongsTo(CommunityServiceHub::class, 'target_hub_id');
     }
 }
-

@@ -14,6 +14,7 @@ use App\Models\Donation;
 use App\Models\SupportTicket;
 use App\Models\HealthReferral;
 use App\Models\MeImpactEvent;
+use App\Services\BroadPayLencoService;
 use Illuminate\Support\Str;
 
 class SupportController extends Controller
@@ -133,16 +134,20 @@ class SupportController extends Controller
             'campaign' => $campaign,
             'recentDonations' => $recentDonations,
             'hubs' => $hubs,
+            'paymentResult' => session('payment_result'),
+            'lencoPublicKey' => config('services.lenco.public_key'),
         ]);
     }
 
-    public function storeDonation(Request $request)
+    public function storeDonation(Request $request, BroadPayLencoService $broadPayService)
     {
         $validated = $request->validate([
-            'donation_type' => 'required|in:sponsor_a_girl_monthly,sponsor_a_girl_annual,emergency_kit_bundle,reusable_pad_pack',
-            'amount_zmw' => 'required|numeric|min:50',
+            'donation_type' => 'required|in:sponsor_a_girl_monthly,sponsor_a_girl_annual,emergency_kit_bundle,reusable_pad_pack,custom_amount',
+            'amount_zmw' => 'required|numeric|min:10',
             'donor_name' => 'nullable|string|max:100',
             'donor_email' => 'nullable|email',
+            'donor_phone' => 'nullable|string|max:20',
+            'payment_method' => 'required|string|in:broadpay_momo,broadpay_card',
             'target_hub_id' => 'nullable|exists:community_service_hubs,id',
         ]);
 
@@ -158,20 +163,51 @@ class SupportController extends Controller
             'donor_user_id' => $user?->id,
             'donor_name' => $validated['donor_name'] ?: ($user ? $user->name : 'Kind Supporter'),
             'donor_email' => $validated['donor_email'] ?: ($user ? $user->email : null),
+            'donor_phone' => $validated['donor_phone'] ?? null,
             'donation_type' => $validated['donation_type'],
             'amount_zmw' => $validated['amount_zmw'],
             'girls_supported_count' => $girlsSupported,
             'target_hub_id' => $validated['target_hub_id'] ?? null,
             'payment_reference' => 'ZMW-SPON-' . strtoupper(Str::random(8)),
-            'payment_status' => 'completed',
-            'allocated_count' => $girlsSupported,
+            'payment_method' => $validated['payment_method'],
+            'payment_status' => 'pending',
+            'allocated_count' => 0,
         ]);
 
-        if ($campaign) {
-            $campaign->increment('raised_amount_zmw', $validated['amount_zmw']);
-        }
+        // Process through Lenco by BroadPay payment gateway
+        $paymentResult = $broadPayService->initiatePayment($donation, [
+            'phone' => $validated['donor_phone'] ?? null,
+        ]);
 
-        return redirect()->route('support.sponsor')->with('success', "Thank you deeply! Your contribution of ZMW {$validated['amount_zmw']} helps keep {$girlsSupported} schoolgirls learning with dignity.");
+        // Redirect back for both registered and guest users
+        $redirectRoute = $user ? 'support.sponsor' : 'public.sponsor';
+        
+        $msg = "Thank you deeply! Your sponsorship of ZMW {$validated['amount_zmw']} helps keep {$girlsSupported} schoolgirls learning with dignity. {$paymentResult['instruction']}";
+
+        return redirect()->route($redirectRoute)->with([
+            'success' => $msg,
+            'payment_result' => $paymentResult,
+        ]);
+    }
+
+    /**
+     * Webhook Handler for BroadPay / Lenco Payment Gateway
+     */
+    public function handleBroadPayWebhook(Request $request, BroadPayLencoService $broadPayService)
+    {
+        $signature = $request->header('X-BroadPay-Signature') ?? $request->header('X-Lenco-Signature');
+        $result = $broadPayService->handleWebhook($request->all(), $signature);
+
+        return response()->json($result, $result['success'] ? 200 : 400);
+    }
+
+    /**
+     * Real-time Payment Status Checker (Polling for mobile USSD approval)
+     */
+    public function verifyDonationStatus(string $reference, BroadPayLencoService $broadPayService)
+    {
+        $status = $broadPayService->verifyPaymentStatus($reference);
+        return response()->json($status);
     }
 
     public function storeTicket(Request $request)

@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-        <meta name="theme-color" content="#F98B88">
-        <meta name="description" content="Mwezi Platform - Menstrual Health, Dignity & Community Support Platform">
+        <meta name="theme-color" content="#FB7185">
+        <meta name="description" content="Mwezi Platform - Modern Menstrual Health, Dignity & Community Support Platform">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <meta name="apple-mobile-web-app-title" content="Mwezi">
@@ -19,7 +19,7 @@
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @routes
@@ -27,7 +27,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])
         @inertiaHead
     </head>
-    <body class="font-body antialiased bg-[#F0F9FA] text-mwezi-dark min-h-screen selection:bg-mwezi-secondary selection:text-mwezi-tertiary">
+    <body class="font-body antialiased bg-[#FAF6F7] text-mwezi-dark min-h-screen selection:bg-rose-100 selection:text-rose-900">
         @inertia
 
         <script>

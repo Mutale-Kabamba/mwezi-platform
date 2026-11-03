@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+    'broadpay' => [
+        'base_url' => env('BROADPAY_BASE_URL', env('LENCO_BASE_URL', 'https://api.lenco.co/access/v2')),
+        'merchant_id' => env('BROADPAY_MERCHANT_ID', ''),
+        'api_key' => env('BROADPAY_API_KEY', env('LENCO_SECRET_KEY', '')),
+        'api_secret' => env('BROADPAY_API_SECRET', env('LENCO_SECRET_KEY', '')),
+        'webhook_secret' => env('BROADPAY_WEBHOOK_SECRET', ''),
+    ],
+
+    'lenco' => [
+        'base_url' => env('LENCO_BASE_URL', 'https://api.lenco.co/access/v2'),
+        'api_name' => env('LENCO_API_NAME', 'MUX'),
+        'secret_key' => env('LENCO_SECRET_KEY', ''),
+        'public_key' => env('LENCO_PUBLIC_KEY', ''),
+        'currency' => env('LENCO_CURRENCY', 'ZMW'),
+    ],
+
 ];
