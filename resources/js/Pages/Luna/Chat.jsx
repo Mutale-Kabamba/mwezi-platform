@@ -18,6 +18,195 @@ import {
     ShieldCheck
 } from 'lucide-react';
 
+// Helper to parse inline markdown (bold, italic, code, links)
+const formatInline = (text) => {
+    if (!text) return '';
+    const parts = [];
+    let remaining = text;
+    let keyIdx = 0;
+
+    // Matches bold (**text** or __text__), italic (*text* or _text_), code (`code`), or links ([text](url))
+    const tokenRegex = /(\*\*|__)(.*?)\1|(\*|_)(.*?)\3|(`)(.*?)\5|\[(.*?)\]\((.*?)\)/;
+
+    while (remaining) {
+        const match = remaining.match(tokenRegex);
+        if (!match) {
+            parts.push(remaining);
+            break;
+        }
+
+        const matchIndex = match.index;
+        if (matchIndex > 0) {
+            parts.push(remaining.substring(0, matchIndex));
+        }
+
+        if (match[2] !== undefined) {
+            // Bold
+            parts.push(
+                <strong key={`b-${keyIdx++}`} className="font-bold text-slate-900">
+                    {formatInline(match[2])}
+                </strong>
+            );
+        } else if (match[4] !== undefined) {
+            // Italic
+            parts.push(
+                <em key={`i-${keyIdx++}`} className="italic">
+                    {formatInline(match[4])}
+                </em>
+            );
+        } else if (match[6] !== undefined) {
+            // Code
+            parts.push(
+                <code key={`c-${keyIdx++}`} className="bg-rose-50 text-rose-700 px-1 py-0.5 rounded text-[11px] font-mono border border-rose-100">
+                    {match[6]}
+                </code>
+            );
+        } else if (match[7] !== undefined && match[8] !== undefined) {
+            // Link
+            parts.push(
+                <a
+                    key={`a-${keyIdx++}`}
+                    href={match[8]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-rose-600 underline hover:text-rose-700 font-medium"
+                >
+                    {match[7]}
+                </a>
+            );
+        }
+
+        remaining = remaining.substring(matchIndex + match[0].length);
+    }
+
+    return parts;
+};
+
+// Component to parse and format block-level markdown with native mobile styling
+function FormattedMessage({ content, isUser }) {
+    if (!content) return null;
+    if (isUser) {
+        return <p className="whitespace-pre-wrap break-words">{content}</p>;
+    }
+
+    const lines = content.split('\n');
+    const elements = [];
+    let currentList = null; // { type: 'ul' | 'ol', items: [] }
+
+    const flushList = () => {
+        if (!currentList) return;
+        if (currentList.type === 'ul') {
+            elements.push(
+                <ul key={`ul-${elements.length}`} className="my-1.5 space-y-1 pl-0.5">
+                    {currentList.items.map((item, i) => (
+                        <li key={i} className="flex items-start text-xs leading-relaxed text-slate-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 mr-2 shrink-0" />
+                            <span className="flex-1 min-w-0">{formatInline(item)}</span>
+                        </li>
+                    ))}
+                </ul>
+            );
+        } else if (currentList.type === 'ol') {
+            elements.push(
+                <ol key={`ol-${elements.length}`} className="my-1.5 space-y-1 pl-0.5">
+                    {currentList.items.map((item, i) => (
+                        <li key={i} className="flex items-start text-xs leading-relaxed text-slate-700">
+                            <span className="font-bold text-rose-600 mr-2 shrink-0 text-[11px] min-w-[14px]">
+                                {i + 1}.
+                            </span>
+                            <span className="flex-1 min-w-0">{formatInline(item)}</span>
+                        </li>
+                    ))}
+                </ol>
+            );
+        }
+        currentList = null;
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        // Empty line
+        if (!trimmed) {
+            flushList();
+            continue;
+        }
+
+        // Headings: ###, ##, #
+        const headingMatch = trimmed.match(/^(#{1,4})\s+(.+)$/);
+        if (headingMatch) {
+            flushList();
+            const level = headingMatch[1].length;
+            const headingText = headingMatch[2];
+            elements.push(
+                <div
+                    key={`h-${i}`}
+                    className={`font-bold mt-2.5 mb-1 ${
+                        level === 1 ? 'text-sm text-rose-800' : level === 2 ? 'text-xs text-rose-700' : 'text-xs text-slate-800'
+                    }`}
+                >
+                    {formatInline(headingText)}
+                </div>
+            );
+            continue;
+        }
+
+        // Unordered list item: * or - or •
+        const ulMatch = trimmed.match(/^[-*•]\s+(.+)$/);
+        if (ulMatch) {
+            if (currentList && currentList.type !== 'ul') {
+                flushList();
+            }
+            if (!currentList) {
+                currentList = { type: 'ul', items: [] };
+            }
+            currentList.items.push(ulMatch[1]);
+            continue;
+        }
+
+        // Ordered list item: 1. or 1)
+        const olMatch = trimmed.match(/^(\d+)[.)]\s+(.+)$/);
+        if (olMatch) {
+            if (currentList && currentList.type !== 'ol') {
+                flushList();
+            }
+            if (!currentList) {
+                currentList = { type: 'ol', items: [] };
+            }
+            currentList.items.push(olMatch[2]);
+            continue;
+        }
+
+        // Blockquote: >
+        const quoteMatch = trimmed.match(/^>\s*(.+)$/);
+        if (quoteMatch) {
+            flushList();
+            elements.push(
+                <blockquote
+                    key={`quote-${i}`}
+                    className="border-l-2 border-rose-400 bg-rose-50/60 pl-2.5 py-1 my-1.5 text-xs text-slate-700 italic rounded-r-lg"
+                >
+                    {formatInline(quoteMatch[1])}
+                </blockquote>
+            );
+            continue;
+        }
+
+        // Standard paragraph
+        flushList();
+        elements.push(
+            <p key={`p-${i}`} className="text-xs leading-relaxed text-slate-700 my-1 first:mt-0 last:mb-0">
+                {formatInline(trimmed)}
+            </p>
+        );
+    }
+
+    flushList();
+
+    return <div className="space-y-1">{elements}</div>;
+}
+
 export default function LunaChat({
     conversation,
     messages: initialMessages = [],
@@ -143,20 +332,20 @@ export default function LunaChat({
             <div className="flex flex-col h-full w-full min-w-0 overflow-hidden">
 
                 {/* 1. HEALTHCARE DISCLAIMER & PRIVACY PILL BAR */}
-                <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 shadow-2xs border border-rose-150/80 flex items-center justify-between text-xs w-full min-w-0 shrink-0 mb-2">
-                    <div className="flex items-center space-x-2 text-slate-600 min-w-0 flex-1 mr-2">
+                <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2 px-3 shadow-2xs border border-rose-150/80 flex items-center justify-between text-xs w-full min-w-0 shrink-0 mb-2 gap-2">
+                    <div className="flex items-center space-x-2 text-slate-600 min-w-0 flex-1">
                         <div className="w-5 h-5 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
                             <Sparkles className="w-3 h-3" />
                         </div>
-                        <span className="text-[11px] font-medium text-slate-600 truncate block">
-                            Certified health guidance, not a medical diagnosis.
+                        <span className="text-[11px] font-medium text-slate-600 leading-tight">
+                            Certified health guidance • Not a medical diagnosis
                         </span>
                     </div>
 
                     <div className="shrink-0">
-                        <span className="inline-flex items-center space-x-1 text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-bold border border-emerald-200/50">
+                        <span className="inline-flex items-center space-x-1 text-[10px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-bold border border-emerald-200/50">
                             <Lock className="w-2.5 h-2.5 text-emerald-600" />
-                            <span>Private & Encrypted</span>
+                            <span>Encrypted</span>
                         </span>
                     </div>
                 </div>
@@ -195,7 +384,7 @@ export default function LunaChat({
                                                     : 'bg-white text-slate-800 rounded-tl-xs border border-rose-100/90'
                                                 }`}
                                         >
-                                            <p className="whitespace-pre-wrap break-words">{msg.message_text}</p>
+                                            <FormattedMessage content={msg.message_text} isUser={isUser} />
 
                                             {/* CRITICAL SAFETY ESCALATION CARD */}
                                             {msg.escalation && (
