@@ -31,19 +31,39 @@ export function LanguageProvider({ children, initialLocale = 'en' }) {
         setLocaleState(newLocale);
         if (typeof window !== 'undefined') {
             localStorage.setItem('mwezi_locale', newLocale);
-        }
 
-        // Attempt persisting to user profile if logged in
-        try {
-            router.patch(route('profile.privacy'), {
-                preferred_language: newLocale,
-            }, {
-                preserveScroll: true,
-                preserveState: true,
-                onError: () => {},
-            });
-        } catch (e) {
-            // Silently ignore when guest / unauthenticated
+            // Guard against calling profile update when unauthenticated / on guest routes
+            const path = window.location.pathname;
+            const guestPaths = ['/', '/login', '/register', '/onboarding', '/forgot-password', '/reset-password', '/sponsor'];
+            const isGuestPath = guestPaths.some(p => path === p || path.startsWith(p + '/'));
+
+            if (isGuestPath) {
+                return;
+            }
+
+            try {
+                const pageEl = document.getElementById('app');
+                if (pageEl?.dataset?.page) {
+                    const parsed = JSON.parse(pageEl.dataset.page);
+                    if (!parsed?.props?.auth?.user) {
+                        return;
+                    }
+                }
+            } catch (_) {
+                return;
+            }
+
+            try {
+                router.patch(route('profile.privacy'), {
+                    preferred_language: newLocale,
+                }, {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onError: () => {},
+                });
+            } catch (e) {
+                // Silently ignore
+            }
         }
     };
 

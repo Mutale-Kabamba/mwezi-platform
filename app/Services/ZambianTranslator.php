@@ -144,3 +144,4 @@ class ZambianTranslator
         return $this->supportedLanguages;
     }
 }
+
