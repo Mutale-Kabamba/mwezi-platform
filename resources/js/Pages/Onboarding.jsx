@@ -129,7 +129,7 @@ export default function Onboarding() {
                 onTouchEnd={() => setIsPaused(false)}
             >
                 {/* 1. TOP SOLID COLOR LOGO & NOTIFICATION BAR SECTION (Continuous Solid Color) */}
-                <div className="bg-[#BE123C] text-white shrink-0 relative pb-16 pt-3 select-none">
+                <div className="bg-[#BE123C] text-white shrink-0 relative pt-3 pb-12 select-none flex flex-col justify-between">
                     
                     {/* Integrated Phone Notification Bar (Seamless Solid Background) */}
                     <div className="w-full px-6 pb-2 flex items-center justify-between text-xs font-semibold">
@@ -161,7 +161,7 @@ export default function Onboarding() {
                     </div>
 
                     {/* Centered Brand Title with Spacious Room */}
-                    <div className="text-center pt-3 pb-2">
+                    <div className="text-center pt-4 pb-2">
                         <div className="inline-flex items-center space-x-2.5">
                             <span className="text-2xl drop-shadow-sm">🌙</span>
                             <span className="font-black text-3xl tracking-tight text-white font-sans drop-shadow-xs">
@@ -191,7 +191,7 @@ export default function Onboarding() {
                 </div>
 
                 {/* 2. FLOATING WHITE CONTENT SECTION (More compact to give room to top logo section) */}
-                <div className="bg-white rounded-t-[36px] -mt-8 pt-5 px-6 pb-4 flex-1 flex flex-col justify-between overflow-y-auto hide-scrollbar relative z-10 shadow-2xl">
+                <div className="bg-white rounded-t-[36px] -mt-6 pt-5 px-6 pb-4 flex-1 min-h-0 flex flex-col justify-between overflow-y-auto hide-scrollbar relative z-10 shadow-2xl">
                     <div className="space-y-3.5 text-center">
                         
                         {/* Dynamic Floating Cards Illustration with Moving Icons to Match Content */}
