@@ -307,36 +307,48 @@ export default function Onboarding() {
                         </p>
                     </div>
 
-                    {/* Bottom Action Area (Compact & Native Pill Buttons) */}
+                    {/* Bottom Action Area (Direct Get Started Navigation + Slide Controls) */}
                     <div className="space-y-2.5 pt-3">
-                        <div className="flex items-center space-x-2">
-                            {currentSlide > 0 && (
-                                <button
-                                    onClick={prevSlide}
-                                    className="p-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition active:scale-95"
-                                    aria-label="Previous slide"
-                                >
-                                    <ChevronLeft className="w-4 h-4" />
-                                </button>
-                            )}
+                        {/* Direct Get Started CTA Button */}
+                        <Link
+                            href="/register"
+                            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#E11D48] via-rose-500 to-[#FB7185] hover:opacity-95 active:scale-98 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-500/25 transition flex items-center justify-center space-x-2 text-center"
+                        >
+                            <span>Get Started Free</span>
+                            <ArrowRight className="w-4 h-4" />
+                        </Link>
 
-                            {currentSlide < slides.length - 1 ? (
-                                <button
-                                    onClick={nextSlide}
-                                    className="flex-1 py-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100/80 active:scale-98 text-rose-700 font-extrabold text-xs sm:text-sm border border-rose-200/70 shadow-xs transition flex items-center justify-center space-x-2"
-                                >
-                                    <span>Get Started</span>
-                                    <ChevronRight className="w-4 h-4" />
-                                </button>
-                            ) : (
-                                <Link
-                                    href="/register"
-                                    className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-[#E11D48] via-rose-500 to-[#FB7185] hover:opacity-95 active:scale-98 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-500/25 transition flex items-center justify-center space-x-2 text-center"
-                                >
-                                    <span>Get Started Free</span>
-                                    <ArrowRight className="w-4 h-4" />
-                                </Link>
-                            )}
+                        {/* Slide Navigation Controls */}
+                        <div className="flex items-center justify-between text-xs px-1 pt-0.5">
+                            <button
+                                onClick={prevSlide}
+                                className="text-[11px] font-bold text-slate-400 hover:text-slate-700 flex items-center space-x-1 py-1"
+                            >
+                                <ChevronLeft className="w-3.5 h-3.5" />
+                                <span>Prev</span>
+                            </button>
+
+                            {/* Center Slide Indicator */}
+                            <div className="flex items-center space-x-1">
+                                {slides.map((_, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => setCurrentSlide(idx)}
+                                        className={`transition-all duration-200 rounded-full ${
+                                            currentSlide === idx ? 'w-4 h-1.5 bg-rose-500' : 'w-1.5 h-1.5 bg-slate-200'
+                                        }`}
+                                        aria-label={`Slide ${idx + 1}`}
+                                    />
+                                ))}
+                            </div>
+
+                            <button
+                                onClick={nextSlide}
+                                className="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center space-x-1 py-1"
+                            >
+                                <span>Next</span>
+                                <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
                         </div>
 
                         {/* Secondary Links: Sponsor & Already have an account */}
