@@ -128,8 +128,8 @@ export default function Onboarding() {
                 onTouchStart={() => setIsPaused(true)}
                 onTouchEnd={() => setIsPaused(false)}
             >
-                {/* 1. TOP SOLID COLOR LOGO & NOTIFICATION BAR SECTION (With sleek rounded bottom corners) */}
-                <div className="bg-[#BE123C] text-white shrink-0 relative pt-3 pb-7 select-none flex flex-col justify-between rounded-b-[32px] shadow-md shadow-rose-950/15 z-20">
+                {/* 1. TOP SOLID COLOR LOGO & NOTIFICATION BAR SECTION (Seamless Flush Edges, No Corner Cutouts) */}
+                <div className="bg-[#BE123C] text-white shrink-0 relative pt-3 pb-6 select-none flex flex-col justify-between shadow-md shadow-rose-950/10 z-20 border-b border-rose-800/40">
                     
                     {/* Integrated Phone Notification Bar (Seamless Solid Background) */}
                     <div className="w-full px-6 pb-2 flex items-center justify-between text-xs font-semibold">

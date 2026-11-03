@@ -20,6 +20,7 @@ import {
     Clock,
     BookOpen
 } from 'lucide-react';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 export default function Dashboard({ 
     cycleInfo, 
@@ -28,6 +29,7 @@ export default function Dashboard({
     nearbyHubsCount = 0, 
     dailyTip = '' 
 }) {
+    const { t } = useTranslation();
     // Dynamic phase badge styles
     const getPhaseBadge = (phase) => {
         const p = (phase || '').toLowerCase();
@@ -45,7 +47,7 @@ export default function Dashboard({
     const phaseBadge = getPhaseBadge(cycleInfo?.phase);
 
     return (
-        <MobileAppLayout title="Dashboard" subtitle="Welcome back • Dignity & Health">
+        <MobileAppLayout title={t('app_title', 'Mwezi')} subtitle={t('app_subtitle', 'Menstrual Health & Dignity')}>
             <Head title="Home Dashboard - Mwezi" />
 
             <div className="space-y-4">
@@ -58,13 +60,13 @@ export default function Dashboard({
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-1.5">
                             <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600">
-                                Daily Affirmation
+                                {t('daily_affirmation_title', 'Daily Affirmation')}
                             </span>
                             <span className="w-1 h-1 rounded-full bg-rose-400" />
-                            <span className="text-[10px] text-slate-400 font-medium">Self-Care</span>
+                            <span className="text-[10px] text-slate-400 font-medium">{t('self_care', 'Self-Care')}</span>
                         </div>
                         <p className="text-xs text-slate-700 font-medium italic mt-0.5 leading-snug">
-                            "{dailyTip || 'Your cycle is your body’s natural power and wisdom. Treat yourself with gentleness today.'}"
+                            "{dailyTip || t('daily_tip_default', 'Your cycle is your body’s natural power and wisdom. Treat yourself with gentleness today.')}"
                         </p>
                     </div>
                 </div>
@@ -85,7 +87,7 @@ export default function Dashboard({
 
                             <span className="text-[11px] font-semibold text-rose-100 flex items-center space-x-1 bg-black/10 px-2.5 py-0.5 rounded-full backdrop-blur-xs">
                                 <Calendar className="w-3 h-3 text-white" />
-                                <span>{cycleInfo.next_period_date || 'Upcoming'}</span>
+                                <span>{cycleInfo.next_period_date || t('upcoming', 'Upcoming')}</span>
                             </span>
                         </div>
 
@@ -96,10 +98,10 @@ export default function Dashboard({
                             </span>
                             <div>
                                 <span className="text-xs font-bold text-white block">
-                                    {cycleInfo.days_until_next === 1 ? 'day until next period' : 'days until next period'}
+                                    {cycleInfo.days_until_next === 1 ? t('day_until_period', 'day until next period') : t('dash_days_left', 'days until next period')}
                                 </span>
                                 <span className="text-[10px] text-rose-100 font-medium">
-                                    Rhythm prediction: High confidence
+                                    {t('rhythm_prediction', 'Rhythm prediction: High confidence')}
                                 </span>
                             </div>
                         </div>
@@ -116,7 +118,7 @@ export default function Dashboard({
                             className="flex-1 py-2.5 px-4 bg-white hover:bg-rose-50 text-rose-600 font-bold text-xs rounded-2xl text-center shadow-md shadow-black/10 active:scale-95 transition flex items-center justify-center space-x-1.5"
                         >
                             <Plus className="w-3.5 h-3.5 text-rose-600" />
-                            <span>{cycleInfo.has_logged_today ? 'Update Today’s Symptoms' : 'Log Today’s Symptoms'}</span>
+                            <span>{cycleInfo.has_logged_today ? t('update_today_symptoms', 'Update Today’s Symptoms') : t('dash_log_symptoms', 'Log Today’s Symptoms')}</span>
                         </Link>
 
                         <Link

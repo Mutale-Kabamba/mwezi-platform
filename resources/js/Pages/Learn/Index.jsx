@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { 
     Search, 
     BookOpen, 
@@ -25,14 +26,25 @@ export default function LearnIndex({
     currentLocale = 'en',
     mythsCount = 4
 }) {
+    const { locale, setLocale, t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState(search);
+
+    useEffect(() => {
+        if (locale && locale !== currentLocale) {
+            router.get(route('learn.index'), {
+                category: selectedCategory,
+                search: searchTerm,
+                locale: locale,
+            }, { preserveState: true, preserveScroll: true });
+        }
+    }, [locale]);
 
     const handleSearch = (e) => {
         e.preventDefault();
         router.get(route('learn.index'), {
             category: selectedCategory,
             search: searchTerm,
-            locale: currentLocale,
+            locale: locale || currentLocale,
         }, { preserveState: true });
     };
 
@@ -41,12 +53,13 @@ export default function LearnIndex({
         router.get(route('learn.index'), {
             category: newCategory,
             search: searchTerm,
-            locale: currentLocale,
+            locale: locale || currentLocale,
         }, { preserveState: true });
     };
 
     const handleLocaleChange = (e) => {
         const newLocale = e.target.value;
+        setLocale(newLocale);
         router.get(route('learn.index'), {
             category: selectedCategory,
             search: searchTerm,
@@ -75,16 +88,16 @@ export default function LearnIndex({
 
                     <div className="relative shrink-0">
                         <select
-                            value={currentLocale}
+                            value={locale || currentLocale}
                             onChange={handleLocaleChange}
                             aria-label="Language selector"
                             className="py-2 pl-2.5 pr-6 bg-white border border-gray-200 rounded-[16px] text-xs font-semibold text-mwezi-tertiary focus:ring-2 focus:ring-mwezi-accent"
                         >
-                            <option value="en">English</option>
-                            <option value="bem">Bemba</option>
-                            <option value="nya">Nyanja</option>
-                            <option value="toi">Tonga</option>
-                            <option value="loz">Lozi</option>
+                            <option value="en">English (EN)</option>
+                            <option value="bem">Icibemba (BEM)</option>
+                            <option value="nya">Chinyanja (NYA)</option>
+                            <option value="toi">Chitonga (TOI)</option>
+                            <option value="loz">Silozi (LOZ)</option>
                         </select>
                     </div>
                 </div>

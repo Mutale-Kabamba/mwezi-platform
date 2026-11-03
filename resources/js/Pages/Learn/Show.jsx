@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
 import MarkdownRenderer from '@/Components/MarkdownRenderer';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { 
     ArrowLeft, 
     CheckCircle, 
@@ -22,6 +23,16 @@ export default function LearnShow({
     related = [], 
     currentLocale = 'en' 
 }) {
+    const { locale, t } = useTranslation();
+
+    useEffect(() => {
+        if (locale && locale !== currentLocale) {
+            router.get(route('learn.show', resource.slug), {
+                locale: locale,
+            }, { preserveState: true, preserveScroll: true });
+        }
+    }, [locale]);
+
     const translation = resource.translations?.[0];
     const title = translation?.translated_title || resource.title;
     const body = translation?.translated_body || resource.body_content;

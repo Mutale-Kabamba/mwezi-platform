@@ -19,8 +19,10 @@ import {
     ChevronRight,
     Wifi,
     BatteryMedium,
-    ArrowLeft
+    ArrowLeft,
+    Globe
 } from 'lucide-react';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 export default function MobileAppLayout({
     children,
@@ -33,11 +35,13 @@ export default function MobileAppLayout({
     const { auth } = usePage().props;
     const user = auth?.user;
     const currentUrl = typeof window !== 'undefined' ? window.location.pathname : '';
+    const { locale, setLocale, t, languages } = useTranslation();
 
     // Quick Exit / Discreet Shield Mode State
     const [discreetMode, setDiscreetMode] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [showEmergencyModal, setShowEmergencyModal] = useState(false);
+    const [showLangMenu, setShowLangMenu] = useState(false);
     const [currentTime, setCurrentTime] = useState('09:41');
     const [quizAnswer, setQuizAnswer] = useState(null);
 
@@ -66,25 +70,25 @@ export default function MobileAppLayout({
     }, []);
 
     const navItems = [
-        { name: 'Home', href: '/dashboard', icon: Home, match: '/dashboard' },
-        { name: 'Track', href: '/cycle', icon: Calendar, match: '/cycle' },
-        { name: 'Learn', href: '/learn', icon: BookOpen, match: '/learn' },
-        { name: 'Luna AI', href: '/luna', icon: Sparkles, match: '/luna' },
-        { name: 'Support', href: '/support', icon: MapPin, match: '/support' },
+        { name: t('nav_home', 'Home'), href: '/dashboard', icon: Home, match: '/dashboard' },
+        { name: t('nav_track', 'Track'), href: '/cycle', icon: Calendar, match: '/cycle' },
+        { name: t('nav_learn', 'Learn'), href: '/learn', icon: BookOpen, match: '/learn' },
+        { name: t('nav_luna', 'Luna AI'), href: '/luna', icon: Sparkles, match: '/luna' },
+        { name: t('nav_support', 'Support'), href: '/support', icon: MapPin, match: '/support' },
     ];
 
     const drawerNavItems = [
-        { name: 'Home Dashboard', href: '/dashboard', icon: Home },
-        { name: 'Cycle Tracker & Logs', href: '/cycle', icon: Calendar },
-        { name: 'Learn Hub & Guides', href: '/learn', icon: BookOpen },
-        { name: 'Busting Myths vs Facts', href: '/learn/myths-facts', icon: CheckCircle2 },
-        { name: 'Ask Luna AI Assistant', href: '/luna', icon: Sparkles },
-        { name: 'Community Discussions', href: '/community', icon: Users },
-        { name: 'Emergency Supplies', href: '/support/request', icon: Heart },
-        { name: 'Find Pad Hubs & Clinics', href: '/support/map', icon: MapPin },
-        { name: 'Sponsor a Girl', href: '/support/sponsor', icon: Heart },
-        { name: 'Trusted Family Circle', href: '/trusted-circle', icon: Users },
-        { name: 'Profile & Privacy Settings', href: '/profile', icon: Settings },
+        { name: t('drawer_home', 'Home Dashboard'), href: '/dashboard', icon: Home },
+        { name: t('drawer_cycle', 'Cycle Tracker & Logs'), href: '/cycle', icon: Calendar },
+        { name: t('drawer_learn', 'Learn Hub & Guides'), href: '/learn', icon: BookOpen },
+        { name: t('drawer_myths', 'Busting Myths vs Facts'), href: '/learn/myths-facts', icon: CheckCircle2 },
+        { name: t('drawer_luna', 'Ask Luna AI Assistant'), href: '/luna', icon: Sparkles },
+        { name: t('drawer_community', 'Community Discussions'), href: '/community', icon: Users },
+        { name: t('drawer_emergency', 'Emergency Supplies'), href: '/support/request', icon: Heart },
+        { name: t('drawer_map', 'Find Pad Hubs & Clinics'), href: '/support/map', icon: MapPin },
+        { name: t('drawer_sponsor', 'Sponsor a Girl'), href: '/support/sponsor', icon: Heart },
+        { name: t('drawer_circle', 'Trusted Family Circle'), href: '/trusted-circle', icon: Users },
+        { name: t('drawer_profile', 'Profile & Privacy Settings'), href: '/profile', icon: Settings },
     ];
 
     return (
@@ -257,9 +261,60 @@ export default function MobileAppLayout({
                                 </div>
                             </Link>
 
-                            {/* Right: Action Button, Quick Exit & Menu Trigger */}
+                            {/* Right: Action Button, Language, Quick Exit & Menu Trigger */}
                             <div className="flex items-center space-x-1.5">
                                 {actionButton}
+
+                                {/* Global Language Selector Button */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowLangMenu(prev => !prev)}
+                                        title="Select Language (Bemba, Nyanja, Tonga, Lozi, English)"
+                                        className="p-1.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center space-x-1 text-xs font-bold transition active:scale-90"
+                                        aria-label="Language Selector"
+                                    >
+                                        <Globe className="w-3.5 h-3.5 text-rose-600" />
+                                        <span className="uppercase text-[10px] tracking-wide font-black">{locale}</span>
+                                    </button>
+
+                                    {/* Language Dropdown Popover */}
+                                    {showLangMenu && (
+                                        <>
+                                            <div
+                                                className="fixed inset-0 z-40 bg-transparent"
+                                                onClick={() => setShowLangMenu(false)}
+                                            />
+                                            <div className="absolute right-0 top-full mt-1.5 w-44 bg-white rounded-2xl shadow-xl border border-rose-100 py-1.5 z-50 animate-fadeIn">
+                                                <div className="px-3 py-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider border-b border-slate-100">
+                                                    Select Language
+                                                </div>
+                                                {languages.map((lang) => (
+                                                    <button
+                                                        key={lang.code}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setLocale(lang.code);
+                                                            setShowLangMenu(false);
+                                                        }}
+                                                        className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition ${
+                                                            locale === lang.code
+                                                                ? 'bg-rose-50 text-rose-700 font-bold'
+                                                                : 'text-slate-700 hover:bg-slate-50'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center space-x-2">
+                                                            <span>{lang.flag}</span>
+                                                            <span>{lang.localName}</span>
+                                                        </div>
+                                                        {locale === lang.code && (
+                                                            <CheckCircle2 className="w-3.5 h-3.5 text-rose-600" />
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
 
                                 {/* Discreet Safety Mode Trigger */}
                                 <button
@@ -329,11 +384,11 @@ export default function MobileAppLayout({
                 <div className="w-32 h-1 bg-slate-300 rounded-full opacity-60" />
             </div>
 
-            {/* NATIVE SLIDE-IN APP DRAWER */}
+            {/* NATIVE SLIDE-IN APP DRAWER (Contained within mobile mockup) */}
             {drawerOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-0 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+                <div className="absolute inset-0 z-50 flex items-center justify-center p-0 bg-slate-900/60 backdrop-blur-xs animate-fadeIn rounded-b-[40px] overflow-hidden">
                     <div
-                        className="fixed inset-0 bg-transparent"
+                        className="absolute inset-0 bg-transparent"
                         onClick={() => setDrawerOpen(false)}
                     />
                     <div className="relative w-full h-full bg-white p-5 flex flex-col justify-between z-10 overflow-y-auto border-r border-rose-100 hide-scrollbar">
@@ -345,7 +400,7 @@ export default function MobileAppLayout({
                                     {user?.name ? user.name.charAt(0).toUpperCase() : 'M'}
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-sm text-slate-900 leading-tight">{user?.name || 'Mwezi Member'}</h3>
+                                    <h3 className="font-bold text-sm text-slate-900 leading-tight">{user?.name || t('drawer_title', 'Mwezi Member')}</h3>
                                     <p className="text-[10px] text-rose-600 font-semibold capitalize mt-0.5">
                                         {user?.role?.replace('_', ' ') || 'Primary User'}
                                     </p>
@@ -362,7 +417,7 @@ export default function MobileAppLayout({
 
                         {/* Menu Options List */}
                         <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">App Navigation</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">{t('drawer_navigation', 'App Navigation')}</span>
                             {drawerNavItems.map((item) => {
                                 const Icon = item.icon;
                                 const isActive = currentUrl === item.href || currentUrl.startsWith(item.href + '/');
@@ -385,6 +440,30 @@ export default function MobileAppLayout({
                                     </Link>
                                 );
                             })}
+                        </div>
+
+                        {/* Dedicated Language Selector in Drawer */}
+                        <div className="mt-4 pt-3 border-t border-rose-100">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2 block mb-2">
+                                App Language • Ululimi / Chilankhulo
+                            </span>
+                            <div className="grid grid-cols-2 gap-1.5 px-1">
+                                {languages.map((lang) => (
+                                    <button
+                                        key={lang.code}
+                                        type="button"
+                                        onClick={() => setLocale(lang.code)}
+                                        className={`py-2 px-2.5 rounded-xl text-left text-[11px] font-semibold transition border flex items-center space-x-1.5 ${
+                                            locale === lang.code
+                                                ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                                                : 'bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100'
+                                        }`}
+                                    >
+                                        <span className="text-xs">{lang.flag}</span>
+                                        <span className="truncate">{lang.localName}</span>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Special Operational Portals */}
@@ -429,7 +508,7 @@ export default function MobileAppLayout({
                             className="w-full py-3 px-4 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white rounded-2xl text-xs font-bold flex items-center justify-center space-x-2 shadow-sm transition"
                         >
                             <PhoneCall className="w-4 h-4" />
-                            <span>Emergency Helplines (116)</span>
+                            <span>{t('drawer_crisis_btn', '24/7 Crisis Helplines (Zambia)')}</span>
                         </button>
 
                         <Link
@@ -439,7 +518,7 @@ export default function MobileAppLayout({
                             className="w-full py-2 px-4 text-xs text-rose-700 hover:bg-rose-50 rounded-xl font-medium flex items-center justify-center space-x-1.5 transition"
                         >
                             <LogOut className="w-3.5 h-3.5" />
-                            <span>Log Out</span>
+                            <span>{t('drawer_sign_out', 'Log Out')}</span>
                         </Link>
                     </div>
                 </div>
@@ -449,9 +528,9 @@ export default function MobileAppLayout({
 
             {/* EMERGENCY HELPLINES NATIVE MODAL */}
             {showEmergencyModal && (
-                <div className="fixed inset-0 z-50 flex items-end justify-center p-0 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+                <div className="absolute inset-0 z-50 flex items-end justify-center p-0 bg-slate-900/60 backdrop-blur-xs animate-fadeIn rounded-b-[40px] overflow-hidden">
                     <div
-                        className="fixed inset-0 bg-transparent"
+                        className="absolute inset-0 bg-transparent"
                         onClick={() => setShowEmergencyModal(false)}
                     />
                     <div className="relative bg-white rounded-t-[32px] w-full p-6 shadow-2xl space-y-4 border-t border-rose-100 z-10">

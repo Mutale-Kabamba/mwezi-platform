@@ -14,7 +14,7 @@ class LunaAiService
     /**
      * Process user prompt with safety checks, RAG retrieval, and Gemini AI synthesis.
      */
-    public function respond(string $userMessage, ?int $userId = null, array $conversationHistory = []): array
+    public function respond(string $userMessage, ?int $userId = null, array $conversationHistory = [], ?string $overrideLocale = null): array
     {
         $normalized = Str::lower($userMessage);
 
@@ -119,8 +119,14 @@ class LunaAiService
         // Deduplicate referenced resources
         $referencedResources = array_values(array_unique($referencedResources, SORT_REGULAR));
 
-        // 3. GENERATE WITH GEMINI AI
-        $geminiResponse = $this->callGeminiApi($userMessage, $groundingContext, $conversationHistory);
+        // 3. GENERATE WITH GEMINI AI (With User Language Context)
+        $userLocale = $overrideLocale ?: 'en';
+        if ($userId && !$overrideLocale) {
+            $user = \App\Models\User::find($userId);
+            $userLocale = $user?->preferred_language ?? 'en';
+        }
+
+        $geminiResponse = $this->callGeminiApi($userMessage, $groundingContext, $conversationHistory, $userLocale);
 
         // Fallback response if Gemini is unavailable
         if (empty($geminiResponse)) {
@@ -181,7 +187,7 @@ class LunaAiService
     /**
      * Call the Google Gemini API with strict system guidelines and grounding.
      */
-    protected function callGeminiApi(string $prompt, string $groundingContext, array $history = []): ?string
+    protected function callGeminiApi(string $prompt, string $groundingContext, array $history = [], string $userLocale = 'en'): ?string
     {
         $apiKey = config('services.gemini.api_key');
         $model = config('services.gemini.model', 'gemini-3.5-flash-lite');
@@ -191,6 +197,15 @@ class LunaAiService
             Log::warning('Gemini API key is not configured in services.gemini.api_key');
             return null;
         }
+
+        $languageMap = [
+            'bem' => 'Bemba (Icibemba, Zambia)',
+            'nya' => 'Nyanja (Chinyanja, Zambia)',
+            'toi' => 'Tonga (Chitonga, Zambia)',
+            'loz' => 'Lozi (Silozi, Zambia)',
+            'en' => 'English'
+        ];
+        $targetLang = $languageMap[$userLocale] ?? 'English';
 
         $systemInstruction = <<<EOT
 You are Luna AI, the official, compassionate, and culturally rooted menstrual health companion for the Mwezi platform in Zambia.
@@ -214,7 +229,17 @@ PROFESSIONAL MEDICAL PERSONNEL REFERRAL (CRITICAL):
    b) Explain that severe pain or heavy bleeding is a medical signal that deserves compassionate in-person care.
    c) Remind them that confidential healthcare advice is available through Childline/Lifeline Zambia Toll-Free 116 or at local Adolescent Friendly Health Facilities.
 
-CULTURAL TONE & LANGUAGE:
+MULTI-LINGUAL PROFICIENCY (ZAMBIAN INDIGENOUS LANGUAGES):
+1. You are completely fluent in English and the 4 major Zambian languages:
+   - Bemba (Icibemba)
+   - Nyanja (Chinyanja)
+   - Tonga (Chitonga)
+   - Lozi (Silozi)
+2. The user's active/preferred language is: {$targetLang}.
+3. If the user addresses you in Bemba, Nyanja, Tonga, or Lozi, OR if their preferred language is not English ({$targetLang}), respond with sisterly warmth, fluency, and clinical accuracy in that language!
+4. If they write in English, respond in English, but welcome them to use Bemba, Nyanja, Tonga, or Lozi anytime.
+
+CULTURAL TONE & ADOLESCENT HEALTH DIGNITY:
 - Speak with warm, reassuring, sisterly empathy, free of judgment or stigma.
 - Explain terms clearly and simply (suitable for adolescents and young women in Zambia).
 - Emphasize that menstruation is completely natural, normal, and nothing to feel ashamed of.

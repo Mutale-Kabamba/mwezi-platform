@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
+import { useTranslation } from '@/i18n/LanguageContext';
 import {
     Sparkles,
     Send,
@@ -212,6 +213,7 @@ export default function LunaChat({
     messages: initialMessages = [],
     suggestedPrompts = []
 }) {
+    const { t, locale } = useTranslation();
     const [messages, setMessages] = useState(initialMessages);
     const [inputText, setInputText] = useState('');
     const [isListening, setIsListening] = useState(false);
@@ -283,6 +285,7 @@ export default function LunaChat({
                 body: JSON.stringify({
                     message: text,
                     is_ephemeral: isEphemeral,
+                    locale: locale,
                 }),
             });
 
@@ -331,21 +334,21 @@ export default function LunaChat({
 
             <div className="flex flex-col h-full w-full min-w-0 overflow-hidden">
 
-                {/* 1. HEALTHCARE DISCLAIMER & PRIVACY PILL BAR */}
-                <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2 px-3 shadow-2xs border border-rose-150/80 flex items-center justify-between text-xs w-full min-w-0 shrink-0 mb-2 gap-2">
-                    <div className="flex items-center space-x-2 text-slate-600 min-w-0 flex-1">
+                {/* 1. HEALTHCARE DISCLAIMER & PRIVACY PILL BAR (Clean, Non-Clipping) */}
+                <div className="bg-white/95 backdrop-blur-md rounded-2xl py-1.5 px-3 shadow-2xs border border-rose-150/80 flex items-center justify-between text-xs w-full min-w-0 shrink-0 mb-2 gap-2">
+                    <div className="flex items-center space-x-1.5 text-slate-600 min-w-0 flex-1">
                         <div className="w-5 h-5 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
                             <Sparkles className="w-3 h-3" />
                         </div>
-                        <span className="text-[11px] font-medium text-slate-600 leading-tight">
-                            Certified health guidance • Not a medical diagnosis
+                        <span className="text-[10px] sm:text-[11px] font-medium text-slate-600 leading-tight truncate">
+                            {t('luna_disclaimer', 'Certified health guidance • Not medical diagnosis')}
                         </span>
                     </div>
 
                     <div className="shrink-0">
-                        <span className="inline-flex items-center space-x-1 text-[10px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-bold border border-emerald-200/50">
+                        <span className="inline-flex items-center space-x-1 text-[9.5px] sm:text-[10px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-bold border border-emerald-200/50">
                             <Lock className="w-2.5 h-2.5 text-emerald-600" />
-                            <span>Encrypted</span>
+                            <span>{t('luna_encrypted', 'Private & Encrypted')}</span>
                         </span>
                     </div>
                 </div>
@@ -358,9 +361,11 @@ export default function LunaChat({
                                 <Sparkles className="w-4 h-4" />
                             </div>
                             <div className="bg-white p-3.5 rounded-2xl rounded-tl-xs text-xs text-slate-800 leading-relaxed shadow-2xs border border-rose-100/90 flex-1 min-w-0">
-                                <p className="font-bold text-rose-700 mb-1">Hello, I'm Luna!</p>
+                                <p className="font-bold text-rose-700 mb-1">
+                                    {t('luna_welcome_title', "Hello, I'm Luna!")}
+                                </p>
                                 <p className="text-slate-600">
-                                    I'm your private, judgment-free companion. You can ask me anything about period pain, cycle irregularities, washing and sun-drying reusable pads, or finding free pads in Zambia. What's on your mind today?
+                                    {t('luna_welcome_desc', "I'm your private, judgment-free companion. You can ask me anything about period pain, cycle irregularities, washing and sun-drying reusable pads, or finding free pads in Zambia. What's on your mind today?")}
                                 </p>
                             </div>
                         </div>
@@ -503,7 +508,7 @@ export default function LunaChat({
                                 value={inputText}
                                 onChange={(e) => setInputText(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                                placeholder="Ask Luna about cramps, flow, or pads..."
+                                placeholder={t('luna_input_placeholder', 'Ask Luna about cramps, flow, or pads...')}
                                 className="flex-1 min-w-0 border-0 focus:ring-0 text-xs px-2 py-1 placeholder-slate-400 font-sans bg-transparent"
                             />
 

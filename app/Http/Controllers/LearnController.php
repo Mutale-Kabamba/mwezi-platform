@@ -130,7 +130,7 @@ class LearnController extends Controller
             ]
         );
 
-        if ($request->header('X-Inertia')) {
+        if ($request->header('X-Inertia') || !$request->expectsJson()) {
             return back()->with('success', 'Progress updated.');
         }
 

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
 import MarkdownRenderer, { formatInlineText } from '@/Components/MarkdownRenderer';
+import { useTranslation } from '@/i18n/LanguageContext';
 import { 
     ArrowLeft, 
     CheckCircle2, 
@@ -13,6 +14,16 @@ import {
 } from 'lucide-react';
 
 export default function MythsFacts({ myths = [], currentLocale = 'en' }) {
+    const { locale, t } = useTranslation();
+
+    useEffect(() => {
+        if (locale && locale !== currentLocale) {
+            router.get(route('learn.myths'), {
+                locale: locale,
+            }, { preserveState: true, preserveScroll: true });
+        }
+    }, [locale]);
+
     // Array of revealed myth IDs
     const [flippedCards, setFlippedCards] = useState({});
 

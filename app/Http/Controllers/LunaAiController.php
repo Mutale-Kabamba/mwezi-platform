@@ -52,9 +52,17 @@ class LunaAiController extends Controller
         $validated = $request->validate([
             'message' => 'required|string|max:1000',
             'is_ephemeral' => 'nullable|boolean',
+            'locale' => 'nullable|string|in:en,bem,nya,toi,loz',
         ]);
 
         $user = $request->user();
+        $locale = $validated['locale'] ?? ($user->preferred_language ?? 'en');
+
+        // Sync preferred language if provided
+        if (!empty($validated['locale']) && $user->preferred_language !== $validated['locale']) {
+            $user->preferred_language = $validated['locale'];
+            $user->save();
+        }
 
         $conversation = LunaConversation::firstOrCreate(
             ['user_id' => $user->id],
@@ -69,8 +77,8 @@ class LunaAiController extends Controller
             'safety_flag' => 'none',
         ]);
 
-        // 2. Generate grounded response with LunaAiService
-        $aiResult = $this->lunaService->respond($validated['message'], $user->id);
+        // 2. Generate grounded response with LunaAiService (respecting active locale)
+        $aiResult = $this->lunaService->respond($validated['message'], $user->id, [], $locale);
 
         // 3. Save Luna response (field-level encrypted)
         $lunaMessage = LunaMessage::create([

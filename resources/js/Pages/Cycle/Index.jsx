@@ -29,7 +29,24 @@ export default function CycleIndex({
     // Helper to format dates cleanly (e.g. "Tue, 3 Nov 2026")
     const formatDisplayDate = (d) => {
         if (!d) return '';
-        const cleanStr = typeof d === 'string' ? d.split('T')[0] : d;
+        const cleanStr = typeof d === 'string' ? d.split('T')[0] : String(d);
+        if (cleanStr.includes('-')) {
+            const parts = cleanStr.split('-');
+            if (parts.length === 3) {
+                const year = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1;
+                const day = parseInt(parts[2], 10);
+                const dateObj = new Date(year, month, day);
+                if (!isNaN(dateObj.getTime())) {
+                    return dateObj.toLocaleDateString('en-GB', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    });
+                }
+            }
+        }
         const dateObj = new Date(cleanStr);
         if (isNaN(dateObj.getTime())) return cleanStr;
         return dateObj.toLocaleDateString('en-GB', {
@@ -382,11 +399,11 @@ export default function CycleIndex({
                 </div>
             </div>
 
-            {/* DAILY LOGGER NATIVE BOTTOM SHEET */}
+            {/* DAILY LOGGER NATIVE BOTTOM SHEET (Contained within mobile mockup) */}
             {showLoggerModal && (
-                <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/60 backdrop-blur-xs p-0 animate-fadeIn">
+                <div className="absolute inset-0 z-50 flex items-end justify-center bg-slate-900/60 backdrop-blur-xs p-0 animate-fadeIn rounded-b-[40px] overflow-hidden">
                     <div 
-                        className="fixed inset-0 bg-transparent"
+                        className="absolute inset-0 bg-transparent"
                         onClick={() => setShowLoggerModal(false)}
                     />
                     <div className="relative bg-white w-full rounded-t-[32px] max-h-[88%] overflow-y-auto p-5 shadow-2xl space-y-4 border-t border-rose-100 hide-scrollbar z-10">
@@ -542,9 +559,9 @@ export default function CycleIndex({
 
             {/* EXPORT HEALTHCARE SUMMARY SHEET */}
             {showExportModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fadeIn">
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fadeIn rounded-[40px] overflow-hidden">
                     <div 
-                        className="fixed inset-0 bg-transparent"
+                        className="absolute inset-0 bg-transparent"
                         onClick={() => setShowExportModal(false)}
                     />
                     <div className="relative bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-rose-100 z-10">
