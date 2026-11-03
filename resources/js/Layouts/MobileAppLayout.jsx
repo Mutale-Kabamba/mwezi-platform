@@ -285,39 +285,41 @@ export default function MobileAppLayout({
                         {/* 3. NATIVE SCROLLABLE APP BODY */}
                         <main className={`flex-1 min-h-0 w-full min-w-0 overflow-x-hidden ${
                             fullHeight
-                                ? 'flex flex-col overflow-hidden px-3 pt-2 pb-2'
-                                : 'overflow-y-auto px-4 py-4 hide-scrollbar'
+                                ? `flex flex-col overflow-hidden px-3 pt-2 ${showNav ? 'pb-20' : 'pb-2'}`
+                                : `overflow-y-auto px-4 pt-4 hide-scrollbar ${showNav ? 'pb-24' : 'pb-4'}`
                         }`}>
                             {children}
                         </main>
 
-                        {/* 4. NATIVE DOCKED BOTTOM TAB BAR */}
+                        {/* 4. NATIVE FLOATING SEMI-GLASS TAB BAR */}
                         {showNav && (
-                            <nav className="shrink-0 bg-white/95 backdrop-blur-2xl border-t border-rose-100/80 px-2 py-2 flex items-center justify-around shadow-[0_-8px_25px_rgba(112,38,56,0.06)] z-40">
-                                {navItems.map((item) => {
-                                    const Icon = item.icon;
-                                    const isActive = currentUrl === item.match || currentUrl.startsWith(item.match + '/');
+                            <div className="absolute bottom-2.5 inset-x-3 z-40 pointer-events-none">
+                                <nav className="pointer-events-auto bg-white/75 backdrop-blur-2xl border border-white/80 ring-1 ring-rose-200/50 shadow-[0_12px_36px_-6px_rgba(112,38,56,0.18),0_4px_16px_rgba(0,0,0,0.04)] rounded-full px-1.5 py-1.5 flex items-center justify-around">
+                                    {navItems.map((item) => {
+                                        const Icon = item.icon;
+                                        const isActive = currentUrl === item.match || currentUrl.startsWith(item.match + '/');
 
-                                    return (
-                                        <Link
-                                            key={item.name}
-                                            href={item.href}
-                                            className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all duration-150 active:scale-90 ${isActive
-                                                ? 'text-rose-600 font-bold'
-                                                : 'text-slate-400 hover:text-slate-600 font-medium'
-                                                }`}
-                                        >
-                                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition ${isActive ? 'bg-rose-50 text-rose-600 shadow-xs' : ''
-                                                }`}>
-                                                <Icon className={`w-4 h-4 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
-                                            </div>
-                                            <span className="text-[10px] tracking-tight mt-0.5">
-                                                {item.name}
-                                            </span>
-                                        </Link>
-                                    );
-                                })}
-                            </nav>
+                                        return (
+                                            <Link
+                                                key={item.name}
+                                                href={item.href}
+                                                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-full transition-all duration-200 active:scale-90 ${isActive
+                                                    ? 'text-rose-600 font-bold'
+                                                    : 'text-slate-400 hover:text-slate-600 font-medium'
+                                                    }`}
+                                            >
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isActive ? 'bg-rose-50/90 text-rose-600 shadow-2xs scale-105' : ''
+                                                    }`}>
+                                                    <Icon className={`w-4 h-4 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
+                                                </div>
+                                                <span className="text-[10px] tracking-tight mt-0.5 leading-none">
+                                                    {item.name}
+                                                </span>
+                                            </Link>
+                                        );
+                                    })}
+                                </nav>
+                            </div>
                         )}
                     </>
                 )}
