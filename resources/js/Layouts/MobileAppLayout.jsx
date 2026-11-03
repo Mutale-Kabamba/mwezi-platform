@@ -127,7 +127,7 @@ export default function MobileAppLayout({
         <div className="min-h-screen bg-gradient-to-tr from-[#FBECEF] via-[#F4F1F4] to-[#EBF3F5] flex items-center justify-center p-0 sm:py-6 sm:px-4 font-sans selection:bg-rose-100 selection:text-rose-900">
 
             {/* NATIVE APP SHELL (Mobile Frame on Desktop, Edge-to-Edge on Handheld) */}
-            <div className="w-full max-w-[440px] h-screen sm:h-[860px] sm:max-h-[92vh] bg-[#FAF6F7] sm:rounded-[48px] shadow-[0_20px_60px_-15px_rgba(112,38,56,0.18)] sm:border-[8px] sm:border-slate-900/90 sm:ring-1 sm:ring-black/10 relative flex flex-col overflow-hidden">
+            <div className="w-full max-w-[440px] h-screen sm:h-[860px] sm:max-h-[92vh] bg-[#FAF6F7] sm:rounded-[48px] shadow-[0_20px_60px_-15px_rgba(112,38,56,0.18)] sm:border-[8px] sm:border-slate-900/90 sm:ring-1 sm:ring-black/10 relative flex flex-col overflow-hidden [transform:translateZ(0)]">
 
                 {/* 1. NATIVE SYSTEM STATUS BAR (Clock, Dynamic Notch, Battery) */}
                 <div className="w-full bg-white/90 backdrop-blur-md px-6 pt-3 pb-1 flex items-center justify-between text-slate-800 text-xs font-semibold z-50 select-none border-b border-rose-100/40 shrink-0">
@@ -229,17 +229,15 @@ export default function MobileAppLayout({
             <div className="absolute bottom-0.5 inset-x-0 h-1 flex justify-center pointer-events-none z-50">
                 <div className="w-32 h-1 bg-slate-300 rounded-full opacity-60" />
             </div>
-        </div>
 
-            {/* NATIVE SLIDE-IN APP DRAWER */ }
-    {
-        drawerOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-                <div
-                    className="fixed inset-0"
-                    onClick={() => setDrawerOpen(false)}
-                />
-                <div className="relative w-full max-w-[440px] h-full sm:h-[88vh] bg-white sm:rounded-[44px] shadow-2xl p-5 flex flex-col justify-between z-10 overflow-y-auto border border-rose-100 hide-scrollbar">
+            {/* NATIVE SLIDE-IN APP DRAWER */}
+            {drawerOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-0 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+                    <div
+                        className="fixed inset-0 bg-transparent"
+                        onClick={() => setDrawerOpen(false)}
+                    />
+                    <div className="relative w-full h-full bg-white p-5 flex flex-col justify-between z-10 overflow-y-auto border-r border-rose-100 hide-scrollbar">
                     <div>
                         {/* Drawer User Header */}
                         <div className="flex items-center justify-between pb-4 border-b border-rose-100 mb-4">
@@ -350,62 +348,66 @@ export default function MobileAppLayout({
         )
     }
 
-    {/* EMERGENCY HELPLINES NATIVE MODAL */ }
-    {
-        showEmergencyModal && (
-            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-                <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-rose-100">
-                    <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                        <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
-                                <PhoneCall className="w-4 h-4" />
+            {/* EMERGENCY HELPLINES NATIVE MODAL */}
+            {showEmergencyModal && (
+                <div className="fixed inset-0 z-50 flex items-end justify-center p-0 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+                    <div
+                        className="fixed inset-0 bg-transparent"
+                        onClick={() => setShowEmergencyModal(false)}
+                    />
+                    <div className="relative bg-white rounded-t-[32px] w-full p-6 shadow-2xl space-y-4 border-t border-rose-100 z-10">
+                        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-1" />
+                        <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                            <div className="flex items-center space-x-2">
+                                <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+                                    <PhoneCall className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-sm text-slate-900">Emergency Support (Zambia)</h3>
+                                    <p className="text-[10px] text-slate-500">Free, confidential 24/7 hotlines</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-bold text-sm text-slate-900">Emergency Support (Zambia)</h3>
-                                <p className="text-[10px] text-slate-500">Free, confidential 24/7 hotlines</p>
-                            </div>
+                            <button onClick={() => setShowEmergencyModal(false)} className="text-slate-400 p-1">
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
-                        <button onClick={() => setShowEmergencyModal(false)} className="text-slate-400 p-1">
-                            <X className="w-5 h-5" />
+
+                        <div className="space-y-2.5">
+                            <a
+                                href="tel:116"
+                                className="block p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/70 shadow-xs"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold text-slate-800">Childline / Lifeline Zambia</span>
+                                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">116</span>
+                                </div>
+                                <div className="text-sm font-extrabold text-emerald-700 mt-0.5">Toll-Free 116</div>
+                                <div className="text-[10px] text-slate-500">24/7 reproductive & psychosocial support</div>
+                            </a>
+
+                            <a
+                                href="tel:992"
+                                className="block p-3.5 rounded-2xl bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200/70 shadow-xs"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold text-slate-800">National GBV Hotline</span>
+                                    <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">992</span>
+                                </div>
+                                <div className="text-sm font-extrabold text-rose-700 mt-0.5">Toll-Free 992</div>
+                                <div className="text-[10px] text-slate-500">Immediate emergency intervention</div>
+                            </a>
+                        </div>
+
+                        <button
+                            onClick={() => setShowEmergencyModal(false)}
+                            className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-2xl transition"
+                        >
+                            Close
                         </button>
                     </div>
-
-                    <div className="space-y-2.5">
-                        <a
-                            href="tel:116"
-                            className="block p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/70 shadow-xs"
-                        >
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-slate-800">Childline / Lifeline Zambia</span>
-                                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">116</span>
-                            </div>
-                            <div className="text-sm font-extrabold text-emerald-700 mt-0.5">Toll-Free 116</div>
-                            <div className="text-[10px] text-slate-500">24/7 reproductive & psychosocial support</div>
-                        </a>
-
-                        <a
-                            href="tel:992"
-                            className="block p-3.5 rounded-2xl bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200/70 shadow-xs"
-                        >
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-slate-800">National GBV Hotline</span>
-                                <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">992</span>
-                            </div>
-                            <div className="text-sm font-extrabold text-rose-700 mt-0.5">Toll-Free 992</div>
-                            <div className="text-[10px] text-slate-500">Immediate emergency intervention</div>
-                        </a>
-                    </div>
-
-                    <button
-                        onClick={() => setShowEmergencyModal(false)}
-                        className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-2xl transition"
-                    >
-                        Close
-                    </button>
                 </div>
+            )}
             </div>
-        )
-    }
-        </div >
-                    );
+        </div>
+    );
 }

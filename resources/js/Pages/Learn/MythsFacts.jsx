@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
+import MarkdownRenderer, { formatInlineText } from '@/Components/MarkdownRenderer';
 import { 
     ArrowLeft, 
     CheckCircle2, 
@@ -88,7 +89,7 @@ export default function MythsFacts({ myths = [], currentLocale = 'en' }) {
                                 {!isFlipped ? (
                                     <div>
                                         <h3 className="font-heading font-bold text-sm text-gray-900 mb-2 leading-snug">
-                                            "{item.myth_statement}"
+                                            "{formatInlineText(item.myth_statement)}"
                                         </h3>
                                         <p className="text-[11px] text-gray-500 italic">
                                             Have you heard this before? Tap anywhere on this card to bust this myth!
@@ -99,9 +100,9 @@ export default function MythsFacts({ myths = [], currentLocale = 'en' }) {
                                         <h3 className="font-heading font-bold text-sm text-emerald-950 mb-1 leading-snug">
                                             The Scientific Truth:
                                         </h3>
-                                        <p className="text-xs text-emerald-900 leading-relaxed font-body">
-                                            {item.fact_explanation}
-                                        </p>
+                                        <div className="text-xs text-emerald-900 leading-relaxed font-body">
+                                            <MarkdownRenderer content={item.fact_explanation} />
+                                        </div>
                                         <div className="pt-2 flex items-center space-x-1.5 text-[10px] text-emerald-700 font-semibold">
                                             <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                                             <span>Clinically verified for adolescent health dignity</span>

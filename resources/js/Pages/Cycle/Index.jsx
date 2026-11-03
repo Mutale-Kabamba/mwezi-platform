@@ -26,6 +26,20 @@ export default function CycleIndex({
     availableSymptoms = [], 
     availableMoods = [] 
 }) {
+    // Helper to format dates cleanly (e.g. "Tue, 3 Nov 2026")
+    const formatDisplayDate = (d) => {
+        if (!d) return '';
+        const cleanStr = typeof d === 'string' ? d.split('T')[0] : d;
+        const dateObj = new Date(cleanStr);
+        if (isNaN(dateObj.getTime())) return cleanStr;
+        return dateObj.toLocaleDateString('en-GB', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        });
+    };
+
     // Current viewed month state
     const today = new Date();
     const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -37,7 +51,7 @@ export default function CycleIndex({
     const [showExportModal, setShowExportModal] = useState(false);
 
     // Find existing log for selected date
-    const selectedLog = logs.find(l => l.logged_date === selectedDate);
+    const selectedLog = logs.find(l => (l.logged_date ? l.logged_date.split('T')[0] : '') === selectedDate);
 
     // Form for logging
     const { data, setData, post, processing, reset } = useForm({
@@ -50,10 +64,11 @@ export default function CycleIndex({
     });
 
     const openLoggerForDate = (dateString) => {
-        setSelectedDate(dateString);
-        const logForDay = logs.find(l => l.logged_date === dateString);
+        const normalized = typeof dateString === 'string' ? dateString.split('T')[0] : dateString;
+        setSelectedDate(normalized);
+        const logForDay = logs.find(l => (l.logged_date ? l.logged_date.split('T')[0] : '') === normalized);
         setData({
-            logged_date: dateString,
+            logged_date: normalized,
             flow_intensity: logForDay ? logForDay.flow_intensity : 'none',
             symptoms: logForDay && logForDay.symptoms ? logForDay.symptoms : [],
             moods: logForDay && logForDay.moods ? logForDay.moods : [],
@@ -321,7 +336,7 @@ export default function CycleIndex({
                     className="w-full py-3.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold rounded-3xl text-xs shadow-md shadow-rose-200/60 transition flex items-center justify-center space-x-2"
                 >
                     <Plus className="w-4 h-4" />
-                    <span>{selectedLog ? `Update Record for ${selectedDate}` : `Log Symptoms for ${selectedDate}`}</span>
+                    <span>{selectedLog ? `Update Record for ${formatDisplayDate(selectedDate)}` : `Log Symptoms for ${formatDisplayDate(selectedDate)}`}</span>
                 </button>
 
                 {/* 4. RECENT LOGS LIST */}
@@ -348,7 +363,7 @@ export default function CycleIndex({
                                             <Droplet className="w-4 h-4 text-rose-600" />
                                         </div>
                                         <div>
-                                            <p className="text-xs font-bold text-slate-800">{log.logged_date}</p>
+                                            <p className="text-xs font-bold text-slate-800">{formatDisplayDate(log.logged_date)}</p>
                                             <p className="text-[10px] text-slate-500 capitalize">
                                                 Flow: {log.flow_intensity} • {log.pad_changes_count || 0} pads
                                             </p>
@@ -369,20 +384,25 @@ export default function CycleIndex({
 
             {/* DAILY LOGGER NATIVE BOTTOM SHEET */}
             {showLoggerModal && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4 animate-fadeIn">
-                    <div className="bg-white w-full max-w-[440px] rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto p-5 shadow-2xl space-y-4 border border-rose-100 hide-scrollbar">
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/60 backdrop-blur-xs p-0 animate-fadeIn">
+                    <div 
+                        className="fixed inset-0 bg-transparent"
+                        onClick={() => setShowLoggerModal(false)}
+                    />
+                    <div className="relative bg-white w-full rounded-t-[32px] max-h-[88%] overflow-y-auto p-5 shadow-2xl space-y-4 border-t border-rose-100 hide-scrollbar z-10">
                         
                         {/* Sheet Handle & Header */}
-                        <div className="w-12 h-1 bg-slate-200 rounded-full mx-auto mb-1 sm:hidden" />
+                        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-1" />
                         
                         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                             <div>
                                 <h3 className="font-bold text-base text-slate-900">Log Symptoms & Flow</h3>
-                                <p className="text-xs text-slate-500">{data.logged_date}</p>
+                                <p className="text-xs text-rose-600 font-semibold">{formatDisplayDate(data.logged_date)}</p>
                             </div>
                             <button 
+                                type="button"
                                 onClick={() => setShowLoggerModal(false)} 
-                                className="p-1 rounded-full text-slate-400 hover:text-slate-600"
+                                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -522,8 +542,12 @@ export default function CycleIndex({
 
             {/* EXPORT HEALTHCARE SUMMARY SHEET */}
             {showExportModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fadeIn">
-                    <div className="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-rose-100">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fadeIn">
+                    <div 
+                        className="fixed inset-0 bg-transparent"
+                        onClick={() => setShowExportModal(false)}
+                    />
+                    <div className="relative bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-rose-100 z-10">
                         <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                             <div className="flex items-center space-x-2">
                                 <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">

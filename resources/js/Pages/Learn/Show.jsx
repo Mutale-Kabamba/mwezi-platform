@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
+import MarkdownRenderer from '@/Components/MarkdownRenderer';
 import { 
     ArrowLeft, 
     CheckCircle, 
@@ -181,9 +182,9 @@ export default function LearnShow({
                     </div>
                 )}
 
-                {/* Article Body Content */}
-                <div className="bg-white rounded-[20px] p-5 shadow-sm border border-gray-100 prose prose-sm max-w-none text-xs text-gray-800 leading-relaxed space-y-3 whitespace-pre-line font-body">
-                    {body}
+                {/* Article Body Content (Richly Formatted Typography) */}
+                <div className="bg-white rounded-3xl p-5 shadow-xs border border-rose-150/80">
+                    <MarkdownRenderer content={body} />
                 </div>
 
                 {/* Mark as Finished CTA */}

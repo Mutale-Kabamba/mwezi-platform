@@ -575,8 +575,12 @@ export default function SponsorPortal({ campaign, recentDonations = [], hubs = [
 
             {/* LIVE LENCO PAYMENT BOTTOM-SHEET / MODAL */}
             {activePayment && (
-                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all">
-                    <div className="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-4 border border-slate-100 animate-in slide-in-from-bottom duration-300">
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end justify-center p-0 transition-all animate-fadeIn">
+                    <div 
+                        className="fixed inset-0 bg-transparent"
+                        onClick={() => setActivePayment(null)}
+                    />
+                    <div className="relative bg-white w-full rounded-t-[32px] max-h-[88%] overflow-y-auto p-5 shadow-2xl space-y-4 border-t border-slate-100 animate-in slide-in-from-bottom duration-300 z-10">
                         
                         {/* Header */}
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100">

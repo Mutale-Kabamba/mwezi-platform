@@ -64,7 +64,7 @@ export default function Login({ status, canResetPassword }) {
             <Head title="Sign In - Mwezi" />
 
             {/* NATIVE APP FRAME (Matches Reference Screenshot Layout) */}
-            <div className="w-full max-w-[420px] h-screen sm:h-[840px] sm:max-h-[92vh] bg-white sm:rounded-[44px] shadow-[0_25px_70px_-15px_rgba(112,38,56,0.22)] sm:border-[8px] sm:border-slate-900/90 sm:ring-1 sm:ring-black/10 relative flex flex-col justify-between overflow-hidden">
+            <div className="w-full max-w-[420px] h-screen sm:h-[840px] sm:max-h-[92vh] bg-white sm:rounded-[44px] shadow-[0_25px_70px_-15px_rgba(112,38,56,0.22)] sm:border-[8px] sm:border-slate-900/90 sm:ring-1 sm:ring-black/10 relative flex flex-col justify-between overflow-hidden [transform:translateZ(0)]">
                 
                 {/* 1. TOP SOLID COLOR LOGO & NOTIFICATION BAR SECTION (With sleek rounded bottom corners) */}
                 <div className="bg-[#BE123C] text-white shrink-0 relative pt-3 pb-8 px-5 select-none flex flex-col justify-between rounded-b-[32px] shadow-md shadow-rose-950/15 z-20">
@@ -247,50 +247,54 @@ export default function Login({ status, canResetPassword }) {
                         <div className="w-32 h-1 bg-slate-300 rounded-full opacity-60 mx-auto" />
                     </div>
                 </div>
-            </div>
 
-            {/* Quick Demo Login Modal */}
-            {showDemoModal && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
-                    <div className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl border border-rose-100 space-y-3">
-                        <div className="flex justify-between items-center border-b border-rose-100 pb-2.5">
-                            <div className="flex items-center space-x-2">
-                                <Sparkles className="w-4 h-4 text-rose-600" />
-                                <h3 className="font-bold text-sm text-slate-900">Select Demo Account</h3>
-                            </div>
-                            <button
-                                onClick={() => setShowDemoModal(false)}
-                                className="text-slate-400 hover:text-slate-600 text-sm font-bold p-1"
-                            >
-                                ✕
-                            </button>
-                        </div>
-
-                        <div className="space-y-2">
-                            {demoAccounts.map((account, idx) => (
+                {/* Quick Demo Login Modal */}
+                {showDemoModal && (
+                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+                        <div
+                            className="fixed inset-0 bg-transparent"
+                            onClick={() => setShowDemoModal(false)}
+                        />
+                        <div className="relative bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl border border-rose-100 space-y-3 z-10">
+                            <div className="flex justify-between items-center border-b border-rose-100 pb-2.5">
+                                <div className="flex items-center space-x-2">
+                                    <Sparkles className="w-4 h-4 text-rose-600" />
+                                    <h3 className="font-bold text-sm text-slate-900">Select Demo Account</h3>
+                                </div>
                                 <button
-                                    key={idx}
-                                    type="button"
-                                    onClick={() => selectDemo(account.email)}
-                                    className="w-full text-left p-2.5 rounded-2xl border border-rose-100 hover:border-rose-400 hover:bg-rose-50/70 transition flex items-center justify-between group"
+                                    onClick={() => setShowDemoModal(false)}
+                                    className="text-slate-400 hover:text-slate-600 text-sm font-bold p-1"
                                 >
-                                    <div>
-                                        <p className="font-bold text-xs text-slate-800 group-hover:text-rose-700">{account.label}</p>
-                                        <p className="text-[10px] text-slate-500">{account.desc} • {account.email}</p>
-                                    </div>
-                                    <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/50">
-                                        Use
-                                    </span>
+                                    ✕
                                 </button>
-                            ))}
-                        </div>
+                            </div>
 
-                        <div className="pt-1 text-center">
-                            <span className="text-[10px] text-slate-400">All demo accounts share password: <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-slate-600">password</code></span>
+                            <div className="space-y-2">
+                                {demoAccounts.map((account, idx) => (
+                                    <button
+                                        key={idx}
+                                        type="button"
+                                        onClick={() => selectDemo(account.email)}
+                                        className="w-full text-left p-2.5 rounded-2xl border border-rose-100 hover:border-rose-400 hover:bg-rose-50/70 transition flex items-center justify-between group"
+                                    >
+                                        <div>
+                                            <p className="font-bold text-xs text-slate-800 group-hover:text-rose-700">{account.label}</p>
+                                            <p className="text-[10px] text-slate-500">{account.desc} • {account.email}</p>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/50">
+                                            Use
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="pt-1 text-center">
+                                <span className="text-[10px] text-slate-400">All demo accounts share password: <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-slate-600">password</code></span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }
