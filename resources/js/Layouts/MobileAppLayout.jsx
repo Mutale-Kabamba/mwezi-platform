@@ -188,11 +188,13 @@ export default function MobileAppLayout({
                 </header>
 
                 {/* 3. NATIVE SCROLLABLE APP BODY */}
-                ? 'flex flex-col overflow-hidden px-3 pt-2 pb-2'
-                : 'overflow-y-auto px-4 py-4 hide-scrollbar'
-                                    }`}>
-                {children}
-            </main>
+                <main className={`flex-1 min-h-0 w-full min-w-0 overflow-x-hidden ${
+                    fullHeight
+                        ? 'flex flex-col overflow-hidden px-3 pt-2 pb-2'
+                        : 'overflow-y-auto px-4 py-4 hide-scrollbar'
+                }`}>
+                    {children}
+                </main>
 
             {/* 4. NATIVE DOCKED BOTTOM TAB BAR */}
             {showNav && (
