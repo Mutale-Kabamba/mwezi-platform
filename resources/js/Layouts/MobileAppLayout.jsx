@@ -18,7 +18,8 @@ import {
     CheckCircle2,
     ChevronRight,
     Wifi,
-    BatteryMedium
+    BatteryMedium,
+    ArrowLeft
 } from 'lucide-react';
 
 export default function MobileAppLayout({
@@ -38,6 +39,7 @@ export default function MobileAppLayout({
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [showEmergencyModal, setShowEmergencyModal] = useState(false);
     const [currentTime, setCurrentTime] = useState('09:41');
+    const [quizAnswer, setQuizAnswer] = useState(null);
 
     // Update digital clock for native status bar
     useEffect(() => {
@@ -62,44 +64,6 @@ export default function MobileAppLayout({
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
-
-    // Discreet Mode disguised view (Study / Grade 11 Biology Notes)
-    if (discreetMode) {
-        return (
-            <div className="min-h-screen bg-slate-100 flex items-center justify-center p-0 sm:p-4 font-sans">
-                <div className="w-full max-w-[440px] min-h-screen sm:min-h-[850px] sm:max-h-[92vh] bg-white sm:rounded-[44px] shadow-2xl p-6 flex flex-col justify-between overflow-y-auto border border-slate-200">
-                    <div>
-                        <div className="flex justify-between items-center border-b border-slate-200 pb-3 mb-5">
-                            <div>
-                                <span className="text-[10px] font-bold tracking-wider uppercase text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full">
-                                    Secondary School Revision
-                                </span>
-                                <h1 className="text-lg font-bold text-slate-900 mt-1.5">Grade 11 Biology Notes</h1>
-                                <p className="text-xs text-slate-500">Unit 4: Plant Cell Respiration</p>
-                            </div>
-                            <button
-                                onClick={() => setDiscreetMode(false)}
-                                className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-xs rounded-xl text-white font-medium shadow-xs transition"
-                            >
-                                Restore
-                            </button>
-                        </div>
-                        <div className="space-y-3.5 text-xs leading-relaxed text-slate-700">
-                            <p><strong>1. Chloroplast Structure:</strong> Chloroplasts contain chlorophyll within thylakoid membranes where light-dependent reactions take place.</p>
-                            <p><strong>2. Calvin Cycle:</strong> Carbon dioxide is fixed into 3-carbon sugars in the stroma using ATP and NADPH produced during light reactions.</p>
-                            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
-                                <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold block mb-0.5">Weekly Assignment</span>
-                                Complete revision questions 4.1 to 4.5 by Friday at 17:00.
-                            </div>
-                        </div>
-                    </div>
-                    <div className="pt-4 text-center border-t border-slate-100">
-                        <span className="text-[10px] text-slate-400">Class notes saved locally • Offline ready</span>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     const navItems = [
         { name: 'Home', href: '/dashboard', icon: Home, match: '/dashboard' },
@@ -145,85 +109,218 @@ export default function MobileAppLayout({
                     </div>
                 </div>
 
-                {/* 2. NATIVE APP TOP BAR */}
-                <header className="bg-white/90 backdrop-blur-xl px-4 py-2.5 border-b border-rose-100/70 flex items-center justify-between sticky top-0 z-40 shadow-[0_2px_12px_rgba(112,38,56,0.03)] shrink-0">
-                    {/* Left: Brand Icon + Title */}
-                    <Link href="/dashboard" className="flex items-center space-x-2.5 group">
-                        <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-white shadow-xs group-active:scale-95 transition">
-                            <span className="text-xs">🌙</span>
-                        </div>
-                        <div>
-                            <span className="font-extrabold text-base text-slate-900 tracking-tight leading-none block">
-                                {title}
-                            </span>
-                            <span className="text-[10px] text-slate-500 font-medium block truncate max-w-[170px] leading-tight">
-                                {subtitle}
-                            </span>
-                        </div>
-                    </Link>
-
-                    {/* Right: Action Button, Quick Exit & Menu Trigger */}
-                    <div className="flex items-center space-x-1.5">
-                        {actionButton}
-
-                        {/* Discreet Safety Mode Trigger */}
-                        <button
-                            onClick={() => setDiscreetMode(true)}
-                            title="Discreet Mode / Quick Disguise (ESC)"
-                            className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/50 flex items-center justify-center shadow-xs transition active:scale-90"
-                            aria-label="Quick Exit"
-                        >
-                            <Shield className="w-4 h-4 text-rose-600" />
-                        </button>
-
-                        {/* Native Drawer Menu Trigger */}
-                        <button
-                            onClick={() => setDrawerOpen(true)}
-                            aria-label="Open App Menu"
-                            className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition active:scale-90"
-                        >
-                            <Menu className="w-4 h-4" />
-                        </button>
-                    </div>
-                </header>
-
-                {/* 3. NATIVE SCROLLABLE APP BODY */}
-                <main className={`flex-1 min-h-0 w-full min-w-0 overflow-x-hidden ${
-                    fullHeight
-                        ? 'flex flex-col overflow-hidden px-3 pt-2 pb-2'
-                        : 'overflow-y-auto px-4 py-4 hide-scrollbar'
-                }`}>
-                    {children}
-                </main>
-
-            {/* 4. NATIVE DOCKED BOTTOM TAB BAR */}
-            {showNav && (
-                <nav className="shrink-0 bg-white/95 backdrop-blur-2xl border-t border-rose-100/80 px-2 py-2 flex items-center justify-around shadow-[0_-8px_25px_rgba(112,38,56,0.06)] z-40">
-                    {navItems.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = currentUrl === item.match || currentUrl.startsWith(item.match + '/');
-
-                        return (
-                            <Link
-                                key={item.name}
-                                href={item.href}
-                                className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all duration-150 active:scale-90 ${isActive
-                                    ? 'text-rose-600 font-bold'
-                                    : 'text-slate-400 hover:text-slate-600 font-medium'
-                                    }`}
-                            >
-                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition ${isActive ? 'bg-rose-50 text-rose-600 shadow-xs' : ''
-                                    }`}>
-                                    <Icon className={`w-4 h-4 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
+                {discreetMode ? (
+                    /* DISCREET STUDY MODE SCREEN (Fully fits inside phone mockup, authentic school revision) */
+                    <div className="flex-1 flex flex-col min-h-0 bg-slate-50 text-slate-800 overflow-hidden font-sans">
+                        {/* Study App Top Bar */}
+                        <div className="bg-emerald-800 text-white px-4 py-2.5 flex items-center justify-between shadow-xs shrink-0">
+                            <div className="flex items-center space-x-2">
+                                <div className="w-7 h-7 rounded-lg bg-emerald-700 flex items-center justify-center text-white">
+                                    <BookOpen className="w-4 h-4" />
                                 </div>
-                                <span className="text-[10px] tracking-tight mt-0.5">
-                                    {item.name}
+                                <div>
+                                    <h2 className="font-bold text-xs leading-none">ECZ Revision Hub</h2>
+                                    <span className="text-[10px] text-emerald-200">Grade 11 Biology • Unit 4</span>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setDiscreetMode(false)}
+                                className="px-2.5 py-1 text-[11px] font-semibold bg-emerald-700/80 hover:bg-emerald-700 active:scale-95 text-emerald-100 hover:text-white rounded-lg transition flex items-center space-x-1"
+                                title="Exit study notes (ESC)"
+                            >
+                                <ArrowLeft className="w-3 h-3" />
+                                <span>Exit Notes</span>
+                            </button>
+                        </div>
+
+                        {/* Study Content Body */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3.5 hide-scrollbar">
+                            {/* Subject Banner */}
+                            <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
+                                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                    Syllabus Topic 4.2
                                 </span>
+                                <h1 className="font-bold text-sm text-slate-900 mt-1">
+                                    Plant Respiration & Photosynthesis
+                                </h1>
+                                <p className="text-[11px] text-slate-500 mt-0.5">
+                                    Term 2 Exam Preparation • Ministry of General Education Zambia
+                                </p>
+                            </div>
+
+                            {/* Core Notes */}
+                            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5 text-xs text-slate-700 leading-relaxed">
+                                <h3 className="font-bold text-xs text-slate-900 border-b border-slate-100 pb-1 flex items-center space-x-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                                    <span>Key Examination Concepts</span>
+                                </h3>
+
+                                <p>
+                                    <strong className="text-slate-900">1. Chloroplast Structure:</strong> Chloroplasts contain chlorophyll pigments situated within thylakoid membranes where light-dependent reactions take place.
+                                </p>
+
+                                <p>
+                                    <strong className="text-slate-900">2. Calvin Cycle (Dark Reactions):</strong> Carbon dioxide (CO₂) is fixed into 3-carbon sugars in the stroma using ATP and NADPH generated during the light phase.
+                                </p>
+
+                                <p>
+                                    <strong className="text-slate-900">3. Gas Exchange & Stomata:</strong> Specialized guard cells regulate transpiration and carbon dioxide intake while guarding against excessive water loss in arid environments.
+                                </p>
+                            </div>
+
+                            {/* Chemical Formula Callout */}
+                            <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3 text-xs">
+                                <span className="text-[10px] uppercase font-bold text-emerald-800 tracking-wider block mb-1">
+                                    Balanced Photosynthesis Equation
+                                </span>
+                                <div className="font-mono text-[11px] font-bold text-emerald-950 bg-white/80 p-2 rounded-xl text-center border border-emerald-200/60 shadow-2xs">
+                                    6CO₂ + 6H₂O + Light Energy ➔ C₆H₁₂O₆ + 6O₂
+                                </div>
+                            </div>
+
+                            {/* Interactive Revision Quiz */}
+                            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                        Quick Check Question
+                                    </span>
+                                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                        ECZ Past Paper
+                                    </span>
+                                </div>
+                                <p className="text-xs font-bold text-slate-800">
+                                    Which organelle is the primary site of aerobic cellular respiration in plant cells?
+                                </p>
+                                <div className="space-y-1.5 pt-1">
+                                    {[
+                                        { id: 'A', text: 'Ribosome' },
+                                        { id: 'B', text: 'Mitochondrion (Site of ATP synthesis)', correct: true },
+                                        { id: 'C', text: 'Golgi Apparatus' },
+                                        { id: 'D', text: 'Endoplasmic Reticulum' }
+                                    ].map((opt) => (
+                                        <button
+                                            key={opt.id}
+                                            type="button"
+                                            onClick={() => setQuizAnswer(opt.id)}
+                                            className={`w-full text-left p-2.5 rounded-xl text-xs font-medium transition flex items-center justify-between border ${
+                                                quizAnswer === opt.id
+                                                    ? opt.correct
+                                                        ? 'bg-emerald-50 border-emerald-400 text-emerald-900 font-bold'
+                                                        : 'bg-rose-50 border-rose-300 text-rose-900'
+                                                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                                            }`}
+                                        >
+                                            <span><strong className="mr-1.5">{opt.id}.</strong> {opt.text}</span>
+                                            {quizAnswer === opt.id && (
+                                                <span className={`text-[10px] font-bold ${opt.correct ? 'text-emerald-700' : 'text-rose-600'}`}>
+                                                    {opt.correct ? '✓ Correct' : '✕ Try Again'}
+                                                </span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Assignment Box */}
+                            <div className="p-3 bg-slate-100 rounded-2xl border border-slate-200 text-xs text-slate-700 flex items-start space-x-2.5">
+                                <div className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                                    !
+                                </div>
+                                <div>
+                                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Weekly Assignment</span>
+                                    <span>Complete revision questions 4.1 to 4.5 in textbook Chapter 4 by Friday 17:00.</span>
+                                </div>
+                            </div>
+
+                            <div className="text-center pt-2 pb-1">
+                                <span className="text-[10px] text-slate-400">Class notes saved locally • Offline ready • Press ESC to return</span>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {/* 2. NATIVE APP TOP BAR */}
+                        <header className="bg-white/90 backdrop-blur-xl px-4 py-2.5 border-b border-rose-100/70 flex items-center justify-between sticky top-0 z-40 shadow-[0_2px_12px_rgba(112,38,56,0.03)] shrink-0">
+                            {/* Left: Brand Icon + Title */}
+                            <Link href="/dashboard" className="flex items-center space-x-2.5 group">
+                                <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-white shadow-xs group-active:scale-95 transition">
+                                    <span className="text-xs">🌙</span>
+                                </div>
+                                <div>
+                                    <span className="font-extrabold text-base text-slate-900 tracking-tight leading-none block">
+                                        {title}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 font-medium block truncate max-w-[170px] leading-tight">
+                                        {subtitle}
+                                    </span>
+                                </div>
                             </Link>
-                        );
-                    })}
-                </nav>
-            )}
+
+                            {/* Right: Action Button, Quick Exit & Menu Trigger */}
+                            <div className="flex items-center space-x-1.5">
+                                {actionButton}
+
+                                {/* Discreet Safety Mode Trigger */}
+                                <button
+                                    onClick={() => setDiscreetMode(true)}
+                                    title="Discreet Mode / Quick Disguise (ESC)"
+                                    className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/50 flex items-center justify-center shadow-xs transition active:scale-90"
+                                    aria-label="Quick Exit"
+                                >
+                                    <Shield className="w-4 h-4 text-rose-600" />
+                                </button>
+
+                                {/* Native Drawer Menu Trigger */}
+                                <button
+                                    onClick={() => setDrawerOpen(true)}
+                                    aria-label="Open App Menu"
+                                    className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition active:scale-90"
+                                >
+                                    <Menu className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </header>
+
+                        {/* 3. NATIVE SCROLLABLE APP BODY */}
+                        <main className={`flex-1 min-h-0 w-full min-w-0 overflow-x-hidden ${
+                            fullHeight
+                                ? 'flex flex-col overflow-hidden px-3 pt-2 pb-2'
+                                : 'overflow-y-auto px-4 py-4 hide-scrollbar'
+                        }`}>
+                            {children}
+                        </main>
+
+                        {/* 4. NATIVE DOCKED BOTTOM TAB BAR */}
+                        {showNav && (
+                            <nav className="shrink-0 bg-white/95 backdrop-blur-2xl border-t border-rose-100/80 px-2 py-2 flex items-center justify-around shadow-[0_-8px_25px_rgba(112,38,56,0.06)] z-40">
+                                {navItems.map((item) => {
+                                    const Icon = item.icon;
+                                    const isActive = currentUrl === item.match || currentUrl.startsWith(item.match + '/');
+
+                                    return (
+                                        <Link
+                                            key={item.name}
+                                            href={item.href}
+                                            className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all duration-150 active:scale-90 ${isActive
+                                                ? 'text-rose-600 font-bold'
+                                                : 'text-slate-400 hover:text-slate-600 font-medium'
+                                                }`}
+                                        >
+                                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition ${isActive ? 'bg-rose-50 text-rose-600 shadow-xs' : ''
+                                                }`}>
+                                                <Icon className={`w-4 h-4 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
+                                            </div>
+                                            <span className="text-[10px] tracking-tight mt-0.5">
+                                                {item.name}
+                                            </span>
+                                        </Link>
+                                    );
+                                })}
+                            </nav>
+                        )}
+                    </>
+                )}
 
             {/* 5. NATIVE HOME INDICATOR BAR (iPhone Home Indicator) */}
             <div className="absolute bottom-0.5 inset-x-0 h-1 flex justify-center pointer-events-none z-50">

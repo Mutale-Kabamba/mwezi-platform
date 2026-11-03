@@ -216,3 +216,4 @@ export default function MarkdownRenderer({ content, className = '' }) {
         </div>
     );
 }
+
