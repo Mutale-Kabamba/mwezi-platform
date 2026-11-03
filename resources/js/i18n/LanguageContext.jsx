@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { usePage, router } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { translations, languages } from './translations';
 
 const LanguageContext = createContext({
@@ -9,10 +9,7 @@ const LanguageContext = createContext({
     languages: languages,
 });
 
-export function LanguageProvider({ children }) {
-    const page = usePage();
-    const userPreferred = page.props?.auth?.user?.preferred_language;
-
+export function LanguageProvider({ children, initialLocale = 'en' }) {
     const [locale, setLocaleState] = useState(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('mwezi_locale');
@@ -20,14 +17,14 @@ export function LanguageProvider({ children }) {
                 return saved;
             }
         }
-        return userPreferred && translations[userPreferred] ? userPreferred : 'en';
+        return initialLocale && translations[initialLocale] ? initialLocale : 'en';
     });
 
     useEffect(() => {
-        if (userPreferred && translations[userPreferred] && !localStorage.getItem('mwezi_locale')) {
-            setLocaleState(userPreferred);
+        if (initialLocale && translations[initialLocale] && !localStorage.getItem('mwezi_locale')) {
+            setLocaleState(initialLocale);
         }
-    }, [userPreferred]);
+    }, [initialLocale]);
 
     const setLocale = (newLocale) => {
         if (!translations[newLocale]) return;
@@ -36,14 +33,17 @@ export function LanguageProvider({ children }) {
             localStorage.setItem('mwezi_locale', newLocale);
         }
 
-        // If user is authenticated and language changed, persist to server
-        if (page.props?.auth?.user && page.props.auth.user.preferred_language !== newLocale) {
+        // Attempt persisting to user profile if logged in
+        try {
             router.patch(route('profile.privacy'), {
                 preferred_language: newLocale,
             }, {
                 preserveScroll: true,
                 preserveState: true,
+                onError: () => {},
             });
+        } catch (e) {
+            // Silently ignore when guest / unauthenticated
         }
     };
 
