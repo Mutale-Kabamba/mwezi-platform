@@ -63,8 +63,8 @@ export default function Register({ initialInviteCode = '' }) {
             {/* NATIVE APP FRAME (Matches Screen 3 Right in Reference) */}
             <div className="w-full max-w-[420px] h-screen sm:h-[840px] sm:max-h-[92vh] bg-white sm:rounded-[44px] shadow-[0_25px_70px_-15px_rgba(112,38,56,0.22)] sm:border-[8px] sm:border-slate-900/90 sm:ring-1 sm:ring-black/10 relative flex flex-col justify-between overflow-hidden">
                 
-                {/* 1. TOP SOLID COLOR LOGO & NOTIFICATION BAR SECTION */}
-                <div className="bg-[#BE123C] text-white shrink-0 relative pt-3 pb-8 px-5 select-none flex flex-col justify-between">
+                {/* 1. TOP SOLID COLOR LOGO & NOTIFICATION BAR SECTION (With sleek rounded bottom corners) */}
+                <div className="bg-[#BE123C] text-white shrink-0 relative pt-3 pb-8 px-5 select-none flex flex-col justify-between rounded-b-[32px] shadow-md shadow-rose-950/15 z-20">
                     
                     {/* Integrated Phone Notification Bar (Seamless Solid Background) */}
                     <div className="w-full px-1 pb-2 flex items-center justify-between text-xs font-semibold">
@@ -116,8 +116,8 @@ export default function Register({ initialInviteCode = '' }) {
                     </div>
                 </div>
 
-                {/* 2. WHITE CONTENT SECTION (With sleek rounded corners) */}
-                <div className="bg-white rounded-t-[24px] -mt-3 pt-6 px-6 pb-4 flex-1 min-h-0 flex flex-col justify-between overflow-y-auto hide-scrollbar relative z-10 shadow-lg">
+                {/* 2. WHITE CONTENT SECTION (Corner spaces filled in white, no red spikes) */}
+                <div className="bg-white pt-5 px-6 pb-4 flex-1 min-h-0 flex flex-col justify-between overflow-y-auto hide-scrollbar relative z-10">
                     <div className="space-y-3">
                         {/* Title and Subtitle */}
                         <div className="text-center space-y-0.5">
