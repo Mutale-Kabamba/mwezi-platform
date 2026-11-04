@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
 import { 
     Calendar, 
@@ -18,29 +18,75 @@ import {
     Plus,
     ShieldCheck,
     Clock,
-    BookOpen
+    BookOpen,
+    Zap,
+    Activity,
+    Moon,
+    Sun,
+    Leaf
 } from 'lucide-react';
 import { useTranslation } from '@/i18n/LanguageContext';
 
 export default function Dashboard({ 
     cycleInfo, 
+    cycleProfile,
+    todayLog,
     featuredArticle, 
     recentRequests = [], 
     nearbyHubsCount = 0, 
     dailyTip = '' 
 }) {
     const { t } = useTranslation();
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const [activeFlow, setActiveFlow] = useState(todayLog?.flow_intensity || (cycleInfo?.today_flow || 'none'));
+    const [activeSymptoms, setActiveSymptoms] = useState(todayLog?.symptoms || []);
+    const [quickLogStatus, setQuickLogStatus] = useState('');
+    const [isSubmittingQuickLog, setIsSubmittingQuickLog] = useState(false);
+
+    const handleQuickLog = (newFlow, newSymptoms) => {
+        setIsSubmittingQuickLog(true);
+        router.post(route('cycle.log.store'), {
+            logged_date: todayStr,
+            flow_intensity: newFlow,
+            symptoms: newSymptoms,
+            moods: todayLog?.moods || [],
+            pad_changes_count: todayLog?.pad_changes_count || 0,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setActiveFlow(newFlow);
+                setActiveSymptoms(newSymptoms);
+                setQuickLogStatus(t('logged_successfully', 'Saved!'));
+                setTimeout(() => setQuickLogStatus(''), 2500);
+            },
+            onFinish: () => {
+                setIsSubmittingQuickLog(false);
+            }
+        });
+    };
+
+    const handleFlowSelect = (flow) => {
+        handleQuickLog(flow, activeSymptoms);
+    };
+
+    const handleToggleSymptom = (sym) => {
+        const nextSymptoms = activeSymptoms.includes(sym)
+            ? activeSymptoms.filter(s => s !== sym)
+            : [...activeSymptoms, sym];
+        handleQuickLog(activeFlow, nextSymptoms);
+    };
     // Dynamic phase badge styles
     const getPhaseBadge = (phase) => {
         const p = (phase || '').toLowerCase();
         if (p.includes('menstrual')) {
-            return { label: 'Menstrual Phase', bg: 'bg-rose-100 text-rose-700 border-rose-200', icon: '🩸' };
+            return { label: 'Menstrual Phase', bg: 'bg-rose-100 text-rose-700 border-rose-200', icon: Droplet };
         } else if (p.includes('follicular')) {
-            return { label: 'Follicular Phase', bg: 'bg-pink-100 text-pink-700 border-pink-200', icon: '🌸' };
+            return { label: 'Follicular Phase', bg: 'bg-pink-100 text-pink-700 border-pink-200', icon: Sparkles };
         } else if (p.includes('ovulat')) {
-            return { label: 'Ovulatory Phase', bg: 'bg-purple-100 text-purple-700 border-purple-200', icon: '✨' };
+            return { label: 'Ovulatory Phase', bg: 'bg-purple-100 text-purple-700 border-purple-200', icon: Sun };
         } else {
-            return { label: phase || 'Luteal Phase', bg: 'bg-amber-100 text-amber-800 border-amber-200', icon: '🌿' };
+            return { label: phase || 'Luteal Phase', bg: 'bg-amber-100 text-amber-800 border-amber-200', icon: Leaf };
         }
     };
 
@@ -81,7 +127,7 @@ export default function Dashboard({
                         {/* Phase & Next Period Header */}
                         <div className="flex items-center justify-between mb-3">
                             <span className="inline-flex items-center space-x-1.5 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[11px] font-bold text-white tracking-wide border border-white/20">
-                                <span>{phaseBadge.icon}</span>
+                                {React.createElement(phaseBadge.icon, { className: 'w-3.5 h-3.5 shrink-0' })}
                                 <span>{phaseBadge.label}</span>
                             </span>
 
@@ -128,6 +174,122 @@ export default function Dashboard({
                         >
                             <Calendar className="w-3.5 h-3.5" />
                         </Link>
+                    </div>
+                </div>
+
+                {/* TEEN MENARCHE CALIBRATION BANNER */}
+                {cycleInfo?.is_first_year_menarche && (
+                    <div className="bg-amber-50/90 border border-amber-200/90 rounded-3xl p-3.5 flex items-start space-x-3 shadow-2xs">
+                        <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+                            <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800">
+                                    Teen Calibration Active
+                                </span>
+                                <span className="text-[9px] bg-amber-200/70 text-amber-900 font-semibold px-2 py-0.2 rounded-full">
+                                    21–45 Days Normal
+                                </span>
+                            </div>
+                            <p className="text-[11px] text-amber-900 font-medium leading-relaxed mt-0.5">
+                                Your cycle rhythm is naturally calibrating. Irregular intervals during your first two years post-menarche are completely healthy and protected from false alarms.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* 1-TAP QUICK LOG STRIP (Flow & Symptoms) */}
+                <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-150/80 space-y-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                            <div className="w-6 h-6 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+                                <Droplet className="w-3.5 h-3.5" />
+                            </div>
+                            <h2 className="text-xs font-bold text-slate-900">
+                                1-Tap Today's Check-in
+                            </h2>
+                        </div>
+                        <div className="flex items-center space-x-1.5">
+                            {quickLogStatus && (
+                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full animate-fadeIn">
+                                    ✓ {quickLogStatus}
+                                </span>
+                            )}
+                            <span className="text-[10px] text-slate-400 font-medium">
+                                {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Flow Intensity Pills */}
+                    <div>
+                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5">
+                            Flow Intensity
+                        </span>
+                        <div className="grid grid-cols-5 gap-1.5">
+                            {[
+                                { id: 'none', label: 'None', dot: 'bg-slate-300' },
+                                { id: 'spotting', label: 'Spot', dot: 'bg-rose-300' },
+                                { id: 'light', label: 'Light', dot: 'bg-rose-400' },
+                                { id: 'medium', label: 'Medium', dot: 'bg-rose-500' },
+                                { id: 'heavy', label: 'Heavy', dot: 'bg-rose-700' },
+                            ].map((flow) => {
+                                const isSelected = activeFlow === flow.id;
+                                return (
+                                    <button
+                                        key={flow.id}
+                                        type="button"
+                                        disabled={isSubmittingQuickLog}
+                                        onClick={() => handleFlowSelect(flow.id)}
+                                        className={`py-2 px-1 rounded-2xl text-[11px] font-bold transition flex flex-col items-center justify-center space-y-1 active:scale-95 border ${
+                                            isSelected
+                                                ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                                                : 'bg-slate-50 hover:bg-rose-50/50 text-slate-700 border-slate-200/80'
+                                        }`}
+                                    >
+                                        <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white' : flow.dot}`} />
+                                        <span>{flow.label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Quick Symptom Chips */}
+                    <div>
+                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5">
+                            Quick Symptoms & Feelings
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                            {[
+                                { id: 'Cramps', label: 'Cramps', icon: Zap },
+                                { id: 'Headache', label: 'Headache', icon: Activity },
+                                { id: 'Backache', label: 'Backache', icon: ShieldCheck },
+                                { id: 'Fatigue', label: 'Tired', icon: Moon },
+                                { id: 'Happy', label: 'Energetic', icon: Sparkles },
+                            ].map((sym) => {
+                                const SymIcon = sym.icon;
+                                const isSelected = activeSymptoms.includes(sym.id);
+                                return (
+                                    <button
+                                        key={sym.id}
+                                        type="button"
+                                        disabled={isSubmittingQuickLog}
+                                        onClick={() => handleToggleSymptom(sym.id)}
+                                        className={`px-3 py-1.5 rounded-xl text-[11px] font-semibold transition active:scale-95 border flex items-center space-x-1.5 ${
+                                            isSelected
+                                                ? 'bg-rose-50 border-rose-400 text-rose-700 font-bold'
+                                                : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600'
+                                        }`}
+                                    >
+                                        <SymIcon className={`w-3 h-3 ${isSelected ? 'text-rose-600' : 'text-slate-400'}`} />
+                                        <span>{sym.label}</span>
+                                        {isSelected && <span className="text-rose-600 ml-0.5">✓</span>}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
 

@@ -13,7 +13,9 @@ import {
     X, 
     Sparkles,
     Flag,
-    EyeOff
+    EyeOff,
+    Stethoscope,
+    Building2
 } from 'lucide-react';
 
 export default function CommunityIndex({ 
@@ -124,9 +126,23 @@ export default function CommunityIndex({
                                         {post.is_anonymous ? '?' : (post.user?.name?.charAt(0) || 'U')}
                                     </div>
                                     <div>
-                                        <p className="text-xs font-bold text-gray-900 leading-tight">
-                                            {post.is_anonymous ? 'Anonymous Sister' : post.user?.name}
-                                        </p>
+                                        <div className="flex items-center space-x-1.5 flex-wrap">
+                                            <p className="text-xs font-bold text-gray-900 leading-tight">
+                                                {post.is_anonymous ? 'Anonymous Sister' : post.user?.name}
+                                            </p>
+                                            {!post.is_anonymous && post.user?.role === 'health_reviewer' && (
+                                                <span className="inline-flex items-center space-x-0.5 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-bold">
+                                                    <Stethoscope className="w-2.5 h-2.5 mr-0.5" />
+                                                    <span>Verified Clinician</span>
+                                                </span>
+                                            )}
+                                            {!post.is_anonymous && post.user?.role === 'community_partner' && (
+                                                <span className="inline-flex items-center space-x-0.5 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[9px] font-bold">
+                                                    <Building2 className="w-2.5 h-2.5 mr-0.5" />
+                                                    <span>Verified Partner</span>
+                                                </span>
+                                            )}
+                                        </div>
                                         <span className="text-[10px] text-mwezi-accent font-semibold capitalize">
                                             {post.topic?.name}
                                         </span>
@@ -190,9 +206,23 @@ export default function CommunityIndex({
                                     {post.comments.map((comment) => (
                                         <div key={comment.id} className="p-2.5 rounded-xl bg-gray-50 text-xs">
                                             <div className="flex items-center justify-between mb-0.5">
-                                                <span className="font-bold text-gray-800 text-[11px]">
-                                                    {comment.is_anonymous ? 'Anonymous Friend' : comment.user?.name}
-                                                </span>
+                                                <div className="flex items-center space-x-1.5 flex-wrap">
+                                                    <span className="font-bold text-gray-800 text-[11px]">
+                                                        {comment.is_anonymous ? 'Anonymous Friend' : comment.user?.name}
+                                                    </span>
+                                                    {!comment.is_anonymous && comment.user?.role === 'health_reviewer' && (
+                                                        <span className="inline-flex items-center space-x-0.5 px-1 py-0.2 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[8px] font-bold">
+                                                            <Stethoscope className="w-2 h-2 mr-0.5" />
+                                                            <span>Clinician</span>
+                                                        </span>
+                                                    )}
+                                                    {!comment.is_anonymous && comment.user?.role === 'community_partner' && (
+                                                        <span className="inline-flex items-center space-x-0.5 px-1 py-0.2 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[8px] font-bold">
+                                                            <Building2 className="w-2 h-2 mr-0.5" />
+                                                            <span>Partner</span>
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <span className="text-[9px] text-gray-400">Supportive Reply</span>
                                             </div>
                                             <p className="text-gray-700 leading-tight">{comment.body}</p>

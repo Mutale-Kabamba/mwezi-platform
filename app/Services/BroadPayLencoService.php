@@ -253,6 +253,15 @@ class BroadPayLencoService
      */
     public function handleWebhook(array $payload, ?string $signature = null): array
     {
+        $secret = config('services.lenco.webhook_secret') ?: config('services.broadpay.webhook_secret');
+        if ($secret && $signature) {
+            $expectedSignature = hash_hmac('sha256', json_encode($payload), $secret);
+            if (!hash_equals($expectedSignature, (string) $signature)) {
+                Log::warning('Lenco webhook signature mismatch', ['expected' => $expectedSignature, 'received' => $signature]);
+                return ['success' => false, 'message' => 'Invalid webhook signature'];
+            }
+        }
+
         $reference = $payload['reference'] ?? $payload['data']['reference'] ?? null;
         $status = strtolower($payload['status'] ?? $payload['data']['status'] ?? '');
         $txnId = $payload['lencoReference'] ?? $payload['data']['lencoReference'] ?? $payload['data']['id'] ?? null;
@@ -296,13 +305,22 @@ class BroadPayLencoService
             }
         }
 
-        // If target hub is assigned, credit hub's emergency inventory
+        // If target hub is assigned, credit hub's emergency inventory and recalculate stock levels
         if ($donation->target_hub_id) {
             $hub = CommunityServiceHub::find($donation->target_hub_id);
             if ($hub) {
-                $kitsToAdd = max(1, (int) floor($donation->amount_zmw / 50));
-                $hub->increment('current_reusable_pads_stock', $kitsToAdd);
-                $donation->update(['allocated_count' => $kitsToAdd]);
+                if ($donation->donation_type === 'emergency_kit_bundle') {
+                    $unitsAdded = max(1, (int) floor($donation->amount_zmw / 50));
+                    $hub->increment('emergency_kits_qty', $unitsAdded);
+                } else {
+                    $unitsAdded = max(1, (int) floor($donation->amount_zmw / 50));
+                    $hub->increment('current_reusable_pads_stock', $unitsAdded);
+                }
+
+                $hub->recalculateStockLevels();
+                $hub->save();
+
+                $donation->update(['allocated_count' => $unitsAdded]);
             }
         }
     }

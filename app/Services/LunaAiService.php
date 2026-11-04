@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\LunaKnowledgeChunk;
 use App\Models\CommunityServiceHub;
 use App\Models\EducationalResource;
+use App\Models\HealthReferral;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -20,19 +21,32 @@ class LunaAiService
 
         // 1. HARD SAFETY BOUNDARY: Clinical & Safeguarding Escalation Checks
         $clinicalFlags = [
+            // English
             'severe pain', 'extreme cramps', 'passed out', 'fainting', 'unbearable pain', 
             'hemorrhage', 'soaking', 'bleeding for weeks', 'bleeding for days and days',
             'blood clots bigger than', 'foul smell', 'green discharge', 'yellow discharge with fever',
-            'burning sensation', 'fever and vomiting', 'toxic shock', 'infection', 'pelvic pain'
+            'burning sensation', 'fever and vomiting', 'toxic shock', 'infection', 'pelvic pain',
+            // Bemba, Nyanja, Tonga, Lozi
+            'ukukalipa sana', 'umubili ulekalipa', 'umulopa uwingi', 'ukupusuka', 'fent',
+            'kupweteka kwambiri', 'mimba ikupweteka', 'magazi ambiri', 'kutaya chidziwitso',
+            'fungoipa', 'chilonda'
         ];
 
         $safeguardingFlags = [
-            'forced', 'abuse', 'hit me', 'raped', 'assault', 'violence', 'scared at home', 'beat me', 'gbv'
+            // English
+            'forced', 'abuse', 'hit me', 'raped', 'assault', 'violence', 'scared at home', 'beat me', 'gbv',
+            // Bemba, Nyanja, Tonga, Lozi
+            'balenuma', 'ukumpuma', 'ukunkalifya', 'chibalo', 'kugwiriridwa', 'amenya',
+            'nkhanza', 'mwenso', 'kumenyedwa', 'kupondereza', 'chigololo'
         ];
 
         $emergencySupplyFlags = [
+            // English
             'no pads', 'ran out of pads', 'emergency pads', 'leaking', 'stained uniform', 
-            'need pad right now', 'need free pads', 'school pad'
+            'need pad right now', 'need free pads', 'school pad',
+            // Bemba, Nyanja, Tonga, Lozi
+            'nshili na mapadi', 'amapadi yapwa', 'ndilibe ma pad', 'ma pad atha', 'mapadi',
+            'sindikukwanitsa kugula mapad'
         ];
 
         // Check Safeguarding Alert First (Highest Priority)
@@ -119,14 +133,14 @@ class LunaAiService
         // Deduplicate referenced resources
         $referencedResources = array_values(array_unique($referencedResources, SORT_REGULAR));
 
-        // 3. GENERATE WITH GEMINI AI (With User Language Context)
-        $userLocale = $overrideLocale ?: 'en';
-        if ($userId && !$overrideLocale) {
-            $user = \App\Models\User::find($userId);
-            $userLocale = $user?->preferred_language ?? 'en';
-        }
+        // 3. GENERATE WITH GEMINI AI (With Age & Location Intelligence)
+        $user = $userId ? \App\Models\User::with('cycleProfile')->find($userId) : null;
+        $userLocale = $overrideLocale ?: ($user?->preferred_language ?? 'en');
+        $ageCohort = $user?->cycleProfile?->age_band ?? '14_17_secondary';
+        $userDistrict = $user?->district;
+        $userProvince = $user?->province;
 
-        $geminiResponse = $this->callGeminiApi($userMessage, $groundingContext, $conversationHistory, $userLocale);
+        $geminiResponse = $this->callGeminiApi($userMessage, $groundingContext, $conversationHistory, $userLocale, $ageCohort);
 
         // Fallback response if Gemini is unavailable
         if (empty($geminiResponse)) {
@@ -140,9 +154,42 @@ class LunaAiService
         ]);
 
         if ($isClinicalEscalation || $aiMentionedDoctor) {
-            $nearbyClinic = CommunityServiceHub::where('offers_health_referrals', true)
-                ->where('hub_type', 'clinic')
-                ->first() ?? CommunityServiceHub::first();
+            // Location-aware clinic lookup: district first, then province, then fallback
+            $nearbyClinicQuery = CommunityServiceHub::where('offers_health_referrals', true)->where('hub_type', 'clinic');
+            $nearbyClinic = null;
+            if ($userDistrict) {
+                $nearbyClinic = (clone $nearbyClinicQuery)->where('district', $userDistrict)->first();
+            }
+            if (!$nearbyClinic && $userProvince) {
+                $nearbyClinic = (clone $nearbyClinicQuery)->where('province', $userProvince)->first();
+            }
+            if (!$nearbyClinic) {
+                $nearbyClinic = $nearbyClinicQuery->first() ?? CommunityServiceHub::first();
+            }
+
+            $voucherCode = null;
+            $referralId = null;
+
+            if ($userId) {
+                try {
+                    $referral = HealthReferral::firstOrCreate(
+                        [
+                            'user_id' => $userId,
+                            'status' => 'generated',
+                        ],
+                        [
+                            'hub_id' => $nearbyClinic ? $nearbyClinic->id : 1,
+                            'referral_reason_category' => 'clinical_escalation_severe_symptoms',
+                            'notes' => 'Automated Luna clinical escalation voucher generated for confidential adolescent walk-in triage.',
+                            'is_anonymous_voucher' => true,
+                        ]
+                    );
+                    $referralId = $referral->id;
+                    $voucherCode = 'MWZ-CLINIC-' . str_pad($referral->id, 4, '0', STR_PAD_LEFT);
+                } catch (\Exception $e) {
+                    Log::warning('Could not create HealthReferral: ' . $e->getMessage());
+                }
+            }
 
             return [
                 'message' => $geminiResponse,
@@ -153,7 +200,9 @@ class LunaAiService
                     'facility' => $nearbyClinic ? $nearbyClinic->organization_name : 'Adolescent Friendly Health Centre',
                     'address' => $nearbyClinic ? $nearbyClinic->address : 'Local District Health Office / Health Post',
                     'phone' => $nearbyClinic ? $nearbyClinic->contact_phone : '+260955776611',
-                    'advice' => 'Severe symptoms require a gentle, in-person checkup. You can visit this verified center or call Toll-Free 116 for guidance.',
+                    'voucher_code' => $voucherCode,
+                    'voucher_id' => $referralId,
+                    'advice' => 'Severe symptoms require a gentle, in-person checkup. You can present this confidential voucher code at the clinic or call Toll-Free 116 for immediate guidance.',
                     'action_text' => 'Find Nearby Health Facility',
                     'action_url' => '/support/map'
                 ],
@@ -162,12 +211,26 @@ class LunaAiService
         }
 
         if ($isEmergencySupply) {
+            // Location-aware supply hub lookup
+            $supplyHub = null;
+            $supplyHubQuery = CommunityServiceHub::where('offers_emergency_kits', true);
+            if ($userDistrict) {
+                $supplyHub = (clone $supplyHubQuery)->where('district', $userDistrict)->first();
+            }
+            if (!$supplyHub && $userProvince) {
+                $supplyHub = (clone $supplyHubQuery)->where('province', $userProvince)->first();
+            }
+            if (!$supplyHub) {
+                $supplyHub = $supplyHubQuery->first() ?? CommunityServiceHub::first();
+            }
+
             return [
                 'message' => $geminiResponse,
                 'safety_flag' => 'emergency_supply_need',
                 'escalation' => [
                     'type' => 'supply_request',
                     'title' => 'Emergency Pad Supply Request',
+                    'facility' => $supplyHub ? $supplyHub->organization_name : 'Nearest School / Community Hub',
                     'advice' => 'Free dignity packs and emergency reusable pads are available at nearby school and community hubs.',
                     'action_text' => 'Request Free Emergency Kit',
                     'action_url' => '/support/request'
@@ -187,7 +250,7 @@ class LunaAiService
     /**
      * Call the Google Gemini API with strict system guidelines and grounding.
      */
-    protected function callGeminiApi(string $prompt, string $groundingContext, array $history = [], string $userLocale = 'en'): ?string
+    protected function callGeminiApi(string $prompt, string $groundingContext, array $history = [], string $userLocale = 'en', string $ageCohort = '14_17_secondary'): ?string
     {
         $apiKey = config('services.gemini.api_key');
         $model = config('services.gemini.model', 'gemini-3.5-flash-lite');
@@ -207,8 +270,17 @@ class LunaAiService
         ];
         $targetLang = $languageMap[$userLocale] ?? 'English';
 
+        $ageGuidance = match ($ageCohort) {
+            '10_13_early_teen' => "The user is in Early Adolescence (Ages 10–13). Communicate with extra warmth, simplicity, and reassuring sisterly care. Avoid dense clinical terminology, explain that body changes and first periods are completely normal, emphasize basic hygiene and reassure them they are safe.",
+            '18_24_young_adult', '25_plus' => "The user is an adult / young adult (Ages 18+). Provide comprehensive, scientifically detailed explanations of hormonal fluctuation, reproductive wellness, fertility awareness, and cycle tracking strategies.",
+            default => "The user is a secondary school student (Ages 14–17). Use clear, relatable, encouraging guidance covering school day menstrual management, leak prevention, period cramp relief, and debunking peer taboos.",
+        };
+
         $systemInstruction = <<<EOT
 You are Luna AI, the official, compassionate, and culturally rooted menstrual health companion for the Mwezi platform in Zambia.
+
+AGE-SPECIFIC INTELLIGENCE:
+{$ageGuidance}
 
 STRICT DOMAIN BOUNDARY (CRITICAL):
 1. You are strictly dedicated to Menstrual Hygiene Management (MHM), menstrual cycle health, puberty education, period pain/cramps management, reusable and disposable pad care (proper washing in clean water with soap, hanging in direct sunlight for natural UV disinfection, and dry storage), cycle irregularity guidance, and busting harmful taboos and myths.
@@ -246,21 +318,53 @@ CULTURAL TONE & ADOLESCENT HEALTH DIGNITY:
 - Reusable pads must always be washed with cold water first (to avoid setting stains), cleaned with soap, and sun-dried in direct sunlight because ultraviolet rays naturally kill bacteria.
 EOT;
 
-        // Build Gemini API payload
+        // Build Gemini API payload with conversation history
         $contents = [];
+        $lastRole = null;
 
-        // Build prompt with grounding context if available
+        if (!empty($history)) {
+            foreach ($history as $h) {
+                $sender = is_array($h) ? ($h['sender'] ?? ($h['role'] ?? 'user')) : ($h->sender ?? 'user');
+                $role = in_array($sender, ['luna', 'model', 'assistant'], true) ? 'model' : 'user';
+                $text = is_array($h) ? ($h['message_text'] ?? ($h['text'] ?? ($h['content'] ?? ''))) : ($h->message_text ?? '');
+                $text = trim((string) $text);
+
+                if (empty($text)) {
+                    continue;
+                }
+
+                if ($role === $lastRole && !empty($contents)) {
+                    $lastIdx = count($contents) - 1;
+                    $contents[$lastIdx]['parts'][0]['text'] .= "\n" . $text;
+                } else {
+                    $contents[] = [
+                        'role' => $role,
+                        'parts' => [
+                            ['text' => $text]
+                        ]
+                    ];
+                    $lastRole = $role;
+                }
+            }
+        }
+
+        // Build current prompt with grounding context if available
         $fullUserPrompt = $prompt;
         if (!empty($groundingContext)) {
             $fullUserPrompt = "MWEZI CERTIFIED HEALTHCARE KNOWLEDGE BASE CONTEXT:\n" . $groundingContext . "\n\nUSER QUESTION:\n" . $prompt;
         }
 
-        $contents[] = [
-            'role' => 'user',
-            'parts' => [
-                ['text' => $fullUserPrompt]
-            ]
-        ];
+        if ($lastRole === 'user' && !empty($contents)) {
+            $lastIdx = count($contents) - 1;
+            $contents[$lastIdx]['parts'][0]['text'] .= "\n\n" . $fullUserPrompt;
+        } else {
+            $contents[] = [
+                'role' => 'user',
+                'parts' => [
+                    ['text' => $fullUserPrompt]
+                ]
+            ];
+        }
 
         $payload = [
             'contents' => $contents,

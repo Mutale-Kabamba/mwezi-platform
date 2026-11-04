@@ -42,26 +42,18 @@ export function LanguageProvider({ children, initialLocale = 'en' }) {
             }
 
             try {
-                const pageEl = document.getElementById('app');
-                if (pageEl?.dataset?.page) {
-                    const parsed = JSON.parse(pageEl.dataset.page);
-                    if (!parsed?.props?.auth?.user) {
-                        return;
-                    }
-                }
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                fetch('/profile/privacy', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        ...(token ? { 'X-CSRF-TOKEN': token } : {}),
+                    },
+                    body: JSON.stringify({ preferred_language: newLocale }),
+                }).catch(() => {});
             } catch (_) {
-                return;
-            }
-
-            try {
-                router.patch(route('profile.privacy'), {
-                    preferred_language: newLocale,
-                }, {
-                    preserveScroll: true,
-                    preserveState: true,
-                    onError: () => {},
-                });
-            } catch (e) {
                 // Silently ignore
             }
         }

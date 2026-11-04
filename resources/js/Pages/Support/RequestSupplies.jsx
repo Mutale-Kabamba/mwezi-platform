@@ -14,13 +14,13 @@ import {
     Building2 
 } from 'lucide-react';
 
-export default function RequestSupplies({ hubs = [], products = [] }) {
+export default function RequestSupplies({ hubs = [], products = [], defaultHubId = null }) {
     const { t } = useTranslation();
     const [step, setStep] = useState(1);
 
     const { data, setData, post, processing, errors } = useForm({
         request_type: 'emergency_kit',
-        assigned_hub_id: hubs[0]?.id || '',
+        assigned_hub_id: defaultHubId || (hubs[0]?.id || ''),
         urgency: 'immediate_emergency',
         delivery_method: 'hub_pickup',
         discreet_location_notes: '',
@@ -38,13 +38,15 @@ export default function RequestSupplies({ hubs = [], products = [] }) {
             badge: 'Immediate Help',
             desc: 'Contains 2 quick-absorb pads, sanitizing wet wipes, and a discreet carry pouch for sudden cycles.',
             urgency: 'immediate_emergency',
+            validity: 'Voucher valid for 72 hours from issue',
         },
         {
             type: 'free_monthly_pack',
             title: 'Monthly Disposable Pad Pack (10 count)',
             badge: 'Monthly Supply',
-            desc: 'Ultra-thin winged pads for full school day protection and dignity.',
+            desc: 'Ultra-thin winged pads for full school day protection and dignity. Subject to 1 pack per 21 days fair-use quota.',
             urgency: 'within_24h',
+            validity: null,
         },
         {
             type: 'affordable_order',
@@ -52,6 +54,7 @@ export default function RequestSupplies({ hubs = [], products = [] }) {
             badge: 'Sustainable (2 Years)',
             desc: 'Breathable 4-layer cotton reusable pads with leakproof wings, complete with washing soap.',
             urgency: 'standard',
+            validity: null,
         },
     ];
 
@@ -96,6 +99,13 @@ export default function RequestSupplies({ hubs = [], products = [] }) {
                                 <p className="text-xs text-gray-600">All emergency dignity packages are free of charge.</p>
                             </div>
 
+                            {errors.request_type && (
+                                <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-800 font-medium">
+                                    <span className="font-bold block mb-0.5">⚠️ Quota Notice:</span>
+                                    {errors.request_type}
+                                </div>
+                            )}
+
                             <div className="space-y-2.5">
                                 {packageOptions.map((pkg) => {
                                     const selected = data.request_type === pkg.type;
@@ -122,6 +132,14 @@ export default function RequestSupplies({ hubs = [], products = [] }) {
                                                 </span>
                                             </div>
                                             <p className="text-xs text-gray-600 mb-2">{pkg.desc}</p>
+                                            
+                                            {pkg.validity && (
+                                                <div className="mb-2 inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200/70 text-[10px] font-semibold">
+                                                    <Clock className="w-3 h-3 text-amber-600 mr-0.5" />
+                                                    <span>{pkg.validity}</span>
+                                                </div>
+                                            )}
+
                                             <div className="flex items-center justify-between text-[10px] font-semibold text-mwezi-tertiary">
                                                 <span>Cost: Free (Donor Subsidized)</span>
                                                 <div className={`w-4 h-4 rounded-full flex items-center justify-center ${selected ? 'bg-mwezi-accent text-white' : 'border border-gray-300'}`}>

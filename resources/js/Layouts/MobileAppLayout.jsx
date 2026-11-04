@@ -20,7 +20,8 @@ import {
     Wifi,
     BatteryMedium,
     ArrowLeft,
-    Globe
+    Globe,
+    Moon
 } from 'lucide-react';
 import { useTranslation } from '@/i18n/LanguageContext';
 
@@ -39,6 +40,10 @@ export default function MobileAppLayout({
 
     // Quick Exit / Discreet Shield Mode State
     const [discreetMode, setDiscreetMode] = useState(false);
+    const [showPinModal, setShowPinModal] = useState(false);
+    const [pinInput, setPinInput] = useState('');
+    const [pinError, setPinError] = useState('');
+    const [isVerifyingPin, setIsVerifyingPin] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [showEmergencyModal, setShowEmergencyModal] = useState(false);
     const [showLangMenu, setShowLangMenu] = useState(false);
@@ -58,16 +63,89 @@ export default function MobileAppLayout({
         return () => clearInterval(timer);
     }, []);
 
+    const requestExitDiscreetMode = () => {
+        if (user?.has_pin) {
+            setShowPinModal(true);
+            setPinInput('');
+            setPinError('');
+        } else {
+            setDiscreetMode(false);
+        }
+    };
+
     // Escape key for quick exit
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'Escape') {
-                setDiscreetMode(prev => !prev);
+                if (discreetMode) {
+                    requestExitDiscreetMode();
+                } else {
+                    setDiscreetMode(true);
+                }
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
+    }, [discreetMode, user]);
+
+    // 3-Minute Inactivity Auto-Lock into Discreet Study Mode
+    useEffect(() => {
+        if (!user || (!user.discreet_mode_enabled && !user.has_pin)) {
+            return;
+        }
+
+        let timeoutId;
+        const resetTimer = () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                setDiscreetMode(true);
+            }, 3 * 60 * 1000); // 3 minutes of inactivity
+        };
+
+        const activityEvents = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+        activityEvents.forEach(evt => window.addEventListener(evt, resetTimer, { passive: true }));
+        resetTimer();
+
+        return () => {
+            clearTimeout(timeoutId);
+            activityEvents.forEach(evt => window.removeEventListener(evt, resetTimer));
+        };
+    }, [user]);
+
+    const handleVerifyPin = async (e) => {
+        e?.preventDefault();
+        if (pinInput.length !== 4) {
+            setPinError('Please enter the 4-digit code.');
+            return;
+        }
+        setIsVerifyingPin(true);
+        setPinError('');
+        try {
+            const res = await (window.axios ? window.axios.post('/profile/verify-pin', { pin: pinInput }) : fetch('/profile/verify-pin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({ pin: pinInput })
+            }).then(r => r.json()));
+
+            const data = res.data || res;
+            if (data.valid) {
+                setShowPinModal(false);
+                setPinInput('');
+                setPinError('');
+                setDiscreetMode(false);
+            } else {
+                setPinError(data.message || 'Incorrect code. Access denied.');
+            }
+        } catch (err) {
+            setPinError(err.response?.data?.message || 'Incorrect code. Access denied.');
+        } finally {
+            setIsVerifyingPin(false);
+        }
+    };
 
     const navItems = [
         { name: t('nav_home', 'Home'), href: '/dashboard', icon: Home, match: '/dashboard' },
@@ -129,7 +207,7 @@ export default function MobileAppLayout({
                             </div>
 
                             <button
-                                onClick={() => setDiscreetMode(false)}
+                                onClick={requestExitDiscreetMode}
                                 className="px-2.5 py-1 text-[11px] font-semibold bg-emerald-700/80 hover:bg-emerald-700 active:scale-95 text-emerald-100 hover:text-white rounded-lg transition flex items-center space-x-1"
                                 title="Exit study notes (ESC)"
                             >
@@ -249,7 +327,7 @@ export default function MobileAppLayout({
                             {/* Left: Brand Icon + Title */}
                             <Link href="/dashboard" className="flex items-center space-x-2.5 group">
                                 <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-white shadow-xs group-active:scale-95 transition">
-                                    <span className="text-xs">🌙</span>
+                                    <Moon className="w-4 h-4 text-white fill-white/20" />
                                 </div>
                                 <div>
                                     <span className="font-extrabold text-base text-slate-900 tracking-tight leading-none block">
@@ -582,6 +660,70 @@ export default function MobileAppLayout({
                         >
                             Close
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* DISCREET STUDY NOTEBOOK PIN PROMPT MODAL */}
+            {showPinModal && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-fadeIn overflow-hidden">
+                    <div
+                        className="absolute inset-0 bg-transparent"
+                        onClick={() => setShowPinModal(false)}
+                    />
+                    <div className="relative bg-white rounded-3xl w-full max-w-xs p-6 shadow-2xl space-y-4 border border-slate-200 z-10 text-center font-sans">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center mx-auto shadow-inner">
+                            <Shield className="w-6 h-6 text-emerald-700" />
+                        </div>
+
+                        <div>
+                            <h3 className="font-bold text-sm text-slate-900">Enter Study Notebook Code</h3>
+                            <p className="text-[11px] text-slate-500 mt-1">
+                                Enter your 4-digit security code to return to your personal dashboard.
+                            </p>
+                        </div>
+
+                        <form onSubmit={handleVerifyPin} className="space-y-3">
+                            <div>
+                                <input
+                                    type="password"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    maxLength={4}
+                                    autoFocus
+                                    value={pinInput}
+                                    onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                    placeholder="••••"
+                                    className="w-32 text-center text-2xl font-mono tracking-[0.5em] py-2 px-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none mx-auto block"
+                                />
+                                {pinError && (
+                                    <p className="text-[11px] text-rose-600 font-semibold mt-1.5 animate-shake">
+                                        {pinError}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="flex space-x-2 pt-1">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowPinModal(false);
+                                        setPinInput('');
+                                        setPinError('');
+                                    }}
+                                    className="flex-1 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={pinInput.length !== 4 || isVerifyingPin}
+                                    className="flex-1 py-2 text-xs font-bold bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white rounded-xl shadow-xs transition disabled:opacity-50"
+                                >
+                                    {isVerifyingPin ? 'Verifying...' : 'Unlock'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

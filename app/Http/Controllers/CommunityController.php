@@ -14,8 +14,15 @@ class CommunityController extends Controller
 {
     public function index(Request $request): Response
     {
+        $user = $request->user();
+        $isRestrictedRole = $user && in_array($user->role, ['trusted_contact', 'donor_sponsor'], true);
+
         $selectedTopicSlug = $request->query('topic');
-        $topics = CommunityTopic::orderBy('sort_order')->get();
+        $topicsQuery = CommunityTopic::orderBy('sort_order');
+        if ($isRestrictedRole) {
+            $topicsQuery->where('audience_scope', '!=', 'girls_only');
+        }
+        $topics = $topicsQuery->get();
 
         $query = CommunityPost::where('moderation_status', 'approved')
             ->with(['topic', 'user:id,name,role', 'comments' => function ($q) {
@@ -24,6 +31,13 @@ class CommunityController extends Controller
                   ->latest()
                   ->take(5);
             }, 'reactions']);
+
+        if ($isRestrictedRole) {
+            $query->whereIn('audience_scope', ['open_community', 'trusted_support_circle', 'ask_an_expert'])
+                  ->whereHas('topic', function ($q) {
+                      $q->where('audience_scope', '!=', 'girls_only');
+                  });
+        }
 
         if ($selectedTopicSlug) {
             $query->whereHas('topic', function ($q) use ($selectedTopicSlug) {
@@ -51,6 +65,13 @@ class CommunityController extends Controller
         ]);
 
         $user = $request->user();
+        $topic = CommunityTopic::findOrFail($validated['topic_id']);
+
+        if ($user && in_array($user->role, ['trusted_contact', 'donor_sponsor'], true)) {
+            if (($validated['audience_scope'] ?? '') === 'girls_only' || $topic->audience_scope === 'girls_only') {
+                abort(403, 'Restricted Forum: Girls-only space is reserved for primary users and healthcare providers.');
+            }
+        }
 
         $post = CommunityPost::create([
             'topic_id' => $validated['topic_id'],
@@ -73,6 +94,12 @@ class CommunityController extends Controller
         ]);
 
         $user = $request->user();
+
+        if ($user && in_array($user->role, ['trusted_contact', 'donor_sponsor'], true)) {
+            if ($post->audience_scope === 'girls_only' || $post->topic?->audience_scope === 'girls_only') {
+                abort(403, 'Restricted Forum: Girls-only discussions are reserved for primary users and healthcare providers.');
+            }
+        }
 
         CommunityComment::create([
             'post_id' => $post->id,
@@ -109,6 +136,83 @@ class CommunityController extends Controller
         }
 
         return back();
+    }
+
+    /**
+     * Update author's community post.
+     */
+    public function updatePost(Request $request, CommunityPost $post)
+    {
+        $user = $request->user();
+        if ($post->user_id !== $user->id && $user->role !== 'admin') {
+            abort(403, 'Unauthorized.');
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:150',
+            'body' => 'required|string|max:2000',
+            'is_anonymous' => 'nullable|boolean',
+        ]);
+
+        $post->update($validated);
+
+        return back()->with('success', 'Post updated successfully.');
+    }
+
+    /**
+     * Delete author's community post.
+     */
+    public function destroyPost(Request $request, CommunityPost $post)
+    {
+        $user = $request->user();
+        if ($post->user_id !== $user->id && $user->role !== 'admin') {
+            abort(403, 'Unauthorized.');
+        }
+
+        $post->comments()->delete();
+        $post->reactions()->delete();
+        $post->delete();
+
+        return back()->with('success', 'Post deleted.');
+    }
+
+    /**
+     * Update author's comment.
+     */
+    public function updateComment(Request $request, CommunityComment $comment)
+    {
+        $user = $request->user();
+        if ($comment->user_id !== $user->id && $user->role !== 'admin') {
+            abort(403, 'Unauthorized.');
+        }
+
+        $validated = $request->validate([
+            'body' => 'required|string|max:1000',
+            'is_anonymous' => 'nullable|boolean',
+        ]);
+
+        $comment->update($validated);
+
+        return back()->with('success', 'Reply updated successfully.');
+    }
+
+    /**
+     * Delete author's comment.
+     */
+    public function destroyComment(Request $request, CommunityComment $comment)
+    {
+        $user = $request->user();
+        if ($comment->user_id !== $user->id && $user->role !== 'admin') {
+            abort(403, 'Unauthorized.');
+        }
+
+        $post = $comment->post;
+        $comment->delete();
+        if ($post) {
+            $post->decrement('comments_count');
+        }
+
+        return back()->with('success', 'Reply deleted.');
     }
 }
 

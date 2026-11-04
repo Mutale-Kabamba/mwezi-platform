@@ -12,6 +12,9 @@ class CycleProfile extends Model
 
     protected $fillable = [
         'user_id',
+        'age_band',
+        'is_first_year_menarche',
+        'preferred_product_type',
         'average_cycle_length',
         'average_period_length',
         'last_period_start',
@@ -23,6 +26,7 @@ class CycleProfile extends Model
         return [
             'average_cycle_length' => 'integer',
             'average_period_length' => 'integer',
+            'is_first_year_menarche' => 'boolean',
             'last_period_start' => 'date',
             'contraceptive_or_health_notes' => 'encrypted',
         ];

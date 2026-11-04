@@ -11,7 +11,16 @@ import {
     Lock, 
     UserCheck,
     Check,
-    Globe
+    Globe,
+    Phone,
+    Mail,
+    Building2,
+    Stethoscope,
+    Heart,
+    HeartHandshake,
+    Sparkles,
+    ArrowRight,
+    Moon
 } from 'lucide-react';
 
 export default function Register({ initialInviteCode = '' }) {
@@ -19,7 +28,9 @@ export default function Register({ initialInviteCode = '' }) {
     const [showLangMenu, setShowLangMenu] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
+        phone: '',
         email: '',
+        username: '',
         password: '',
         password_confirmation: '',
         role: initialInviteCode ? 'trusted_contact' : 'primary_user',
@@ -42,9 +53,9 @@ export default function Register({ initialInviteCode = '' }) {
         return () => clearInterval(timer);
     }, []);
 
-    // Calculate dynamic password strength matching reference screenshot indicator
+    // Calculate dynamic password strength
     const getPasswordStrength = (pwd) => {
-        if (!pwd) return { label: 'Enter password', color: 'text-slate-400', bars: 0, barColor: 'bg-slate-200' };
+        if (!pwd) return { label: 'Required', color: 'text-slate-400', bars: 0, barColor: 'bg-slate-200' };
         if (pwd.length < 6) return { label: 'Weak', color: 'text-amber-500', bars: 1, barColor: 'bg-amber-400' };
         if (pwd.length < 8) return { label: 'Medium', color: 'text-rose-500', bars: 2, barColor: 'bg-rose-400' };
         return { label: 'Strong', color: 'text-emerald-500', bars: 3, barColor: 'bg-emerald-500' };
@@ -62,13 +73,13 @@ export default function Register({ initialInviteCode = '' }) {
 
     return (
         <div className="min-h-screen bg-gradient-to-tr from-[#FBECEF] via-[#F4F1F4] to-[#EBF3F5] flex items-center justify-center p-0 sm:py-6 sm:px-4 font-sans selection:bg-rose-100 selection:text-rose-900">
-            <Head title="Get Started Free - Mwezi" />
+            <Head title="Create Free Account - Mwezi" />
 
-            {/* NATIVE APP FRAME (Matches Screen 3 Right in Reference) */}
+            {/* NATIVE MOBILE FRAME */}
             <div className="w-full max-w-[420px] h-screen sm:h-[840px] sm:max-h-[92vh] bg-white sm:rounded-[44px] shadow-[0_25px_70px_-15px_rgba(112,38,56,0.22)] sm:border-[8px] sm:border-slate-900/90 sm:ring-1 sm:ring-black/10 relative flex flex-col justify-between overflow-hidden">
                 
-                {/* 1. TOP SOLID COLOR LOGO & NOTIFICATION BAR SECTION (With sleek rounded bottom corners) */}
-                <div className="bg-[#BE123C] text-white shrink-0 relative pt-3 pb-8 px-5 select-none flex flex-col justify-between rounded-b-[32px] shadow-md shadow-rose-950/15 z-20">
+                {/* 1. TOP SOLID COLOR LOGO & NOTIFICATION BAR SECTION (Matches Login & Onboarding) */}
+                <div className="bg-[#BE123C] text-white shrink-0 relative pt-3 pb-8 px-5 select-none flex flex-col justify-between rounded-b-[32px] z-20">
                     
                     {/* Integrated Phone Notification Bar (Seamless Solid Background) */}
                     <div className="w-full px-1 pb-2 flex items-center justify-between text-xs font-semibold">
@@ -150,7 +161,7 @@ export default function Register({ initialInviteCode = '' }) {
                     {/* Centered Brand Title with Generous Breathing Room */}
                     <div className="text-center pt-5 pb-3">
                         <div className="inline-flex items-center space-x-2.5">
-                            <span className="text-2xl drop-shadow-sm">🌙</span>
+                            <Moon className="w-6 h-6 text-rose-200 fill-rose-200/30" />
                             <span className="font-black text-3xl tracking-tight text-white font-sans drop-shadow-xs">
                                 Mwezi
                             </span>
@@ -158,69 +169,96 @@ export default function Register({ initialInviteCode = '' }) {
                     </div>
                 </div>
 
-                {/* 2. WHITE CONTENT SECTION (Corner spaces filled in white, no red spikes) */}
+                {/* 2. WHITE CONTENT SECTION */}
                 <div className="bg-white pt-5 px-6 pb-4 flex-1 min-h-0 flex flex-col justify-between overflow-y-auto hide-scrollbar relative z-10">
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                         {/* Title and Subtitle */}
                         <div className="text-center space-y-0.5">
-                            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                                {t('auth_register_title', 'Get started free.')}
+                            <h1 className="text-lg font-black text-slate-900 tracking-tight">
+                                {t('auth_register_title', 'Create Free Account')}
                             </h1>
-                            <p className="text-xs text-slate-400 font-medium">
-                                {t('auth_register_desc', 'Free forever. No credit card needed.')}
+                            <p className="text-[11px] text-slate-500 font-medium">
+                                {t('auth_register_desc', 'Join Mwezi for stigma-free menstrual dignity.')}
                             </p>
                         </div>
 
                         {/* Registration Form */}
-                        <form onSubmit={submit} className="space-y-2 pt-0.5">
-                            {/* Email Address Field with Micro-Label */}
-                            <div className="border border-slate-200/90 rounded-2xl p-2.5 px-3.5 bg-white focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-100 transition shadow-2xs">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-                                    {t('auth_email', 'Email Address')}
-                                </label>
+                        <form onSubmit={submit} className="space-y-2">
+                            {/* Phone Number Field */}
+                            <div className="border border-slate-200/90 rounded-xl p-2 px-3 bg-white focus-within:border-rose-500 focus-within:ring-1 focus-within:ring-rose-500/20 transition shadow-2xs">
+                                <div className="flex items-center justify-between mb-0.5">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                                        <Phone className="w-2.5 h-2.5 text-slate-400" />
+                                        <span>{t('auth_phone', 'Phone Number')}</span>
+                                    </label>
+                                    <span className="text-[8px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.2 rounded-md">
+                                        Primary in Zambia
+                                    </span>
+                                </div>
+                                <input
+                                    type="tel"
+                                    value={data.phone}
+                                    onChange={(e) => setData('phone', e.target.value)}
+                                    placeholder="0977 123456 or +260..."
+                                    className="w-full p-0 border-0 text-xs font-semibold text-slate-900 placeholder-slate-300 focus:ring-0 bg-transparent"
+                                />
+                            </div>
+                            {errors.phone && <div className="text-[10px] text-rose-600 pl-1 font-medium">{errors.phone}</div>}
+
+                            {/* Email Address Field */}
+                            <div className="border border-slate-200/90 rounded-xl p-2 px-3 bg-white focus-within:border-rose-500 focus-within:ring-1 focus-within:ring-rose-500/20 transition shadow-2xs">
+                                <div className="flex items-center justify-between mb-0.5">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                                        <Mail className="w-2.5 h-2.5 text-slate-400" />
+                                        <span>{t('auth_email', 'Email Address')}</span>
+                                    </label>
+                                    <span className="text-[8px] font-medium text-slate-400">
+                                        {data.phone ? 'Optional' : 'Required if no phone'}
+                                    </span>
+                                </div>
                                 <input
                                     type="email"
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
-                                    placeholder="nicholas@ergemla.com"
+                                    placeholder="name@example.com"
                                     className="w-full p-0 border-0 text-xs font-semibold text-slate-900 placeholder-slate-300 focus:ring-0 bg-transparent"
-                                    required
                                 />
                             </div>
-                            {errors.email && <div className="text-[11px] text-rose-600 pl-1 font-medium">{errors.email}</div>}
+                            {errors.email && <div className="text-[10px] text-rose-600 pl-1 font-medium">{errors.email}</div>}
 
-                            {/* Your Name Field with Micro-Label */}
-                            <div className="border border-slate-200/90 rounded-2xl p-2.5 px-3.5 bg-white focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-100 transition shadow-2xs">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-                                    {t('auth_name', 'Your Name')}
+                            {/* Your Name Field */}
+                            <div className="border border-slate-200/90 rounded-xl p-2 px-3 bg-white focus-within:border-rose-500 focus-within:ring-1 focus-within:ring-rose-500/20 transition shadow-2xs">
+                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                                    <User className="w-2.5 h-2.5 text-slate-400" />
+                                    <span>{t('auth_name', 'Your Name')}</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    placeholder="Natasha Phiri"
+                                    placeholder="e.g. Natasha Phiri"
                                     className="w-full p-0 border-0 text-xs font-semibold text-slate-900 placeholder-slate-300 focus:ring-0 bg-transparent"
                                     required
                                 />
                             </div>
-                            {errors.name && <div className="text-[11px] text-rose-600 pl-1 font-medium">{errors.name}</div>}
+                            {errors.name && <div className="text-[10px] text-rose-600 pl-1 font-medium">{errors.name}</div>}
 
-                            {/* Password Field with Dynamic Strength Indicator (Matches Reference Screenshot) */}
-                            <div className="border border-slate-200/90 rounded-2xl p-2.5 px-3.5 bg-white focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-100 transition shadow-2xs">
+                            {/* Password Field with Dynamic Strength */}
+                            <div className="border border-slate-200/90 rounded-xl p-2 px-3 bg-white focus-within:border-rose-500 focus-within:ring-1 focus-within:ring-rose-500/20 transition shadow-2xs">
                                 <div className="flex justify-between items-center mb-0.5">
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                        {t('auth_password', 'Password')}
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                                        <Lock className="w-2.5 h-2.5 text-slate-400" />
+                                        <span>{t('auth_password', 'Password')}</span>
                                     </label>
 
-                                    {/* Password Strength Gauge (Matches Reference Screenshot) */}
                                     {data.password && (
                                         <div className="flex items-center space-x-1.5">
-                                            <div className="flex space-x-1">
-                                                <div className={`w-3.5 h-1 rounded-full ${strength.bars >= 1 ? strength.barColor : 'bg-slate-200'}`} />
-                                                <div className={`w-3.5 h-1 rounded-full ${strength.bars >= 2 ? strength.barColor : 'bg-slate-200'}`} />
-                                                <div className={`w-3.5 h-1 rounded-full ${strength.bars >= 3 ? strength.barColor : 'bg-slate-200'}`} />
+                                            <div className="flex space-x-0.5">
+                                                <div className={`w-3 h-0.5 rounded-full ${strength.bars >= 1 ? strength.barColor : 'bg-slate-200'}`} />
+                                                <div className={`w-3 h-0.5 rounded-full ${strength.bars >= 2 ? strength.barColor : 'bg-slate-200'}`} />
+                                                <div className={`w-3 h-0.5 rounded-full ${strength.bars >= 3 ? strength.barColor : 'bg-slate-200'}`} />
                                             </div>
-                                            <span className={`text-[10px] font-bold ${strength.color}`}>
+                                            <span className={`text-[9px] font-bold ${strength.color}`}>
                                                 {strength.label}
                                             </span>
                                         </div>
@@ -241,69 +279,74 @@ export default function Register({ initialInviteCode = '' }) {
                                         className="text-slate-400 hover:text-slate-600 p-0.5 transition"
                                         tabIndex={-1}
                                     >
-                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                     </button>
                                 </div>
                             </div>
-                            {errors.password && <div className="text-[11px] text-rose-600 pl-1 font-medium">{errors.password}</div>}
+                            {errors.password && <div className="text-[10px] text-rose-600 pl-1 font-medium">{errors.password}</div>}
 
-                            {/* Role Selection Badge Chips */}
+                            {/* Role Selection Badge Chips (Professional Lucide Icons, NO Emojis) */}
                             <div className="pt-0.5">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                                     I am joining as:
                                 </label>
                                 <div className="grid grid-cols-2 gap-1.5">
-                                    <button
-                                        type="button"
-                                        onClick={() => setData('role', 'primary_user')}
-                                        className={`py-1.5 px-2.5 rounded-xl text-left border text-[11px] font-bold transition ${
-                                            data.role === 'primary_user'
-                                                ? 'bg-rose-50 border-rose-500 text-rose-800'
-                                                : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                                        }`}
-                                    >
-                                        Girl / Woman (User)
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setData('role', 'trusted_contact')}
-                                        className={`py-1.5 px-2.5 rounded-xl text-left border text-[11px] font-bold transition ${
-                                            data.role === 'trusted_contact'
-                                                ? 'bg-rose-50 border-rose-500 text-rose-800'
-                                                : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                                        }`}
-                                    >
-                                        Companion / Partner
-                                    </button>
+                                    {[
+                                        { id: 'primary_user', label: 'Girl / Teen / Woman', icon: User, color: 'text-rose-600' },
+                                        { id: 'trusted_contact', label: 'Trusted Companion', icon: HeartHandshake, color: 'text-amber-600' },
+                                        { id: 'community_partner', label: 'School / NGO Hub', icon: Building2, color: 'text-sky-600' },
+                                        { id: 'health_reviewer', label: 'Clinician / Midwife', icon: Stethoscope, color: 'text-emerald-600' },
+                                        { id: 'donor_sponsor', label: 'Dignity Sponsor', icon: Heart, color: 'text-rose-500' },
+                                    ].map((r) => {
+                                        const IconComponent = r.icon;
+                                        const isSelected = data.role === r.id;
+                                        return (
+                                            <button
+                                                key={r.id}
+                                                type="button"
+                                                onClick={() => setData('role', r.id)}
+                                                className={`py-1.5 px-2 rounded-xl text-left border text-[10px] font-bold transition flex items-center space-x-1.5 ${
+                                                    isSelected
+                                                        ? 'bg-rose-50 border-rose-500 text-rose-900 shadow-2xs ring-1 ring-rose-500/20'
+                                                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                                                } ${r.id === 'donor_sponsor' ? 'col-span-2' : ''}`}
+                                            >
+                                                <IconComponent className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-rose-600' : r.color}`} />
+                                                <span className="truncate">{r.label}</span>
+                                                {isSelected && <Check className="w-3 h-3 ml-auto text-rose-600 shrink-0" />}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
-                            {/* Gradient Primary Sign Up Button */}
+                            {/* Primary Register Button */}
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#E11D48] via-rose-500 to-[#FB7185] hover:opacity-95 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-500/25 transition active:scale-98 disabled:opacity-50 mt-1"
+                                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#BE123C] to-rose-500 hover:opacity-95 text-white font-bold text-xs shadow-md shadow-rose-900/15 transition active:scale-98 disabled:opacity-50 mt-1 flex items-center justify-center space-x-1.5"
                             >
-                                {processing ? t('loading', 'Creating Account...') : t('auth_register_btn', 'Create Account')}
+                                <span>{processing ? t('loading', 'Creating Account...') : t('auth_register_btn', 'Register Free')}</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
                             </button>
                         </form>
 
                         {/* Divider */}
-                        <div className="flex items-center my-1">
+                        <div className="flex items-center my-0.5">
                             <div className="flex-1 border-t border-slate-200/80"></div>
-                            <span className="px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                            <span className="px-2 text-[9px] text-slate-400 font-bold uppercase tracking-wider">
                                 Or sign up with
                             </span>
                             <div className="flex-1 border-t border-slate-200/80"></div>
                         </div>
 
-                        {/* Quick Sign-Up Pills (Matching Reference Google & Demo) */}
-                        <div className="grid grid-cols-2 gap-2.5">
+                        {/* Alternative Options */}
+                        <div className="grid grid-cols-2 gap-2">
                             <Link
                                 href="/login"
-                                className="py-2 px-3 rounded-2xl bg-white border border-slate-200/80 hover:bg-slate-50 transition flex items-center justify-center space-x-2 shadow-2xs active:scale-95 text-xs font-bold text-slate-700"
+                                className="py-1.5 px-3 rounded-xl bg-white border border-slate-200/80 hover:bg-slate-50 transition flex items-center justify-center space-x-1.5 shadow-2xs active:scale-95 text-[11px] font-bold text-slate-700"
                             >
-                                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
                                     <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z"/>
                                     <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.27v3.15C3.25 21.37 7.31 24 12 24z"/>
                                     <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.27C.46 8.2.01 10.04.01 12c0 1.96.45 3.8 1.26 5.42l4.01-3.15z"/>
@@ -314,15 +357,15 @@ export default function Register({ initialInviteCode = '' }) {
 
                             <Link
                                 href="/login"
-                                className="py-2 px-3 rounded-2xl bg-white border border-slate-200/80 hover:bg-slate-50 transition flex items-center justify-center space-x-2 shadow-2xs active:scale-95 text-xs font-bold text-rose-700"
+                                className="py-1.5 px-3 rounded-xl bg-white border border-slate-200/80 hover:bg-slate-50 transition flex items-center justify-center space-x-1.5 shadow-2xs active:scale-95 text-[11px] font-bold text-rose-700"
                             >
-                                <UserCheck className="w-4 h-4 text-rose-600 shrink-0" />
+                                <UserCheck className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                                 <span>Demo Roles</span>
                             </Link>
                         </div>
                     </div>
 
-                    {/* 4. BOTTOM NATIVE HOME INDICATOR */}
+                    {/* 3. BOTTOM HOME INDICATOR */}
                     <div className="pt-2 text-center shrink-0">
                         <div className="w-32 h-1 bg-slate-300 rounded-full opacity-60 mx-auto" />
                     </div>

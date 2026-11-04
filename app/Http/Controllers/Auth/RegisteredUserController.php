@@ -37,7 +37,9 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'email' => 'nullable|string|lowercase|email|max:255|unique:'.User::class.',email|required_without_all:phone,username',
+            'phone' => 'nullable|string|max:25|unique:'.User::class.',phone|required_without_all:email,username',
+            'username' => 'nullable|string|max:50|unique:'.User::class.',username|required_without_all:email,phone',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => 'nullable|string|in:primary_user,trusted_contact,community_partner,health_reviewer,donor_sponsor',
             'preferred_language' => 'nullable|string|in:en,bem,nya,toi,loz',
@@ -57,7 +59,9 @@ class RegisteredUserController extends Controller
 
         $user = User::create([
             'name' => $request->name,
-            'email' => $request->email,
+            'email' => $request->email ?: null,
+            'phone' => $request->phone ?: null,
+            'username' => $request->username ?: null,
             'password' => Hash::make($request->password),
             'role' => $role,
             'preferred_language' => $request->preferred_language ?? 'en',
@@ -73,28 +77,16 @@ class RegisteredUserController extends Controller
             'data_retention_consent_at' => now(),
         ]);
 
-        // If primary user, set default cycle profile
+        // If primary user, set default cycle profile without fabricating fake period dates
         if ($role === 'primary_user') {
-            $lastStart = Carbon::now()->subDays(10);
-            CycleProfile::create([
-                'user_id' => $user->id,
-                'average_cycle_length' => 28,
-                'average_period_length' => 5,
-                'last_period_start' => $lastStart->toDateString(),
-            ]);
-
-            $nextStart = (clone $lastStart)->addDays(28);
-            CyclePrediction::create([
-                'user_id' => $user->id,
-                'predicted_start_date' => $nextStart->toDateString(),
-                'predicted_end_date' => (clone $nextStart)->addDays(5)->toDateString(),
-                'ovulation_window' => [
-                    'start' => (clone $lastStart)->addDays(12)->toDateString(),
-                    'peak' => (clone $lastStart)->addDays(14)->toDateString(),
-                    'end' => (clone $lastStart)->addDays(16)->toDateString(),
-                ],
-                'confidence_score' => 0.85,
-            ]);
+            CycleProfile::firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'average_cycle_length' => 28,
+                    'average_period_length' => 5,
+                    'last_period_start' => null,
+                ]
+            );
         }
 
         // Link invite if present
@@ -109,15 +101,7 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        // Redirect based on role
-        if ($role === 'community_partner') {
-            return redirect()->route('portal.partner');
-        } elseif ($role === 'health_reviewer') {
-            return redirect()->route('portal.reviewer');
-        } elseif ($role === 'trusted_contact') {
-            return redirect()->route('trusted-circle.companion');
-        }
-
-        return redirect(route('dashboard', absolute: false));
+        // Redirect all new signups to Step 2: Role-Specific Intelligence Calibration
+        return redirect()->route('onboarding.wizard');
     }
 }

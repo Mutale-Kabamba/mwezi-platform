@@ -11,7 +11,8 @@ import {
     ShieldCheck, 
     UserCheck,
     Lock,
-    Globe
+    Globe,
+    Moon
 } from 'lucide-react';
 
 export default function Login({ status, canResetPassword }) {
@@ -71,7 +72,7 @@ export default function Login({ status, canResetPassword }) {
             <div className="w-full max-w-[420px] h-screen sm:h-[840px] sm:max-h-[92vh] bg-white sm:rounded-[44px] shadow-[0_25px_70px_-15px_rgba(112,38,56,0.22)] sm:border-[8px] sm:border-slate-900/90 sm:ring-1 sm:ring-black/10 relative flex flex-col justify-between overflow-hidden [transform:translateZ(0)]">
                 
                 {/* 1. TOP SOLID COLOR LOGO & NOTIFICATION BAR SECTION (With sleek rounded bottom corners) */}
-                <div className="bg-[#BE123C] text-white shrink-0 relative pt-3 pb-8 px-5 select-none flex flex-col justify-between rounded-b-[32px] shadow-md shadow-rose-950/15 z-20">
+                <div className="bg-[#BE123C] text-white shrink-0 relative pt-3 pb-8 px-5 select-none flex flex-col justify-between rounded-b-[32px] z-20">
                     
                     {/* Integrated Phone Notification Bar (Seamless Solid Background) */}
                     <div className="w-full px-1 pb-2 flex items-center justify-between text-xs font-semibold">
@@ -152,7 +153,7 @@ export default function Login({ status, canResetPassword }) {
                     {/* Centered Brand Title with Generous Breathing Room */}
                     <div className="text-center pt-5 pb-3">
                         <div className="inline-flex items-center space-x-2.5">
-                            <span className="text-2xl drop-shadow-sm">🌙</span>
+                            <Moon className="w-6 h-6 text-rose-200 fill-rose-200/30" />
                             <span className="font-black text-3xl tracking-tight text-white font-sans drop-shadow-xs">
                                 Mwezi
                             </span>
@@ -181,16 +182,16 @@ export default function Login({ status, canResetPassword }) {
 
                         {/* Login Form */}
                         <form onSubmit={submit} className="space-y-2.5 pt-0.5">
-                            {/* Email Input Field with Top Micro-Label */}
+                            {/* Phone / Email / Username Input Field */}
                             <div className="border border-slate-200/90 rounded-2xl p-2.5 px-3.5 bg-white focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-100 transition shadow-2xs">
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-                                    {t('auth_email', 'Email Address')}
+                                    {t('auth_identifier', 'Phone Number, Email, or Username')}
                                 </label>
                                 <input
-                                    type="email"
+                                    type="text"
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
-                                    placeholder="nicholas@ergemla.com"
+                                    placeholder="e.g. 0977... or name@mwezi.org"
                                     className="w-full p-0 border-0 text-xs font-semibold text-slate-900 placeholder-slate-300 focus:ring-0 bg-transparent"
                                     required
                                 />

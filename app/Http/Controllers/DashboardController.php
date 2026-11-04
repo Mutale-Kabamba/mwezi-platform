@@ -59,12 +59,23 @@ class DashboardController extends Controller
 
         $cycleInfo['has_logged_today'] = !is_null($todayLog);
         $cycleInfo['today_flow'] = $todayLog ? $todayLog->flow_intensity : null;
+        $cycleInfo['is_first_year_menarche'] = (bool) ($profile?->is_first_year_menarche ?? false);
+        $cycleInfo['average_cycle_length'] = $profile?->average_cycle_length ?? 28;
 
-        // 2. Featured Educational Guide (e.g. Reusable pad care)
-        $featuredArticle = EducationalResource::where('is_featured', true)
-            ->where('review_status', 'approved')
-            ->with('category')
-            ->first();
+        // 2. Featured Educational Guide (prioritize reusable pad care if preferred)
+        $featuredQuery = EducationalResource::where('review_status', 'approved')->with('category');
+        if ($profile && in_array($profile->preferred_product_type, ['reusable_pads', 'need_supplies'], true)) {
+            $reusableGuide = (clone $featuredQuery)
+                ->where(function ($q) {
+                    $q->where('slug', 'like', '%reusable%')
+                      ->orWhere('title', 'like', '%reusable%')
+                      ->orWhere('title', 'like', '%washing%');
+                })
+                ->first();
+            $featuredArticle = $reusableGuide ?: $featuredQuery->where('is_featured', true)->first();
+        } else {
+            $featuredArticle = $featuredQuery->where('is_featured', true)->first();
+        }
 
         // 3. User's recent requests
         $recentRequests = ProductAndEmergencyRequest::where('user_id', $user->id)
@@ -87,6 +98,8 @@ class DashboardController extends Controller
 
         return Inertia::render('Dashboard', [
             'cycleInfo' => $cycleInfo,
+            'cycleProfile' => $profile,
+            'todayLog' => $todayLog,
             'featuredArticle' => $featuredArticle,
             'recentRequests' => $recentRequests,
             'nearbyHubsCount' => $nearbyHubsCount,

@@ -32,7 +32,10 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user()?->load('privacySettings'),
+                'user' => $request->user() ? array_merge(
+                    $request->user()->load('privacySettings')->toArray(),
+                    ['has_pin' => !is_null($request->user()->pin_code_hash)]
+                ) : null,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

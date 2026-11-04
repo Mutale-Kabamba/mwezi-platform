@@ -28,10 +28,18 @@ export default function CycleIndex({
     availableMoods = [] 
 }) {
     const { t } = useTranslation();
+
+    // Helper to safely extract YYYY-MM-DD from any date representation
+    const extractYmd = (d) => {
+        if (!d) return '';
+        const str = String(d).trim();
+        return str.split('T')[0].split(' ')[0];
+    };
+
     // Helper to format dates cleanly (e.g. "Tue, 3 Nov 2026")
     const formatDisplayDate = (d) => {
         if (!d) return '';
-        const cleanStr = typeof d === 'string' ? d.split('T')[0] : String(d);
+        const cleanStr = extractYmd(d);
         if (cleanStr.includes('-')) {
             const parts = cleanStr.split('-');
             if (parts.length === 3) {
@@ -65,12 +73,12 @@ export default function CycleIndex({
     const [currentMonth, setCurrentMonth] = useState(today.getMonth()); // 0-indexed
 
     // Selected day for logging
-    const [selectedDate, setSelectedDate] = useState(today.toISOString().split('T')[0]);
+    const [selectedDate, setSelectedDate] = useState(extractYmd(today.toISOString()));
     const [showLoggerModal, setShowLoggerModal] = useState(false);
     const [showExportModal, setShowExportModal] = useState(false);
 
     // Find existing log for selected date
-    const selectedLog = logs.find(l => (l.logged_date ? l.logged_date.split('T')[0] : '') === selectedDate);
+    const selectedLog = logs.find(l => extractYmd(l.logged_date) === selectedDate);
 
     // Form for logging
     const { data, setData, post, processing, reset } = useForm({
@@ -83,9 +91,9 @@ export default function CycleIndex({
     });
 
     const openLoggerForDate = (dateString) => {
-        const normalized = typeof dateString === 'string' ? dateString.split('T')[0] : dateString;
+        const normalized = extractYmd(dateString);
         setSelectedDate(normalized);
-        const logForDay = logs.find(l => (l.logged_date ? l.logged_date.split('T')[0] : '') === normalized);
+        const logForDay = logs.find(l => extractYmd(l.logged_date) === normalized);
         setData({
             logged_date: normalized,
             flow_intensity: logForDay ? logForDay.flow_intensity : 'none',
@@ -150,7 +158,10 @@ export default function CycleIndex({
     // Log map for fast lookup
     const logsMap = {};
     logs.forEach(l => {
-        logsMap[l.logged_date] = l;
+        const ymd = extractYmd(l.logged_date);
+        if (ymd) {
+            logsMap[ymd] = l;
+        }
     });
 
     // Check prediction window dates
@@ -182,7 +193,7 @@ export default function CycleIndex({
             isOvulation = true;
         }
 
-        const isToday = fullDateStr === today.toISOString().split('T')[0];
+        const isToday = fullDateStr === extractYmd(today.toISOString());
 
         days.push({
             dayNum: d,
@@ -226,7 +237,9 @@ export default function CycleIndex({
                             </span>
                             <span className="text-[10px] text-slate-500 font-medium">d</span>
                         </div>
-                        <span className="text-[9px] text-emerald-600 font-semibold mt-0.5 block truncate">Regular</span>
+                        <span className={`text-[9px] font-semibold mt-0.5 block truncate ${profile.is_first_year_menarche ? 'text-amber-600' : 'text-emerald-600'}`}>
+                            {profile.is_first_year_menarche ? 'Teen Calibrated' : 'Regular'}
+                        </span>
                     </div>
 
                     <div className="bg-white rounded-3xl p-3 shadow-xs border border-rose-150/70 text-center">
@@ -255,6 +268,19 @@ export default function CycleIndex({
                         <span className="text-[9px] text-purple-500 font-semibold mt-0.5 block truncate">Encrypted</span>
                     </div>
                 </div>
+
+                {/* Teen Menarche Calibration Notice */}
+                {profile.is_first_year_menarche && (
+                    <div className="bg-amber-50/90 border border-amber-200/80 rounded-3xl p-3.5 flex items-start space-x-2.5 text-xs text-amber-900 shadow-2xs">
+                        <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                        <div>
+                            <span className="font-bold block text-amber-950">Teen Calibration Active (21–45 Days)</span>
+                            <span className="text-[11px] text-amber-800 leading-relaxed block mt-0.5">
+                                For adolescents in their first 1–2 years of menstruation, fluctuating intervals between 21 and 45 days are completely normal and healthy.
+                            </span>
+                        </div>
+                    </div>
+                )}
 
                 {/* 2. NATIVE CALENDAR CARD */}
                 <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-150/80">

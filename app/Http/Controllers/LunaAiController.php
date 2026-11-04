@@ -69,6 +69,21 @@ class LunaAiController extends Controller
             ['title' => 'Health Conversation', 'is_ephemeral' => $validated['is_ephemeral'] ?? false]
         );
 
+        // Fetch last 6 conversation messages before adding the new message
+        $historyMessages = $conversation->messages()
+            ->latest()
+            ->take(6)
+            ->get()
+            ->reverse()
+            ->values()
+            ->map(function ($msg) {
+                return [
+                    'sender' => $msg->sender,
+                    'message_text' => $msg->message_text,
+                ];
+            })
+            ->toArray();
+
         // 1. Save user message (field-level encrypted by model cast)
         LunaMessage::create([
             'conversation_id' => $conversation->id,
@@ -77,8 +92,8 @@ class LunaAiController extends Controller
             'safety_flag' => 'none',
         ]);
 
-        // 2. Generate grounded response with LunaAiService (respecting active locale)
-        $aiResult = $this->lunaService->respond($validated['message'], $user->id, [], $locale);
+        // 2. Generate grounded response with LunaAiService (respecting active locale and multi-turn history)
+        $aiResult = $this->lunaService->respond($validated['message'], $user->id, $historyMessages, $locale);
 
         // 3. Save Luna response (field-level encrypted)
         $lunaMessage = LunaMessage::create([
@@ -88,6 +103,21 @@ class LunaAiController extends Controller
             'referenced_resources' => $aiResult['referenced_resources'] ?? [],
             'safety_flag' => $aiResult['safety_flag'] ?? 'none',
         ]);
+
+        // Record M&E Telemetry for clinical safety escalation
+        if (($aiResult['safety_flag'] ?? '') === 'clinical_escalation') {
+            \App\Models\MeImpactEvent::create([
+                'event_type' => 'clinical_safety_escalation',
+                'province' => 'Lusaka',
+                'district' => 'Lusaka',
+                'anonymized_cohort' => 'Adolescent-Consultation',
+                'metadata' => [
+                    'safety_flag' => 'clinical_escalation',
+                    'voucher_code' => $aiResult['escalation']['voucher_code'] ?? null,
+                ],
+                'created_at' => now(),
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -107,6 +137,27 @@ class LunaAiController extends Controller
         }
 
         return back()->with('success', 'Conversation history cleared for your privacy.');
+    }
+
+    /**
+     * Rate Luna AI message helpfulness (thumbs up / thumbs down).
+     */
+    public function rateMessage(Request $request, LunaMessage $message)
+    {
+        if ($message->conversation->user_id !== $request->user()->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $validated = $request->validate([
+            'helpful_rating' => 'required|boolean',
+        ]);
+
+        $message->update(['helpful_rating' => $validated['helpful_rating']]);
+
+        return response()->json([
+            'success' => true,
+            'helpful_rating' => $message->helpful_rating,
+        ]);
     }
 }
 

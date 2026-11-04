@@ -20,6 +20,15 @@ class User extends Authenticatable
         'password',
         'role',
         'preferred_language',
+        'province',
+        'district',
+        'default_hub_id',
+        'clinical_specialty',
+        'hpcz_registration_number',
+        'review_locales',
+        'donor_default_anonymous',
+        'admin_scope',
+        'onboarding_completed_at',
         'avatar',
         'bio',
         'discreet_mode_enabled',
@@ -34,13 +43,31 @@ class User extends Authenticatable
         'pin_code_hash',
     ];
 
+    protected $appends = [
+        'has_pin',
+    ];
+
+    public function getHasPinAttribute(): bool
+    {
+        return !is_null($this->pin_code_hash);
+    }
+
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'discreet_mode_enabled' => 'boolean',
+            'review_locales' => 'array',
+            'donor_default_anonymous' => 'boolean',
+            'onboarding_completed_at' => 'datetime',
+            'default_hub_id' => 'integer',
         ];
+    }
+
+    public function defaultHub(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(CommunityServiceHub::class, 'default_hub_id');
     }
 
     public function privacySettings(): HasOne

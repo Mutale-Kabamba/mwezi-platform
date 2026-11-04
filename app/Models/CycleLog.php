@@ -23,7 +23,7 @@ class CycleLog extends Model
     protected function casts(): array
     {
         return [
-            'logged_date' => 'date',
+            'logged_date' => 'date:Y-m-d',
             'pad_changes_count' => 'integer',
             'symptoms' => 'encrypted:array',
             'moods' => 'encrypted:array',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
 import MarkdownRenderer from '@/Components/MarkdownRenderer';
@@ -14,7 +14,9 @@ import {
     Square,
     Sparkles,
     CheckCircle2,
-    VolumeX
+    VolumeX,
+    Play,
+    Pause
 } from 'lucide-react';
 
 export default function LearnShow({
@@ -37,8 +39,50 @@ export default function LearnShow({
     const title = translation?.translated_title || resource.title;
     const body = translation?.translated_body || resource.body_content;
 
+    const audioUrl = translation?.audio_narration_url || resource.audio_narration_url;
+    const audioRef = useRef(null);
+    const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+    const [audioProgress, setAudioProgress] = useState(0);
+    const [audioDuration, setAudioDuration] = useState(0);
+
     const [isCompleted, setIsCompleted] = useState(!!progress?.completed_at);
     const [isPlayingSpeech, setIsPlayingSpeech] = useState(false);
+
+    const toggleAudioPlay = () => {
+        if (!audioRef.current) return;
+        if (isPlayingAudio) {
+            audioRef.current.pause();
+            setIsPlayingAudio(false);
+        } else {
+            audioRef.current.play();
+            setIsPlayingAudio(true);
+        }
+    };
+
+    const handleTimeUpdate = () => {
+        if (!audioRef.current) return;
+        setAudioProgress(audioRef.current.currentTime);
+        setAudioDuration(audioRef.current.duration || 0);
+    };
+
+    const handleAudioEnded = () => {
+        setIsPlayingAudio(false);
+        setAudioProgress(0);
+    };
+
+    const handleSeek = (e) => {
+        if (!audioRef.current) return;
+        const targetTime = parseFloat(e.target.value);
+        audioRef.current.currentTime = targetTime;
+        setAudioProgress(targetTime);
+    };
+
+    const formatAudioTime = (sec) => {
+        if (!sec || isNaN(sec)) return '0:00';
+        const mins = Math.floor(sec / 60);
+        const secs = Math.floor(sec % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    };
 
     // Interactive Checklist state for Reusable pad steps
     const [checkedSteps, setCheckedSteps] = useState([false, false, false, false]);
@@ -102,17 +146,19 @@ export default function LearnShow({
                     </Link>
 
                     <div className="flex items-center space-x-2">
-                        <button
-                            onClick={toggleSpeech}
-                            className={`p-2 rounded-xl border transition flex items-center space-x-1 text-xs font-semibold ${isPlayingSpeech
-                                    ? 'bg-mwezi-accent text-white border-mwezi-accent'
-                                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                                }`}
-                            title="Listen to Narration"
-                        >
-                            {isPlayingSpeech ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                            <span className="hidden sm:inline">{isPlayingSpeech ? 'Stop' : 'Listen'}</span>
-                        </button>
+                        {!audioUrl && (
+                            <button
+                                onClick={toggleSpeech}
+                                className={`p-2 rounded-xl border transition flex items-center space-x-1 text-xs font-semibold ${isPlayingSpeech
+                                        ? 'bg-rose-600 text-white border-rose-600'
+                                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                                    }`}
+                                title="Listen to AI Speech Narration"
+                            >
+                                {isPlayingSpeech ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                                <span className="hidden sm:inline">{isPlayingSpeech ? 'Stop' : 'Listen'}</span>
+                            </button>
+                        )}
 
                         <button
                             onClick={() => {
@@ -127,6 +173,54 @@ export default function LearnShow({
                         </button>
                     </div>
                 </div>
+
+                {/* DEDICATED LOCAL-LANGUAGE AUDIO NARRATION PLAYER */}
+                {audioUrl && (
+                    <div className="bg-gradient-to-r from-rose-50 via-white to-pink-50 rounded-2xl p-3.5 border border-rose-200/80 shadow-2xs space-y-2">
+                        <audio
+                            ref={audioRef}
+                            src={audioUrl}
+                            preload="none"
+                            onTimeUpdate={handleTimeUpdate}
+                            onLoadedMetadata={handleTimeUpdate}
+                            onEnded={handleAudioEnded}
+                        />
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                                <button
+                                    type="button"
+                                    onClick={toggleAudioPlay}
+                                    className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center hover:bg-rose-700 active:scale-95 transition shadow-xs"
+                                    title={isPlayingAudio ? 'Pause' : 'Play audio narration'}
+                                >
+                                    {isPlayingAudio ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                                </button>
+                                <div>
+                                    <span className="text-xs font-bold text-slate-800 block leading-tight">
+                                        Voice Narration
+                                    </span>
+                                    <span className="text-[10px] text-rose-600 font-semibold uppercase tracking-wider">
+                                        {currentLocale === 'en' ? 'English Audio' : `${currentLocale.toUpperCase()} Local Voice`}
+                                    </span>
+                                </div>
+                            </div>
+                            <span className="text-[10px] font-mono font-semibold text-slate-500">
+                                {formatAudioTime(audioProgress)} / {formatAudioTime(audioDuration)}
+                            </span>
+                        </div>
+                        {/* Audio Progress Scrubber */}
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="range"
+                                min={0}
+                                max={audioDuration || 100}
+                                value={audioProgress}
+                                onChange={handleSeek}
+                                className="w-full h-1.5 bg-rose-200 rounded-lg appearance-none cursor-pointer accent-rose-600"
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {/* Article Header Card */}
                 <div className="bg-white rounded-[20px] p-5 shadow-sm border border-gray-100">

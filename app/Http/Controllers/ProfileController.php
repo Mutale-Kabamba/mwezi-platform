@@ -82,25 +82,73 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update granular privacy settings.
+     * Update granular privacy settings or preferred language.
      */
     public function updatePrivacy(Request $request): RedirectResponse
     {
         $user = $request->user();
 
         $validated = $request->validate([
-            'allow_anonymous_forum_default' => 'required|boolean',
-            'share_cycle_with_trusted' => 'required|boolean',
-            'share_symptoms_with_trusted' => 'required|boolean',
-            'receive_discreet_notifications' => 'required|boolean',
+            'preferred_language' => 'nullable|in:en,bem,nya,toi,loz',
+            'allow_anonymous_forum_default' => 'sometimes|boolean',
+            'share_cycle_with_trusted' => 'sometimes|boolean',
+            'share_symptoms_with_trusted' => 'sometimes|boolean',
+            'receive_discreet_notifications' => 'sometimes|boolean',
         ]);
 
-        UserPrivacySetting::updateOrCreate(
-            ['user_id' => $user->id],
-            $validated
-        );
+        if (isset($validated['preferred_language'])) {
+            $user->preferred_language = $validated['preferred_language'];
+            $user->save();
+        }
 
-        return Redirect::route('profile.edit')->with('success', 'Privacy preferences saved.');
+        $privacyData = array_intersect_key($validated, array_flip([
+            'allow_anonymous_forum_default',
+            'share_cycle_with_trusted',
+            'share_symptoms_with_trusted',
+            'receive_discreet_notifications',
+        ]));
+
+        if (!empty($privacyData)) {
+            UserPrivacySetting::updateOrCreate(
+                ['user_id' => $user->id],
+                $privacyData
+            );
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return back()->with('success', 'Preferences saved.');
+    }
+
+    /**
+     * Verify 4-digit PIN for discreet mode unlock.
+     */
+    public function verifyPin(Request $request)
+    {
+        $validated = $request->validate([
+            'pin' => 'required|string|digits:4',
+        ]);
+
+        $user = $request->user();
+        if (!$user || !$user->pin_code_hash) {
+            return response()->json(['valid' => true, 'message' => 'No PIN set.']);
+        }
+
+        $isValid = Hash::check($validated['pin'], $user->pin_code_hash);
+
+        if (!$isValid) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Incorrect 4-digit code. Access denied.',
+            ], 422);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'message' => 'PIN verified successfully.',
+        ]);
     }
 
     /**

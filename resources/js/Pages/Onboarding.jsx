@@ -16,7 +16,9 @@ import {
     Plus,
     ShieldCheck,
     Globe,
-    CheckCircle2
+    CheckCircle2,
+    Moon,
+    Heart
 } from 'lucide-react';
 
 export default function Onboarding() {
@@ -97,14 +99,13 @@ export default function Onboarding() {
         },
     ];
 
-    // Smooth auto-slide transition (pauses on user interaction)
+    // Smooth continuous auto-scroll carousel (advances every 4 seconds)
     useEffect(() => {
-        if (isPaused) return;
         const interval = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % slides.length);
-        }, 5500);
+        }, 4000);
         return () => clearInterval(interval);
-    }, [isPaused, slides.length]);
+    }, [currentSlide, slides.length]);
 
     const nextSlide = () => {
         setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -128,13 +129,9 @@ export default function Onboarding() {
             {/* NATIVE APP FRAME */}
             <div 
                 className="w-full max-w-[420px] h-screen sm:h-[840px] sm:max-h-[92vh] bg-white sm:rounded-[44px] shadow-[0_25px_70px_-15px_rgba(112,38,56,0.22)] sm:border-[8px] sm:border-slate-900/90 sm:ring-1 sm:ring-black/10 relative flex flex-col justify-between overflow-hidden"
-                onMouseEnter={() => setIsPaused(true)}
-                onMouseLeave={() => setIsPaused(false)}
-                onTouchStart={() => setIsPaused(true)}
-                onTouchEnd={() => setIsPaused(false)}
             >
-                {/* 1. TOP SOLID COLOR LOGO & NOTIFICATION BAR SECTION (Seamless Flush Edges, No Corner Cutouts) */}
-                <div className="bg-[#BE123C] text-white shrink-0 relative pt-3 pb-6 select-none flex flex-col justify-between shadow-md shadow-rose-950/10 z-20 border-b border-rose-800/40">
+                {/* 1. TOP SOLID COLOR LOGO & NOTIFICATION BAR SECTION (Sleek rounded bottom corners, no murky drop-shadow) */}
+                <div className="bg-[#BE123C] text-white shrink-0 relative pt-3 pb-8 px-5 select-none flex flex-col justify-between rounded-b-[32px] z-20">
                     
                     {/* Integrated Phone Notification Bar (Seamless Solid Background) */}
                     <div className="w-full px-6 pb-2 flex items-center justify-between text-xs font-semibold">
@@ -220,7 +217,7 @@ export default function Onboarding() {
                     {/* Centered Brand Title with Spacious Room */}
                     <div className="text-center pt-4 pb-2">
                         <div className="inline-flex items-center space-x-2.5">
-                            <span className="text-2xl drop-shadow-sm">🌙</span>
+                            <Moon className="w-6 h-6 text-rose-200 fill-rose-200/30" />
                             <span className="font-black text-3xl tracking-tight text-white font-sans drop-shadow-xs">
                                 {t('app_title', 'Mwezi')}
                             </span>
@@ -251,92 +248,45 @@ export default function Onboarding() {
                 <div className="bg-white pt-5 px-6 pb-4 flex-1 min-h-0 flex flex-col justify-between overflow-y-auto hide-scrollbar relative z-10">
                     <div className="space-y-3.5 text-center">
                         
-                        {/* Dynamic Floating Cards Illustration with Moving Icons to Match Content */}
-                        <div className="w-full max-w-[290px] h-36 mx-auto relative flex items-center justify-center select-none">
-                            {/* Soft glowing ambient backdrop */}
-                            <div className="absolute inset-0 bg-rose-100/60 rounded-full blur-2xl transform scale-90" />
-
-                            {/* Left Card (Tilted & Floating, Showing Previous Pillar Icon) */}
+                        {/* Dynamic Full Icons Stage (Clean, shadow-free, prominent icons) */}
+                        <div className="w-full max-w-[290px] h-32 mx-auto relative flex items-center justify-center select-none py-2">
+                            {/* Left Previous Pillar Icon */}
                             <button
+                                type="button"
                                 onClick={prevSlide}
                                 aria-label="Previous Feature"
-                                className="absolute left-4 w-18 h-26 sm:w-20 sm:h-28 bg-white border border-rose-150/80 rounded-2xl shadow-md flex flex-col justify-between p-2.5 transform animate-card-left transition-all duration-500 hover:scale-105 active:scale-95"
+                                className="absolute left-3 w-13 h-13 rounded-2xl bg-white border border-rose-200/80 flex flex-col items-center justify-center p-2 transition-all duration-300 hover:scale-105 active:scale-95 group hover:border-rose-400 hover:bg-rose-50/50"
                             >
-                                <div className="flex justify-between items-center text-[10px] text-rose-500 font-bold">
-                                    <span className="truncate max-w-[50px]">{slides[prevIndex].tag}</span>
-                                    <div className="w-4 h-4 rounded-full bg-rose-50 flex items-center justify-center">
-                                        <PrevIcon className="w-2.5 h-2.5 text-rose-600" />
-                                    </div>
-                                </div>
-                                <div className="space-y-1 my-auto">
-                                    <div className="w-full h-1 bg-rose-100 rounded-full" />
-                                    <div className="w-3/4 h-1 bg-rose-100 rounded-full" />
-                                    <div className="w-1/2 h-1 bg-rose-100 rounded-full" />
-                                </div>
-                                <span className="text-[9px] font-bold text-slate-500 truncate block text-left">
-                                    {slides[prevIndex].previewLabel}
+                                <PrevIcon className="w-5 h-5 text-slate-400 group-hover:text-rose-500 transition-colors" />
+                                <span className="text-[8px] font-bold text-slate-400 group-hover:text-rose-600 truncate max-w-[44px] mt-0.5">
+                                    {slides[prevIndex].tag}
                                 </span>
                             </button>
 
-                            {/* Right Card (Tilted & Floating, Showing Next Pillar Icon) */}
-                            <button
-                                onClick={nextSlide}
-                                aria-label="Next Feature"
-                                className="absolute right-4 w-18 h-26 sm:w-20 sm:h-28 bg-white border border-rose-150/80 rounded-2xl shadow-md flex flex-col justify-between p-2.5 transform animate-card-right transition-all duration-500 hover:scale-105 active:scale-95"
-                            >
-                                <div className="flex justify-between items-center text-[10px] text-pink-500 font-bold">
-                                    <span className="truncate max-w-[50px]">{slides[nextIndex].tag}</span>
-                                    <div className="w-4 h-4 rounded-full bg-pink-50 flex items-center justify-center">
-                                        <NextIcon className="w-2.5 h-2.5 text-pink-600" />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-3 gap-1 py-1 my-auto">
-                                    {[...Array(6)].map((_, i) => (
-                                        <div key={i} className="w-2.5 h-2 bg-pink-100 rounded-xs" />
-                                    ))}
-                                </div>
-                                <span className="text-[9px] font-bold text-slate-500 truncate block text-left">
-                                    {slides[nextIndex].previewLabel}
-                                </span>
-                            </button>
-
-                            {/* Center Upright Card (Animated, Dynamically Matches Current Active Slide's Icon) */}
+                            {/* Center Active Hero Icon */}
                             <div 
                                 key={currentSlide}
-                                className="relative z-10 w-24 h-32 bg-white border-2 border-rose-200/90 rounded-2xl shadow-xl flex flex-col justify-between p-3 transform animate-card-center transition-all duration-500 ease-out"
+                                className="relative z-10 flex flex-col items-center justify-center transition-all duration-500 animate-fadeIn"
                             >
-                                <div className="flex justify-between items-center">
-                                    <span className={`text-[10px] font-black ${slide.accentText}`}>
-                                        {slide.tag}
-                                    </span>
-                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                                <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-[#BE123C] via-rose-500 to-pink-500 text-white border-2 border-rose-100 flex items-center justify-center transform transition-transform duration-300 hover:scale-105">
+                                    <ActiveIcon className="w-8 h-8 sm:w-9 sm:h-9 text-white stroke-[2.2]" />
                                 </div>
-                                
-                                <div className="py-1 text-center my-auto">
-                                    {/* Active Moving Icon */}
-                                    <div className={`w-10 h-10 rounded-2xl ${slide.accentBg} ${slide.accentText} flex items-center justify-center mx-auto mb-1.5 shadow-xs border border-rose-100 transform transition-transform duration-500 hover:scale-110`}>
-                                        <ActiveIcon className="w-5 h-5 transition-transform duration-500" />
-                                    </div>
-                                    <span className="text-[10px] font-bold text-slate-800 block truncate">
-                                        {slide.previewLabel}
-                                    </span>
-                                </div>
-
-                                <div className="w-full h-1.5 bg-rose-100 rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-gradient-to-r from-rose-500 to-pink-500 rounded-full transition-all duration-500" 
-                                        style={{ width: `${((currentSlide + 1) / slides.length) * 100}%` }}
-                                    />
-                                </div>
+                                <span className={`text-[10px] font-extrabold mt-1.5 px-2.5 py-0.5 rounded-full ${slide.accentBg} ${slide.accentText} border border-rose-100/80`}>
+                                    {slide.previewLabel}
+                                </span>
                             </div>
 
-                            {/* Glowing Central Floating Gradient Button with '+' (Matches Reference) */}
+                            {/* Right Next Pillar Icon */}
                             <button
+                                type="button"
                                 onClick={nextSlide}
-                                aria-label="Next slide"
-                                className="absolute -bottom-2 z-20 w-10 h-10 rounded-full bg-gradient-to-tr from-[#E11D48] via-rose-500 to-[#FB7185] text-white flex items-center justify-center shadow-lg shadow-rose-500/40 border-2 border-white transform animate-badge-plus transition hover:scale-110 active:scale-90"
+                                aria-label="Next Feature"
+                                className="absolute right-3 w-13 h-13 rounded-2xl bg-white border border-rose-200/80 flex flex-col items-center justify-center p-2 transition-all duration-300 hover:scale-105 active:scale-95 group hover:border-pink-400 hover:bg-pink-50/50"
                             >
-                                <Plus className="w-4 h-4 font-bold" />
+                                <NextIcon className="w-5 h-5 text-slate-400 group-hover:text-pink-500 transition-colors" />
+                                <span className="text-[8px] font-bold text-slate-400 group-hover:text-pink-600 truncate max-w-[44px] mt-0.5">
+                                    {slides[nextIndex].tag}
+                                </span>
                             </button>
                         </div>
 
@@ -409,20 +359,24 @@ export default function Onboarding() {
                         </div>
 
                         {/* Secondary Links: Sponsor & Already have an account */}
-                        <div className="flex items-center justify-between text-xs px-2 pt-0.5">
+                        <div className="flex flex-col items-center justify-center gap-1.5 pt-1 text-center">
                             <Link
                                 href="/sponsor"
-                                className="text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline"
+                                className="inline-flex items-center space-x-1.5 text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline"
                             >
-                                {t('onboarding_sponsor_pack', 'Sponsor a Girl')}
+                                <Heart className="w-3.5 h-3.5 text-rose-600 fill-rose-600/20" />
+                                <span>{t('onboarding_sponsor_pack', "Sponsor a Girl's Dignity Pack")}</span>
                             </Link>
 
-                            <Link
-                                href="/login"
-                                className="text-[11px] font-bold text-slate-500 hover:text-slate-800"
-                            >
-                                {t('onboarding_have_account', 'Already have an account?')} <span className="text-rose-600 underline">{t('onboarding_sign_in', 'Sign in')}</span>
-                            </Link>
+                            <p className="text-[11px] font-medium text-slate-500">
+                                {t('onboarding_have_account', 'Already have an account?')}{' '}
+                                <Link
+                                    href="/login"
+                                    className="font-bold text-rose-600 hover:text-rose-700 underline"
+                                >
+                                    {t('onboarding_sign_in', 'Sign in')}
+                                </Link>
+                            </p>
                         </div>
 
                         {/* Native Home Indicator */}

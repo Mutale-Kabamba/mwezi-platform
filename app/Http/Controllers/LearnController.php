@@ -130,6 +130,20 @@ class LearnController extends Controller
             ]
         );
 
+        if ($validated['progress_percent'] >= 100) {
+            \App\Models\MeImpactEvent::create([
+                'event_type' => 'education_module_completed',
+                'province' => 'Lusaka',
+                'district' => 'Lusaka',
+                'anonymized_cohort' => 'Youth-Learner',
+                'metadata' => [
+                    'resource_id' => $validated['resource_id'],
+                    'quiz_score' => $validated['quiz_score'] ?? null,
+                ],
+                'created_at' => now(),
+            ]);
+        }
+
         if ($request->wantsJson() && !$request->header('X-Inertia')) {
             return response()->json(['success' => true, 'progress' => $progress]);
         }
@@ -156,6 +170,18 @@ class LearnController extends Controller
         $progress->save();
 
         return back()->with('success', $progress->bookmarked ? 'Bookmarked.' : 'Bookmark removed.');
+    }
+
+    /**
+     * Reset learning progress and quiz scores for a guide.
+     */
+    public function destroyProgress(Request $request, EducationalResource $resource)
+    {
+        UserLearningProgress::where('user_id', $request->user()->id)
+            ->where('resource_id', $resource->id)
+            ->delete();
+
+        return back()->with('success', 'Learning progress and quiz scores reset.');
     }
 }
 

@@ -95,6 +95,18 @@ class TrustedCircleController extends Controller
             'status' => 'invited',
         ]);
 
+        // Record M&E Telemetry for trusted circle expansion
+        \App\Models\MeImpactEvent::create([
+            'event_type' => 'trusted_circle_invite_sent',
+            'province' => 'Lusaka',
+            'district' => 'Lusaka',
+            'anonymized_cohort' => 'Support-Network',
+            'metadata' => [
+                'relationship' => $validated['relationship'],
+            ],
+            'created_at' => now(),
+        ]);
+
         return back()->with('success', "Invite created! Share code {$code} with your trusted companion.");
     }
 
@@ -124,6 +136,76 @@ class TrustedCircleController extends Controller
         $connection->update(['status' => 'revoked']);
 
         return back()->with('success', 'Companion access revoked immediately.');
+    }
+
+    /**
+     * Claim / Link an invite code post-signup (Companion side).
+     */
+    public function claim(Request $request)
+    {
+        $validated = $request->validate([
+            'invite_code' => 'required|string|exists:trusted_connections,invite_code',
+        ]);
+
+        $user = $request->user();
+        $connection = TrustedConnection::where('invite_code', $validated['invite_code'])
+            ->where('status', '!=', 'revoked')
+            ->firstOrFail();
+
+        $connection->update([
+            'trusted_user_id' => $user->id,
+            'status' => 'active',
+        ]);
+
+        \App\Models\MeImpactEvent::create([
+            'event_type' => 'trusted_partner_onboarded',
+            'province' => $user->province ?? 'Lusaka',
+            'district' => $user->district ?? 'Lusaka',
+            'anonymized_cohort' => 'Companion',
+            'metadata' => [
+                'relationship' => $connection->relationship,
+                'invite_code' => $connection->invite_code,
+            ],
+            'created_at' => now(),
+        ]);
+
+        return back()->with('success', "Successfully linked with your supported family member!");
+    }
+
+    /**
+     * Update companion contact channel and relationship.
+     */
+    public function updateCompanion(Request $request, TrustedConnection $connection)
+    {
+        if ($connection->trusted_user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'contact_channel' => 'required|string|max:100',
+            'relationship' => 'required|in:mother,father,guardian,partner,sibling,mentor',
+        ]);
+
+        $connection->update($validated);
+
+        return back()->with('success', 'Companion preferences updated.');
+    }
+
+    /**
+     * Companion leaves / unlinks from support circle.
+     */
+    public function destroyCompanion(Request $request, TrustedConnection $connection)
+    {
+        if ($connection->trusted_user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $connection->update([
+            'trusted_user_id' => null,
+            'status' => 'revoked',
+        ]);
+
+        return back()->with('info', 'You have left this trusted support circle.');
     }
 }
 
