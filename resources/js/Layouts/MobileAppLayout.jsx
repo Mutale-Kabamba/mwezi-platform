@@ -380,10 +380,7 @@ export default function MobileAppLayout({
                                                                 : 'text-slate-700 hover:bg-slate-50'
                                                         }`}
                                                     >
-                                                        <div className="flex items-center space-x-2">
-                                                            <span>{lang.flag}</span>
-                                                            <span>{lang.localName}</span>
-                                                        </div>
+                                                        <span>{lang.localName}</span>
                                                         {locale === lang.code && (
                                                             <CheckCircle2 className="w-3.5 h-3.5 text-rose-600" />
                                                         )}
@@ -520,27 +517,32 @@ export default function MobileAppLayout({
                             })}
                         </div>
 
-                        {/* Dedicated Language Selector in Drawer */}
+                        {/* Minimal Language Selector in Drawer */}
                         <div className="mt-4 pt-3 border-t border-rose-100">
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2 block mb-2">
-                                App Language • Ululimi / Chilankhulo
-                            </span>
-                            <div className="grid grid-cols-2 gap-1.5 px-1">
-                                {languages.map((lang) => (
-                                    <button
-                                        key={lang.code}
-                                        type="button"
-                                        onClick={() => setLocale(lang.code)}
-                                        className={`py-2 px-2.5 rounded-xl text-left text-[11px] font-semibold transition border flex items-center space-x-1.5 ${
-                                            locale === lang.code
-                                                ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
-                                                : 'bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100'
-                                        }`}
-                                    >
-                                        <span className="text-xs">{lang.flag}</span>
-                                        <span className="truncate">{lang.localName}</span>
-                                    </button>
-                                ))}
+                            <div className="flex items-center justify-between px-2 mb-2">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    Language
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-medium">Ululimi</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 px-1">
+                                {languages.map((lang) => {
+                                    const isSelected = locale === lang.code;
+                                    return (
+                                        <button
+                                            key={lang.code}
+                                            type="button"
+                                            onClick={() => setLocale(lang.code)}
+                                            className={`px-3 py-1.5 rounded-full text-xs transition active:scale-95 ${
+                                                isSelected
+                                                    ? 'bg-[#BE123C] text-white font-semibold shadow-2xs'
+                                                    : 'bg-slate-100 hover:bg-slate-200/70 text-slate-600 font-medium'
+                                            }`}
+                                        >
+                                            {lang.localName}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 

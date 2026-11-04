@@ -7,39 +7,52 @@ import {
     EyeOff, 
     Wifi, 
     BatteryMedium, 
-    User, 
-    Lock, 
-    UserCheck,
-    Check,
     Globe,
-    Phone,
-    Mail,
-    Building2,
-    Stethoscope,
     Heart,
     HeartHandshake,
+    Building2,
+    Stethoscope,
     Sparkles,
+    UserCheck,
+    Moon,
     ArrowRight,
-    Moon
+    ShieldCheck,
+    CheckCircle2,
+    AlertCircle,
+    Loader2
 } from 'lucide-react';
 
 export default function Register({ initialInviteCode = '' }) {
     const { t, locale, setLocale, languages } = useTranslation();
     const [showLangMenu, setShowLangMenu] = useState(false);
+    
+    // Step 1: Role Selection | Step 2: Role-Specific Form
+    const [step, setStep] = useState(initialInviteCode ? 2 : 1);
+    
+    const [rawIdentifier, setRawIdentifier] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [currentTime, setCurrentTime] = useState('09:41');
+
+    // Companion Code Verification State
+    const [codeVerified, setCodeVerified] = useState(false);
+    const [isVerifyingCode, setIsVerifyingCode] = useState(false);
+    const [codeError, setCodeError] = useState('');
+    const [verifiedDetails, setVerifiedDetails] = useState(null);
+
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         phone: '',
         email: '',
         username: '',
+        contact_channel: '',
         password: '',
         password_confirmation: '',
         role: initialInviteCode ? 'trusted_contact' : 'primary_user',
         preferred_language: locale || 'en',
         invite_code: initialInviteCode,
+        remember: true,
     });
-
-    const [showPassword, setShowPassword] = useState(false);
-    const [currentTime, setCurrentTime] = useState('09:41');
 
     useEffect(() => {
         const updateClock = () => {
@@ -53,19 +66,160 @@ export default function Register({ initialInviteCode = '' }) {
         return () => clearInterval(timer);
     }, []);
 
-    // Calculate dynamic password strength
-    const getPasswordStrength = (pwd) => {
-        if (!pwd) return { label: 'Required', color: 'text-slate-400', bars: 0, barColor: 'bg-slate-200' };
-        if (pwd.length < 6) return { label: 'Weak', color: 'text-amber-500', bars: 1, barColor: 'bg-amber-400' };
-        if (pwd.length < 8) return { label: 'Medium', color: 'text-rose-500', bars: 2, barColor: 'bg-rose-400' };
-        return { label: 'Strong', color: 'text-emerald-500', bars: 3, barColor: 'bg-emerald-500' };
+    // Verify companion invite code
+    const verifyInviteCode = async (codeToVerify) => {
+        const cleanCode = (codeToVerify || data.invite_code || '').trim().toUpperCase();
+        if (!cleanCode) {
+            setCodeError('Please enter your companion invite code.');
+            return;
+        }
+
+        setIsVerifyingCode(true);
+        setCodeError('');
+
+        try {
+            const res = await fetch(`/companion/verify-code?code=${encodeURIComponent(cleanCode)}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            const json = await res.json();
+            if (json.success && json.connection) {
+                setCodeVerified(true);
+                setVerifiedDetails(json.connection);
+                setData((prev) => ({
+                    ...prev,
+                    invite_code: json.connection.invite_code,
+                    name: prev.name || json.connection.contact_name || '',
+                    contact_channel: json.connection.contact_channel || '',
+                }));
+                handleIdentifierChange(json.connection.contact_channel || '');
+            } else {
+                setCodeVerified(false);
+                setCodeError(json.message || 'Invalid or expired invite code.');
+            }
+        } catch (err) {
+            setCodeError('Unable to verify code right now. Please try again.');
+        } finally {
+            setIsVerifyingCode(false);
+        }
     };
 
-    const strength = getPasswordStrength(data.password);
+    // Auto-verify if code passed in URL
+    useEffect(() => {
+        if (initialInviteCode) {
+            setData((prev) => ({ ...prev, role: 'trusted_contact', invite_code: initialInviteCode }));
+            setStep(2);
+            verifyInviteCode(initialInviteCode);
+        }
+    }, [initialInviteCode]);
+
+    // Synchronize identifier input into email, phone, or username
+    const handleIdentifierChange = (value) => {
+        setRawIdentifier(value);
+        const clean = value.trim();
+        if (clean.includes('@')) {
+            setData((prev) => ({ ...prev, email: clean, phone: '', username: '', contact_channel: clean }));
+        } else if (/^[\d+\s()-]+$/.test(clean) && clean.replace(/\D/g, '').length >= 6) {
+            setData((prev) => ({ ...prev, phone: clean, email: '', username: '', contact_channel: clean }));
+        } else {
+            setData((prev) => ({ ...prev, username: clean, email: '', phone: '', contact_channel: clean }));
+        }
+    };
+
+    const roles = [
+        { 
+            id: 'primary_user', 
+            label: 'Girl / Teen / Woman', 
+            desc: 'Track cycle safely, ask Luna AI, and request dignity supplies',
+            icon: Heart 
+        },
+        { 
+            id: 'trusted_contact', 
+            label: 'Trusted Companion', 
+            desc: 'Support a daughter, sister, or partner using an invite code',
+            icon: HeartHandshake 
+        },
+        { 
+            id: 'community_partner', 
+            label: 'School / NGO Hub', 
+            desc: 'Manage local stock and distribute emergency hygiene packs',
+            icon: Building2 
+        },
+        { 
+            id: 'health_reviewer', 
+            label: 'Clinician / Midwife', 
+            desc: 'Verify medical guides and provide clinical review support',
+            icon: Stethoscope 
+        },
+        { 
+            id: 'donor_sponsor', 
+            label: 'Dignity Sponsor', 
+            desc: 'Directly fund reusable pad kits for Zambian schoolgirls',
+            icon: Sparkles 
+        },
+    ];
+
+    const currentRoleConfig = roles.find((r) => r.id === data.role) || roles[0];
+
+    // Role-specific field titles and descriptions
+    const getRoleFormDetails = () => {
+        switch (data.role) {
+            case 'trusted_contact':
+                return {
+                    title: 'Companion Registration',
+                    subtitle: 'Create your account to support someone in your care',
+                    nameLabel: 'Your full name',
+                    namePlaceholder: 'e.g. Chileshe Mulenga',
+                    identifierPlaceholder: 'Mobile number or Email address',
+                    hasInviteCode: true,
+                };
+            case 'community_partner':
+                return {
+                    title: 'Register Service Hub',
+                    subtitle: 'For schools, health posts, and local distribution centers',
+                    nameLabel: 'School or Organization name',
+                    namePlaceholder: 'e.g. Play It Forward Hub - Livingstone',
+                    identifierPlaceholder: 'Hub coordinator phone or official email',
+                    hasInviteCode: false,
+                };
+            case 'health_reviewer':
+                return {
+                    title: 'Clinician & Midwife Portal',
+                    subtitle: 'Verified health professional registration for peer review',
+                    nameLabel: 'Full name & professional title',
+                    namePlaceholder: 'e.g. Dr. Bupe Mwamba (OB-GYN)',
+                    identifierPlaceholder: 'Clinical email or phone number',
+                    hasInviteCode: false,
+                };
+            case 'donor_sponsor':
+                return {
+                    title: 'Join as Dignity Sponsor',
+                    subtitle: 'Support menstrual dignity packs for vulnerable girls',
+                    nameLabel: 'Your name or organization',
+                    namePlaceholder: 'e.g. Natasha Banda (or Anonymous)',
+                    identifierPlaceholder: 'Mobile Money phone (Airtel/MTN) or Email',
+                    hasInviteCode: false,
+                };
+            case 'primary_user':
+            default:
+                return {
+                    title: 'Welcome to Mwezi',
+                    subtitle: 'Kindly fill in your details to get started',
+                    nameLabel: 'Your name or nickname',
+                    namePlaceholder: 'Full name or preferred nickname',
+                    identifierPlaceholder: 'Phone number or Email address',
+                    hasInviteCode: false,
+                };
+        }
+    };
+
+    const roleDetails = getRoleFormDetails();
 
     const submit = (e) => {
         e.preventDefault();
-        setData('password_confirmation', data.password);
         post(route('register'), {
             onFinish: () => reset('password', 'password_confirmation'),
         });
@@ -73,15 +227,15 @@ export default function Register({ initialInviteCode = '' }) {
 
     return (
         <div className="min-h-screen bg-gradient-to-tr from-[#FBECEF] via-[#F4F1F4] to-[#EBF3F5] flex items-center justify-center p-0 sm:py-6 sm:px-4 font-sans selection:bg-rose-100 selection:text-rose-900">
-            <Head title="Create Free Account - Mwezi" />
+            <Head title="Sign Up - Mwezi" />
 
-            {/* NATIVE MOBILE FRAME */}
+            {/* NATIVE PHONE FRAME */}
             <div className="w-full max-w-[420px] h-screen sm:h-[840px] sm:max-h-[92vh] bg-white sm:rounded-[44px] shadow-[0_25px_70px_-15px_rgba(112,38,56,0.22)] sm:border-[8px] sm:border-slate-900/90 sm:ring-1 sm:ring-black/10 relative flex flex-col justify-between overflow-hidden">
                 
-                {/* 1. TOP SOLID COLOR LOGO & NOTIFICATION BAR SECTION (Matches Login & Onboarding) */}
-                <div className="bg-[#BE123C] text-white shrink-0 relative pt-3 pb-8 px-5 select-none flex flex-col justify-between rounded-b-[32px] z-20">
+                {/* 1. TOP SOLID RED ROUNDED HEADER SECTION (Matches Onboarding & Login) */}
+                <div className="bg-[#BE123C] text-white shrink-0 relative pt-3 pb-7 px-5 select-none flex flex-col justify-between rounded-b-[32px] z-20">
                     
-                    {/* Integrated Phone Notification Bar (Seamless Solid Background) */}
+                    {/* Integrated Phone Notification Bar */}
                     <div className="w-full px-1 pb-2 flex items-center justify-between text-xs font-semibold">
                         <span className="font-bold tracking-tight text-[11px] text-white">{currentTime}</span>
                         
@@ -99,13 +253,24 @@ export default function Register({ initialInviteCode = '' }) {
 
                     {/* Top Action Navigation Bar */}
                     <div className="flex items-center justify-between pt-1">
-                        <Link 
-                            href="/" 
-                            className="p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition active:scale-95"
-                            aria-label="Back"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </Link>
+                        {step === 2 ? (
+                            <button 
+                                type="button"
+                                onClick={() => setStep(1)}
+                                className="p-1.5 -ml-1 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition active:scale-95"
+                                aria-label="Back to role selection"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                        ) : (
+                            <Link 
+                                href="/" 
+                                className="p-1.5 -ml-1 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition active:scale-95"
+                                aria-label="Back"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </Link>
+                        )}
 
                         <div className="flex items-center space-x-2 text-xs">
                             {/* Header Language Selector */}
@@ -123,14 +288,13 @@ export default function Register({ initialInviteCode = '' }) {
                                 {showLangMenu && (
                                     <>
                                         <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setShowLangMenu(false)} />
-                                        <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-2xl shadow-xl border border-rose-100 py-1 z-50 text-slate-800">
+                                        <div className="absolute right-0 top-full mt-1.5 w-36 bg-white rounded-2xl shadow-xl border border-rose-100 py-1 z-50 text-slate-800">
                                             {languages.map((lang) => (
                                                 <button
                                                     key={lang.code}
                                                     type="button"
                                                     onClick={() => {
                                                         setLocale(lang.code);
-                                                        setData('preferred_language', lang.code);
                                                         setShowLangMenu(false);
                                                     }}
                                                     className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between transition ${
@@ -146,228 +310,447 @@ export default function Register({ initialInviteCode = '' }) {
                                 )}
                             </div>
 
-                            <span className="text-[11px] text-rose-100 font-medium hidden xs:inline">
-                                {t('auth_already_registered', 'Already have an account?')}
-                            </span>
                             <Link 
                                 href="/login" 
                                 className="px-3 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold border border-white/20 backdrop-blur-sm shadow-xs transition active:scale-95"
                             >
-                                {t('onboarding_sign_in', 'Sign in')}
+                                {t('auth_log_in', 'Log in')}
                             </Link>
                         </div>
                     </div>
 
-                    {/* Centered Brand Title with Generous Breathing Room */}
-                    <div className="text-center pt-5 pb-3">
+                    {/* Centered Brand Title */}
+                    <div className="text-center pt-3 pb-1">
                         <div className="inline-flex items-center space-x-2.5">
                             <Moon className="w-6 h-6 text-rose-200 fill-rose-200/30" />
                             <span className="font-black text-3xl tracking-tight text-white font-sans drop-shadow-xs">
                                 Mwezi
                             </span>
                         </div>
+                        <p className="text-[11px] text-rose-100 font-medium tracking-wide mt-0.5">
+                            {t('app_subtitle', 'Menstrual Health & Dignity')}
+                        </p>
                     </div>
                 </div>
 
-                {/* 2. WHITE CONTENT SECTION */}
-                <div className="bg-white pt-5 px-6 pb-4 flex-1 min-h-0 flex flex-col justify-between overflow-y-auto hide-scrollbar relative z-10">
-                    <div className="space-y-2.5">
-                        {/* Title and Subtitle */}
-                        <div className="text-center space-y-0.5">
-                            <h1 className="text-lg font-black text-slate-900 tracking-tight">
-                                {t('auth_register_title', 'Create Free Account')}
-                            </h1>
-                            <p className="text-[11px] text-slate-500 font-medium">
-                                {t('auth_register_desc', 'Join Mwezi for stigma-free menstrual dignity.')}
-                            </p>
-                        </div>
-
-                        {/* Registration Form */}
-                        <form onSubmit={submit} className="space-y-2">
-                            {/* Phone Number Field */}
-                            <div className="border border-slate-200/90 rounded-xl p-2 px-3 bg-white focus-within:border-rose-500 focus-within:ring-1 focus-within:ring-rose-500/20 transition shadow-2xs">
-                                <div className="flex items-center justify-between mb-0.5">
-                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                                        <Phone className="w-2.5 h-2.5 text-slate-400" />
-                                        <span>{t('auth_phone', 'Phone Number')}</span>
-                                    </label>
-                                    <span className="text-[8px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.2 rounded-md">
-                                        Primary in Zambia
-                                    </span>
-                                </div>
-                                <input
-                                    type="tel"
-                                    value={data.phone}
-                                    onChange={(e) => setData('phone', e.target.value)}
-                                    placeholder="0977 123456 or +260..."
-                                    className="w-full p-0 border-0 text-xs font-semibold text-slate-900 placeholder-slate-300 focus:ring-0 bg-transparent"
-                                />
+                {/* 2. MAIN CONTENT AREA */}
+                <div className="bg-white px-7 pt-4 pb-6 flex-1 flex flex-col justify-between overflow-y-auto hide-scrollbar z-10">
+                    
+                    {/* STEP 1: ROLE SELECTION (Appears BEFORE the registration form) */}
+                    {step === 1 && (
+                        <div className="space-y-4 animate-fadeIn">
+                            <div className="text-center pt-1">
+                                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                                    I am joining as:
+                                </h1>
+                                <p className="text-xs text-slate-500 font-normal mt-1">
+                                    Select your role to customize your Mwezi experience
+                                </p>
                             </div>
-                            {errors.phone && <div className="text-[10px] text-rose-600 pl-1 font-medium">{errors.phone}</div>}
 
-                            {/* Email Address Field */}
-                            <div className="border border-slate-200/90 rounded-xl p-2 px-3 bg-white focus-within:border-rose-500 focus-within:ring-1 focus-within:ring-rose-500/20 transition shadow-2xs">
-                                <div className="flex items-center justify-between mb-0.5">
-                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                                        <Mail className="w-2.5 h-2.5 text-slate-400" />
-                                        <span>{t('auth_email', 'Email Address')}</span>
-                                    </label>
-                                    <span className="text-[8px] font-medium text-slate-400">
-                                        {data.phone ? 'Optional' : 'Required if no phone'}
-                                    </span>
-                                </div>
-                                <input
-                                    type="email"
-                                    value={data.email}
-                                    onChange={(e) => setData('email', e.target.value)}
-                                    placeholder="name@example.com"
-                                    className="w-full p-0 border-0 text-xs font-semibold text-slate-900 placeholder-slate-300 focus:ring-0 bg-transparent"
-                                />
-                            </div>
-                            {errors.email && <div className="text-[10px] text-rose-600 pl-1 font-medium">{errors.email}</div>}
-
-                            {/* Your Name Field */}
-                            <div className="border border-slate-200/90 rounded-xl p-2 px-3 bg-white focus-within:border-rose-500 focus-within:ring-1 focus-within:ring-rose-500/20 transition shadow-2xs">
-                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 mb-0.5">
-                                    <User className="w-2.5 h-2.5 text-slate-400" />
-                                    <span>{t('auth_name', 'Your Name')}</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
-                                    placeholder="e.g. Natasha Phiri"
-                                    className="w-full p-0 border-0 text-xs font-semibold text-slate-900 placeholder-slate-300 focus:ring-0 bg-transparent"
-                                    required
-                                />
-                            </div>
-                            {errors.name && <div className="text-[10px] text-rose-600 pl-1 font-medium">{errors.name}</div>}
-
-                            {/* Password Field with Dynamic Strength */}
-                            <div className="border border-slate-200/90 rounded-xl p-2 px-3 bg-white focus-within:border-rose-500 focus-within:ring-1 focus-within:ring-rose-500/20 transition shadow-2xs">
-                                <div className="flex justify-between items-center mb-0.5">
-                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                                        <Lock className="w-2.5 h-2.5 text-slate-400" />
-                                        <span>{t('auth_password', 'Password')}</span>
-                                    </label>
-
-                                    {data.password && (
-                                        <div className="flex items-center space-x-1.5">
-                                            <div className="flex space-x-0.5">
-                                                <div className={`w-3 h-0.5 rounded-full ${strength.bars >= 1 ? strength.barColor : 'bg-slate-200'}`} />
-                                                <div className={`w-3 h-0.5 rounded-full ${strength.bars >= 2 ? strength.barColor : 'bg-slate-200'}`} />
-                                                <div className={`w-3 h-0.5 rounded-full ${strength.bars >= 3 ? strength.barColor : 'bg-slate-200'}`} />
+                            {/* Role Selection Cards */}
+                            <div className="space-y-2.5 pt-1">
+                                {roles.map((r) => {
+                                    const IconComponent = r.icon;
+                                    const isSelected = data.role === r.id;
+                                    return (
+                                        <button
+                                            key={r.id}
+                                            type="button"
+                                            onClick={() => setData('role', r.id)}
+                                            className={`w-full p-3 rounded-2xl text-left transition border flex items-center justify-between group ${
+                                                isSelected
+                                                    ? 'bg-rose-50/80 border-[#C81E3D] shadow-xs'
+                                                    : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/60'
+                                            }`}
+                                        >
+                                            <div className="flex items-center space-x-3 min-w-0 pr-2">
+                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition ${
+                                                    isSelected ? 'bg-[#C81E3D] text-white shadow-xs' : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200/80'
+                                                }`}>
+                                                    <IconComponent className="w-5 h-5" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className={`text-xs font-bold leading-tight ${isSelected ? 'text-[#C81E3D]' : 'text-slate-800'}`}>
+                                                        {r.label}
+                                                    </p>
+                                                    <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
+                                                        {r.desc}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <span className={`text-[9px] font-bold ${strength.color}`}>
-                                                {strength.label}
-                                            </span>
+
+                                            {/* Selection Radio Indicator */}
+                                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition ${
+                                                isSelected 
+                                                    ? 'border-[#C81E3D] bg-[#C81E3D]' 
+                                                    : 'border-slate-300 bg-white'
+                                            }`}>
+                                                {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Continue Button to Step 2 */}
+                            <div className="pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setStep(2)}
+                                    className="w-full py-3.5 rounded-xl bg-[#C81E3D] hover:bg-[#B01733] active:scale-[0.99] text-white font-semibold text-sm transition shadow-sm flex items-center justify-center space-x-2"
+                                >
+                                    <span>Continue to Registration</span>
+                                    <ArrowRight className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            {/* Sublink */}
+                            <div className="text-center pt-0.5 text-xs text-slate-500">
+                                <span>{t('auth_already_have_account', 'Have an account?')} </span>
+                                <Link 
+                                    href="/login" 
+                                    className="text-[#C81E3D] font-semibold hover:underline"
+                                >
+                                    {t('auth_log_in', 'Log in')}
+                                </Link>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* STEP 2: ROLE-SPECIFIC REGISTRATION FORM */}
+                    {step === 2 && (
+                        <div className="space-y-3.5 animate-fadeIn">
+                            {/* Role Badge & Back / Change Role Shortcut */}
+                            <div className="flex items-center justify-between bg-slate-50 p-2 px-3 rounded-xl border border-slate-200">
+                                <div className="flex items-center space-x-2">
+                                    <currentRoleConfig.icon className="w-4 h-4 text-[#C81E3D]" />
+                                    <span className="text-xs font-bold text-slate-800">{currentRoleConfig.label}</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setStep(1);
+                                        setCodeVerified(false);
+                                        setVerifiedDetails(null);
+                                    }}
+                                    className="text-[11px] font-semibold text-[#C81E3D] hover:underline"
+                                >
+                                    Change
+                                </button>
+                            </div>
+
+                            {/* SPECIAL FLOW FOR COMPANION: STEP 2A - ENTER CODE */}
+                            {data.role === 'trusted_contact' && !codeVerified ? (
+                                <div className="space-y-4 pt-1 animate-fadeIn">
+                                    <div className="text-center pt-0.5">
+                                        <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+                                            Enter Companion Invite Code
+                                        </h1>
+                                        <p className="text-xs text-slate-500 font-normal mt-1 leading-relaxed">
+                                            Enter the code shared with you. Your details entered by the primary user will pop up automatically.
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-3 pt-2">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                                Companion Code
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={data.invite_code}
+                                                onChange={(e) => {
+                                                    setData('invite_code', e.target.value.toUpperCase());
+                                                    setCodeError('');
+                                                }}
+                                                placeholder="e.g. MWEZI-1234-ABCD"
+                                                className="w-full px-4 py-3.5 rounded-xl border border-slate-200 text-sm font-mono font-bold tracking-wider text-slate-900 placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal placeholder:text-xs uppercase focus:outline-none focus:border-[#C81E3D] focus:ring-1 focus:ring-[#C81E3D] transition shadow-2xs"
+                                                autoFocus
+                                            />
+                                            {codeError && (
+                                                <p className="text-[11px] text-[#C81E3D] mt-1.5 pl-1 font-medium flex items-center space-x-1">
+                                                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                                    <span>{codeError}</span>
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            disabled={isVerifyingCode || !data.invite_code.trim()}
+                                            onClick={() => verifyInviteCode(data.invite_code)}
+                                            className="w-full py-3.5 rounded-xl bg-[#C81E3D] hover:bg-[#B01733] active:scale-[0.99] text-white font-semibold text-sm transition shadow-sm disabled:opacity-50 flex items-center justify-center space-x-2"
+                                        >
+                                            {isVerifyingCode ? (
+                                                <span className="flex items-center space-x-2">
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                    <span>Finding Invitation...</span>
+                                                </span>
+                                            ) : (
+                                                <>
+                                                    <span>Find My Invitation</span>
+                                                    <ArrowRight className="w-4 h-4" />
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+
+                                    <div className="p-3 bg-rose-50/60 rounded-2xl border border-rose-100 text-[11px] text-slate-600 space-y-1">
+                                        <p className="font-semibold text-slate-800">Need a code?</p>
+                                        <p>Ask the girl, teen, or woman you're supporting to invite you from their "Trusted Circle" in the Mwezi app.</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* STEP 2B - REGISTRATION FORM (OR COMPANION PASSWORD SETUP AFTER VERIFICATION) */
+                                <div className="space-y-3.5 pt-0.5">
+                                    {/* COMPANION POPUP CARD SHOWING PRIMARY USER'S DETAILS */}
+                                    {data.role === 'trusted_contact' && codeVerified && (
+                                        <div className="bg-gradient-to-r from-emerald-50 via-rose-50/50 to-emerald-50 p-3.5 rounded-2xl border border-emerald-200/90 shadow-2xs space-y-1.5 animate-fadeIn">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center space-x-1.5 text-emerald-800 font-bold text-xs">
+                                                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                                    <span>Invitation Verified!</span>
+                                                </div>
+                                                <span className="font-mono text-[10px] font-bold text-slate-600 bg-white/90 px-2 py-0.5 rounded-md border border-slate-200">
+                                                    {data.invite_code}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-slate-700">
+                                                Invited by <strong className="text-slate-900">{verifiedDetails?.primary_user_name}</strong> as their <span className="font-semibold capitalize text-[#C81E3D]">{verifiedDetails?.relationship}</span> companion.
+                                            </p>
+                                            <p className="text-[10px] text-slate-500">
+                                                Your details were pre-filled below. You can edit them if needed, then set your password.
+                                            </p>
                                         </div>
                                     )}
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <input
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={data.password}
-                                        onChange={(e) => setData('password', e.target.value)}
-                                        placeholder="••••••••••••"
-                                        className="w-full p-0 border-0 text-xs font-semibold text-slate-900 placeholder-slate-300 focus:ring-0 bg-transparent"
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="text-slate-400 hover:text-slate-600 p-0.5 transition"
-                                        tabIndex={-1}
-                                    >
-                                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                                    </button>
-                                </div>
-                            </div>
-                            {errors.password && <div className="text-[10px] text-rose-600 pl-1 font-medium">{errors.password}</div>}
 
-                            {/* Role Selection Badge Chips (Professional Lucide Icons, NO Emojis) */}
-                            <div className="pt-0.5">
-                                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                                    I am joining as:
-                                </label>
-                                <div className="grid grid-cols-2 gap-1.5">
-                                    {[
-                                        { id: 'primary_user', label: 'Girl / Teen / Woman', icon: User, color: 'text-rose-600' },
-                                        { id: 'trusted_contact', label: 'Trusted Companion', icon: HeartHandshake, color: 'text-amber-600' },
-                                        { id: 'community_partner', label: 'School / NGO Hub', icon: Building2, color: 'text-sky-600' },
-                                        { id: 'health_reviewer', label: 'Clinician / Midwife', icon: Stethoscope, color: 'text-emerald-600' },
-                                        { id: 'donor_sponsor', label: 'Dignity Sponsor', icon: Heart, color: 'text-rose-500' },
-                                    ].map((r) => {
-                                        const IconComponent = r.icon;
-                                        const isSelected = data.role === r.id;
-                                        return (
+                                    {/* Centered Heading */}
+                                    <div className="text-center pt-0.5">
+                                        <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+                                            {data.role === 'trusted_contact' ? 'Set Your Password' : roleDetails.title}
+                                        </h1>
+                                        <p className="text-xs text-slate-500 font-normal mt-0.5">
+                                            {data.role === 'trusted_contact' 
+                                                ? 'Create your password to complete setup and activate companion view' 
+                                                : roleDetails.subtitle
+                                            }
+                                        </p>
+                                    </div>
+
+                                    {/* Sign Up Form */}
+                                    <form onSubmit={submit} className="space-y-3 pt-1">
+                                        {/* Name Input tailored to Role (Editable) */}
+                                        <div>
+                                            {data.role === 'trusted_contact' && (
+                                                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                                                    Your Name (as entered by primary user, editable)
+                                                </label>
+                                            )}
+                                            <input
+                                                type="text"
+                                                value={data.name}
+                                                onChange={(e) => setData('name', e.target.value)}
+                                                placeholder={roleDetails.namePlaceholder}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 placeholder:text-xs focus:outline-none focus:border-[#C81E3D] focus:ring-1 focus:ring-[#C81E3D] transition shadow-2xs"
+                                                required
+                                            />
+                                            {errors.name && (
+                                                <p className="text-[11px] text-[#C81E3D] mt-1 pl-1 font-medium">{errors.name}</p>
+                                            )}
+                                        </div>
+
+                                        {/* Email address / Phone number tailored to Role (Editable) */}
+                                        <div>
+                                            {data.role === 'trusted_contact' && (
+                                                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                                                    Mobile Number or Email (editable)
+                                                </label>
+                                            )}
+                                            <input
+                                                type="text"
+                                                value={rawIdentifier}
+                                                onChange={(e) => handleIdentifierChange(e.target.value)}
+                                                placeholder={roleDetails.identifierPlaceholder}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 placeholder:text-xs focus:outline-none focus:border-[#C81E3D] focus:ring-1 focus:ring-[#C81E3D] transition shadow-2xs"
+                                                required
+                                            />
+                                            {(errors.email || errors.phone || errors.username) && (
+                                                <p className="text-[11px] text-[#C81E3D] mt-1 pl-1 font-medium">
+                                                    {errors.email || errors.phone || errors.username}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Password with Eye Toggle */}
+                                        <div>
+                                            {data.role === 'trusted_contact' && (
+                                                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                                                    Create Password
+                                                </label>
+                                            )}
+                                            <div className="relative flex items-center">
+                                                <input
+                                                    type={showPassword ? 'text' : 'password'}
+                                                    value={data.password}
+                                                    onChange={(e) => setData('password', e.target.value)}
+                                                    placeholder="Password (minimum 8 characters)"
+                                                    className="w-full px-4 py-3 pr-11 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 placeholder:text-xs focus:outline-none focus:border-[#C81E3D] focus:ring-1 focus:ring-[#C81E3D] transition shadow-2xs"
+                                                    required
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3.5 text-slate-400 hover:text-slate-600 transition"
+                                                    tabIndex={-1}
+                                                    aria-label="Toggle password visibility"
+                                                >
+                                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                </button>
+                                            </div>
+                                            {errors.password && (
+                                                <p className="text-[11px] text-[#C81E3D] mt-1 pl-1 font-medium">{errors.password}</p>
+                                            )}
+                                        </div>
+
+                                        {/* Confirm Password with Eye Toggle */}
+                                        <div>
+                                            {data.role === 'trusted_contact' && (
+                                                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                                                    Confirm Password
+                                                </label>
+                                            )}
+                                            <div className="relative flex items-center">
+                                                <input
+                                                    type={showConfirmPassword ? 'text' : 'password'}
+                                                    value={data.password_confirmation}
+                                                    onChange={(e) => setData('password_confirmation', e.target.value)}
+                                                    placeholder="Confirm password"
+                                                    className="w-full px-4 py-3 pr-11 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 placeholder:text-xs focus:outline-none focus:border-[#C81E3D] focus:ring-1 focus:ring-[#C81E3D] transition shadow-2xs"
+                                                    required
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                    className="absolute right-3.5 text-slate-400 hover:text-slate-600 transition"
+                                                    tabIndex={-1}
+                                                    aria-label="Toggle confirm password visibility"
+                                                >
+                                                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                </button>
+                                            </div>
+                                            {errors.password_confirmation && (
+                                                <p className="text-[11px] text-[#C81E3D] mt-1 pl-1 font-medium">{errors.password_confirmation}</p>
+                                            )}
+                                        </div>
+
+                                        {/* Remember me Checkbox */}
+                                        <div className="pt-0.5">
+                                            <label className="flex items-center space-x-2 text-xs text-slate-500 cursor-pointer select-none">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={data.remember}
+                                                    onChange={(e) => setData('remember', e.target.checked)}
+                                                    className="w-3.5 h-3.5 rounded border-slate-300 text-[#C81E3D] focus:ring-[#C81E3D] transition"
+                                                />
+                                                <span className="text-[11px] text-slate-600 font-normal">
+                                                    {t('auth_remember_me', 'Remember me')}
+                                                </span>
+                                            </label>
+                                        </div>
+
+                                        {/* Main Action Button */}
+                                        <div className="pt-1">
                                             <button
-                                                key={r.id}
-                                                type="button"
-                                                onClick={() => setData('role', r.id)}
-                                                className={`py-1.5 px-2 rounded-xl text-left border text-[10px] font-bold transition flex items-center space-x-1.5 ${
-                                                    isSelected
-                                                        ? 'bg-rose-50 border-rose-500 text-rose-900 shadow-2xs ring-1 ring-rose-500/20'
-                                                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                                                } ${r.id === 'donor_sponsor' ? 'col-span-2' : ''}`}
+                                                type="submit"
+                                                disabled={processing}
+                                                className="w-full py-3.5 rounded-xl bg-[#C81E3D] hover:bg-[#B01733] active:scale-[0.99] text-white font-semibold text-sm transition shadow-sm disabled:opacity-60"
                                             >
-                                                <IconComponent className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-rose-600' : r.color}`} />
-                                                <span className="truncate">{r.label}</span>
-                                                {isSelected && <Check className="w-3 h-3 ml-auto text-rose-600 shrink-0" />}
+                                                {processing 
+                                                    ? t('loading', 'Creating account...') 
+                                                    : (data.role === 'trusted_contact' ? 'Create Password & Done' : t('auth_create_account', 'Create account'))
+                                                }
                                             </button>
-                                        );
-                                    })}
+                                        </div>
+
+                                        {/* If companion, option to re-enter code */}
+                                        {data.role === 'trusted_contact' && (
+                                            <div className="text-center pt-0.5">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setCodeVerified(false);
+                                                        setVerifiedDetails(null);
+                                                    }}
+                                                    className="text-[11px] text-slate-500 hover:text-slate-700 underline"
+                                                >
+                                                    Use a different invite code
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Direct Sublink */}
+                                        <div className="text-center pt-0.5 text-xs text-slate-500">
+                                            <span>{t('auth_already_have_account', 'Have an account?')} </span>
+                                            <Link 
+                                                href="/login" 
+                                                className="text-[#C81E3D] font-semibold hover:underline"
+                                            >
+                                                {t('auth_log_in', 'Log in')}
+                                            </Link>
+                                        </div>
+                                    </form>
                                 </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* 3. BOTTOM SECTION: Divider & Social/Quick Sign-In Icons (No Apple) */}
+                    <div className="pt-4 space-y-3">
+                        {/* Divider */}
+                        <div className="relative flex items-center justify-center">
+                            <div className="w-full border-t border-slate-200"></div>
+                            <span className="absolute bg-white px-3 text-xs text-slate-400 font-medium">
+                                Or
+                            </span>
+                        </div>
+
+                        {/* Social / Quick Sign In Icon Buttons: Google & Demo Roles */}
+                        <div className="flex items-center justify-center space-x-10 pt-1">
+                            {/* Google Button */}
+                            <div className="flex flex-col items-center space-y-1">
+                                <Link
+                                    href="/login"
+                                    className="w-12 h-12 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center transition active:scale-95 shadow-2xs"
+                                    title="Sign up with Google"
+                                >
+                                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z"/>
+                                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.27v3.15C3.25 21.37 7.31 24 12 24z"/>
+                                        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.27C.46 8.2.01 10.04.01 12c0 1.96.45 3.8 1.26 5.42l4.01-3.15z"/>
+                                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.63 1.27 6.58l4.01 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                                    </svg>
+                                </Link>
+                                <span className="text-[11px] text-slate-500 font-medium">Google</span>
                             </div>
 
-                            {/* Primary Register Button */}
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#BE123C] to-rose-500 hover:opacity-95 text-white font-bold text-xs shadow-md shadow-rose-900/15 transition active:scale-98 disabled:opacity-50 mt-1 flex items-center justify-center space-x-1.5"
-                            >
-                                <span>{processing ? t('loading', 'Creating Account...') : t('auth_register_btn', 'Register Free')}</span>
-                                <ArrowRight className="w-3.5 h-3.5" />
-                            </button>
-                        </form>
-
-                        {/* Divider */}
-                        <div className="flex items-center my-0.5">
-                            <div className="flex-1 border-t border-slate-200/80"></div>
-                            <span className="px-2 text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                                Or sign up with
-                            </span>
-                            <div className="flex-1 border-t border-slate-200/80"></div>
+                            {/* Demo Roles Shortcut Button */}
+                            <div className="flex flex-col items-center space-y-1">
+                                <Link
+                                    href="/login"
+                                    className="w-12 h-12 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center text-[#C81E3D] transition active:scale-95 shadow-2xs"
+                                    title="Explore Demo Accounts"
+                                >
+                                    <UserCheck className="w-5 h-5" />
+                                </Link>
+                                <span className="text-[11px] text-slate-500 font-medium">Demo Roles</span>
+                            </div>
                         </div>
 
-                        {/* Alternative Options */}
-                        <div className="grid grid-cols-2 gap-2">
-                            <Link
-                                href="/login"
-                                className="py-1.5 px-3 rounded-xl bg-white border border-slate-200/80 hover:bg-slate-50 transition flex items-center justify-center space-x-1.5 shadow-2xs active:scale-95 text-[11px] font-bold text-slate-700"
-                            >
-                                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
-                                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z"/>
-                                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.27v3.15C3.25 21.37 7.31 24 12 24z"/>
-                                    <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.27C.46 8.2.01 10.04.01 12c0 1.96.45 3.8 1.26 5.42l4.01-3.15z"/>
-                                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.63 1.27 6.58l4.01 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-                                </svg>
-                                <span>Google</span>
-                            </Link>
-
-                            <Link
-                                href="/login"
-                                className="py-1.5 px-3 rounded-xl bg-white border border-slate-200/80 hover:bg-slate-50 transition flex items-center justify-center space-x-1.5 shadow-2xs active:scale-95 text-[11px] font-bold text-rose-700"
-                            >
-                                <UserCheck className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                                <span>Demo Roles</span>
-                            </Link>
+                        {/* Bottom Phone Indicator */}
+                        <div className="pt-2 text-center">
+                            <div className="w-32 h-1 bg-slate-300 rounded-full opacity-60 mx-auto" />
                         </div>
-                    </div>
-
-                    {/* 3. BOTTOM HOME INDICATOR */}
-                    <div className="pt-2 text-center shrink-0">
-                        <div className="w-32 h-1 bg-slate-300 rounded-full opacity-60 mx-auto" />
                     </div>
                 </div>
             </div>

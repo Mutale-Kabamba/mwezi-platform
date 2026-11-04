@@ -96,6 +96,36 @@ class DashboardController extends Controller
         ];
         $dailyTip = $affirmations[date('j') % count($affirmations)];
 
+        // 5. Incoming Companion Invitations & Active Companion Support Hubs
+        $pendingCompanionRequests = \App\Models\TrustedConnection::where('trusted_user_id', $user->id)
+            ->where('status', 'pending')
+            ->with('primaryUser:id,name')
+            ->get();
+
+        $companionCareSummaries = \App\Models\TrustedConnection::where('trusted_user_id', $user->id)
+            ->where('status', 'active')
+            ->with('primaryUser:id,name')
+            ->get()
+            ->map(function ($conn) {
+                $prediction = CyclePrediction::where('user_id', $conn->primary_user_id)->latest()->first();
+                $daysUntil = 14;
+                $predictedDate = 'Upcoming Window';
+                if ($prediction) {
+                    $start = Carbon::parse($prediction->predicted_start_date);
+                    $diff = (int) Carbon::now()->diffInDays($start, false);
+                    $daysUntil = max(0, $diff);
+                    $predictedDate = $start->format('M d, Y');
+                }
+                return [
+                    'connection_id' => $conn->id,
+                    'primary_name' => $conn->contact_name ?: ($conn->primaryUser?->name ?? 'Loved One'),
+                    'relationship' => $conn->relationship,
+                    'days_until_next' => $daysUntil,
+                    'predicted_start_date' => $predictedDate,
+                    'permissions' => $conn->permissions ?? [],
+                ];
+            });
+
         return Inertia::render('Dashboard', [
             'cycleInfo' => $cycleInfo,
             'cycleProfile' => $profile,
@@ -104,6 +134,8 @@ class DashboardController extends Controller
             'recentRequests' => $recentRequests,
             'nearbyHubsCount' => $nearbyHubsCount,
             'dailyTip' => $dailyTip,
+            'pendingCompanionRequests' => $pendingCompanionRequests,
+            'companionCareSummaries' => $companionCareSummaries,
         ]);
     }
 }

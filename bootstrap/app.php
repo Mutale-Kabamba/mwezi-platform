@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'webhooks/*',
+            'companion/verify-code',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

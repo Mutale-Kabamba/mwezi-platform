@@ -23,7 +23,8 @@ import {
     Activity,
     Moon,
     Sun,
-    Leaf
+    Leaf,
+    HeartHandshake
 } from 'lucide-react';
 import { useTranslation } from '@/i18n/LanguageContext';
 
@@ -34,7 +35,9 @@ export default function Dashboard({
     featuredArticle, 
     recentRequests = [], 
     nearbyHubsCount = 0, 
-    dailyTip = '' 
+    dailyTip = '',
+    pendingCompanionRequests = [],
+    companionCareSummaries = []
 }) {
     const { t } = useTranslation();
     const todayStr = new Date().toISOString().split('T')[0];
@@ -116,6 +119,88 @@ export default function Dashboard({
                         </p>
                     </div>
                 </div>
+
+                {/* 1.1 INCOMING COMPANION INVITATIONS (When another user adds this registered account) */}
+                {pendingCompanionRequests && pendingCompanionRequests.length > 0 && (
+                    <div className="space-y-2">
+                        {pendingCompanionRequests.map((req) => (
+                            <div key={req.id} className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-3xl p-4 shadow-xs space-y-2.5 animate-fadeIn">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                        <HeartHandshake className="w-4 h-4 text-amber-600" />
+                                        <span className="text-xs font-bold text-amber-900 uppercase tracking-wider">Companion Request</span>
+                                    </div>
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 capitalize">
+                                        {req.relationship}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-slate-700 leading-relaxed">
+                                    <strong>{req.primary_user?.name || 'A family member'}</strong> has invited you to be their Trusted Companion. You will receive gentle readiness reminders to support them.
+                                </p>
+                                <div className="flex items-center space-x-2 pt-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => router.post(route('trusted-circle.request.accept', req.id))}
+                                        className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition active:scale-95"
+                                    >
+                                        Accept Request
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => router.post(route('trusted-circle.request.decline', req.id))}
+                                        className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs rounded-xl transition active:scale-95"
+                                    >
+                                        Decline
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* 1.2 COMPANION CARE HUB COMPONENT (For users who also act as a companion) */}
+                {companionCareSummaries && companionCareSummaries.length > 0 && (
+                    <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-100 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                                <div className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center text-[#C81E3D]">
+                                    <HeartHandshake className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600">Companion Care</span>
+                                    <h3 className="font-bold text-xs text-slate-900 leading-tight">Supporting Loved Ones</h3>
+                                </div>
+                            </div>
+                            <Link
+                                href={route('trusted-circle.companion')}
+                                className="text-[11px] font-bold text-[#C81E3D] hover:underline flex items-center space-x-0.5"
+                            >
+                                <span>Full Hub</span>
+                                <ChevronRight className="w-3.5 h-3.5" />
+                            </Link>
+                        </div>
+
+                        <div className="space-y-2">
+                            {companionCareSummaries.map((summary) => (
+                                <div key={summary.connection_id} className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                                    <div>
+                                        <div className="flex items-center space-x-1.5">
+                                            <span className="font-bold text-xs text-slate-800">{summary.primary_name}</span>
+                                            <span className="text-[10px] text-slate-500 capitalize">({summary.relationship})</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-500 mt-0.5">
+                                            Next cycle window: <strong className="text-slate-700">{summary.predicted_start_date}</strong>
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="font-extrabold text-sm text-[#C81E3D]">~{summary.days_until_next}</span>
+                                        <span className="text-[9px] block text-slate-400">days left</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* 2. CYCLE COUNTDOWN HERO CONTAINER */}
                 <div className="bg-gradient-to-br from-rose-500 via-rose-500 to-pink-500 rounded-3xl p-5 shadow-lg shadow-rose-200/60 text-white relative overflow-hidden flex flex-col justify-between">

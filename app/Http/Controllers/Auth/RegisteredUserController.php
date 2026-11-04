@@ -25,8 +25,10 @@ class RegisteredUserController extends Controller
      */
     public function create(Request $request): Response
     {
+        $inviteCode = $request->query('invite') ?? $request->query('code') ?? '';
+
         return Inertia::render('Auth/Register', [
-            'initialInviteCode' => $request->query('invite'),
+            'initialInviteCode' => $inviteCode,
         ]);
     }
 
@@ -48,10 +50,21 @@ class RegisteredUserController extends Controller
 
         $role = $request->role ?? 'primary_user';
 
-        // Check if an invite code was supplied for trusted contact
+        // Check and validate invite code for trusted companion
         $trustedConnection = null;
-        if ($request->invite_code) {
-            $trustedConnection = TrustedConnection::where('invite_code', $request->invite_code)->first();
+        if ($role === 'trusted_contact' || $request->invite_code) {
+            if ($request->invite_code) {
+                $trustedConnection = TrustedConnection::where('invite_code', $request->invite_code)
+                    ->where('status', 'invited')
+                    ->first();
+            }
+
+            if ($role === 'trusted_contact' && !$trustedConnection) {
+                return back()->withErrors([
+                    'invite_code' => 'A valid companion invite code is required to register as a Trusted Companion.',
+                ]);
+            }
+
             if ($trustedConnection) {
                 $role = 'trusted_contact';
             }
@@ -65,6 +78,7 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
             'role' => $role,
             'preferred_language' => $request->preferred_language ?? 'en',
+            'onboarding_completed_at' => $role === 'trusted_contact' ? now() : null,
         ]);
 
         // Default privacy settings
@@ -92,6 +106,8 @@ class RegisteredUserController extends Controller
         // Link invite if present
         if ($trustedConnection) {
             $trustedConnection->update([
+                'contact_name' => $request->name,
+                'contact_channel' => $request->email ?: ($request->phone ?: $request->username),
                 'trusted_user_id' => $user->id,
                 'status' => 'active',
             ]);
@@ -101,7 +117,12 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        // Redirect all new signups to Step 2: Role-Specific Intelligence Calibration
+        // Companions go straight to Companion Care Hub; others go to Calibration Wizard
+        if ($role === 'trusted_contact') {
+            return redirect()->route('trusted-circle.companion')
+                ->with('success', "Welcome to Mwezi! You are now connected with {$trustedConnection->primaryUser?->name}.");
+        }
+
         return redirect()->route('onboarding.wizard');
     }
 }

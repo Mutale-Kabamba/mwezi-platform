@@ -31,6 +31,11 @@ Route::post('/sponsor', [SupportController::class, 'storeDonation'])->name('publ
 Route::get('/sponsor/verify/{reference}', [SupportController::class, 'verifyDonationStatus'])->name('public.sponsor.verify');
 Route::post('/webhooks/broadpay', [SupportController::class, 'handleBroadPayWebhook'])->name('webhook.broadpay');
 
+// Companion Password Setup (Invited by Primary User)
+Route::get('/companion/setup', [TrustedCircleController::class, 'companionSetup'])->name('companion.setup');
+Route::post('/companion/setup', [TrustedCircleController::class, 'companionStorePassword'])->name('companion.setup.store');
+Route::match(['get', 'post'], '/companion/verify-code', [TrustedCircleController::class, 'verifyInviteCode'])->name('companion.verify-code');
+
 // Authenticated Core Application Routes
 Route::middleware(['auth'])->group(function () {
     // 0. Onboarding Wizard (Step 2 Role Calibration)
@@ -109,6 +114,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [TrustedCircleController::class, 'manage'])->name('manage');
         Route::post('/invite', [TrustedCircleController::class, 'invite'])->name('invite');
         Route::post('/claim', [TrustedCircleController::class, 'claim'])->name('claim');
+        Route::post('/requests/{connection}/accept', [TrustedCircleController::class, 'acceptRequest'])->name('request.accept');
+        Route::post('/requests/{connection}/decline', [TrustedCircleController::class, 'declineRequest'])->name('request.decline');
         Route::patch('/{connection}/permissions', [TrustedCircleController::class, 'updatePermissions'])->name('permissions');
         Route::delete('/{connection}', [TrustedCircleController::class, 'revoke'])->name('revoke');
         Route::get('/companion', [TrustedCircleController::class, 'companion'])->name('companion');
