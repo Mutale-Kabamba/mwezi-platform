@@ -24,7 +24,9 @@ import {
     Moon,
     Sun,
     Leaf,
-    HeartHandshake
+    HeartHandshake,
+    Building,
+    Stethoscope
 } from 'lucide-react';
 import { useTranslation } from '@/i18n/LanguageContext';
 
@@ -37,7 +39,9 @@ export default function Dashboard({
     nearbyHubsCount = 0, 
     dailyTip = '',
     pendingCompanionRequests = [],
-    companionCareSummaries = []
+    companionCareSummaries = [],
+    partnerManagement = null,
+    reviewerManagement = null
 }) {
     const { t } = useTranslation();
     const todayStr = new Date().toISOString().split('T')[0];
@@ -96,7 +100,7 @@ export default function Dashboard({
     const phaseBadge = getPhaseBadge(cycleInfo?.phase);
 
     return (
-        <MobileAppLayout title={t('app_title', 'Mwezi')} subtitle={t('app_subtitle', 'Menstrual Health & Dignity')}>
+        <MobileAppLayout title={t('app_title', 'Mwezi')}>
             <Head title="Home Dashboard - Mwezi" />
 
             <div className="space-y-4">
@@ -158,7 +162,99 @@ export default function Dashboard({
                     </div>
                 )}
 
-                {/* 1.2 COMPANION CARE HUB COMPONENT (For users who also act as a companion) */}
+                {/* 1.2 HUB PARTNER / NGO MANAGEMENT COMPONENT */}
+                {partnerManagement && (
+                    <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 rounded-3xl p-4 text-white shadow-md space-y-3 animate-fadeIn">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                                <div className="w-8 h-8 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
+                                    <Building className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-100">Hub Distribution Management</span>
+                                    <h3 className="font-extrabold text-sm leading-tight text-white">{partnerManagement.hub_name}</h3>
+                                </div>
+                            </div>
+                            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md">
+                                {partnerManagement.location}
+                            </span>
+                        </div>
+
+                        {/* Live Metrics Grid */}
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-2 border border-white/20">
+                                <span className="text-[9px] font-bold text-amber-100 uppercase block">Pending Requests</span>
+                                <span className="text-xl font-extrabold text-white mt-0.5 block">{partnerManagement.pending_requests_count}</span>
+                            </div>
+                            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-2 border border-white/20">
+                                <span className="text-[9px] font-bold text-amber-100 uppercase block">Free Pads Stock</span>
+                                <span className="text-xl font-extrabold text-white mt-0.5 block">{partnerManagement.free_pads_qty}</span>
+                            </div>
+                            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-2 border border-white/20">
+                                <span className="text-[9px] font-bold text-amber-100 uppercase block">Reusable Kits</span>
+                                <span className="text-xl font-extrabold text-white mt-0.5 block">{partnerManagement.reusable_pads_stock}</span>
+                            </div>
+                        </div>
+
+                        {/* Action Link */}
+                        <Link
+                            href="/portal/partner"
+                            className="w-full py-2.5 bg-white hover:bg-amber-50 text-amber-900 font-bold text-xs rounded-2xl text-center shadow-xs transition active:scale-95 flex items-center justify-center space-x-1.5"
+                        >
+                            <Package className="w-4 h-4 text-amber-700" />
+                            <span>Manage Hub Inventory & Fulfill Requests</span>
+                            <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
+                    </div>
+                )}
+
+                {/* 1.3 HEALTH REVIEWER MANAGEMENT COMPONENT */}
+                {reviewerManagement && (
+                    <div className="bg-gradient-to-r from-teal-600 via-teal-700 to-emerald-600 rounded-3xl p-4 text-white shadow-md space-y-3 animate-fadeIn">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                                <div className="w-8 h-8 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
+                                    <Stethoscope className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-teal-100">Clinical Review Panel</span>
+                                    <h3 className="font-extrabold text-sm leading-tight text-white">Medical Clearance Hub</h3>
+                                </div>
+                            </div>
+                            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md">
+                                Verified Clinician
+                            </span>
+                        </div>
+
+                        {/* Live Metrics Grid */}
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-2 border border-white/20">
+                                <span className="text-[9px] font-bold text-teal-100 uppercase block">Awaiting Review</span>
+                                <span className="text-xl font-extrabold text-white mt-0.5 block">{reviewerManagement.pending_articles_count}</span>
+                            </div>
+                            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-2 border border-white/20">
+                                <span className="text-[9px] font-bold text-teal-100 uppercase block">Approved Guides</span>
+                                <span className="text-xl font-extrabold text-white mt-0.5 block">{reviewerManagement.approved_articles_count}</span>
+                            </div>
+                            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-2 border border-white/20">
+                                <span className="text-[9px] font-bold text-teal-100 uppercase block">Verified Facts</span>
+                                <span className="text-xl font-extrabold text-white mt-0.5 block">{reviewerManagement.myths_count}</span>
+                            </div>
+                        </div>
+
+                        {/* Action Link */}
+                        <Link
+                            href="/portal/reviewer"
+                            className="w-full py-2.5 bg-white hover:bg-teal-50 text-teal-900 font-bold text-xs rounded-2xl text-center shadow-xs transition active:scale-95 flex items-center justify-center space-x-1.5"
+                        >
+                            <ShieldCheck className="w-4 h-4 text-teal-700" />
+                            <span>Review Educational Content & Clinical Guides</span>
+                            <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
+                    </div>
+                )}
+
+                {/* 1.4 COMPANION CARE HUB COMPONENT (For users who also act as a companion) */}
                 {companionCareSummaries && companionCareSummaries.length > 0 && (
                     <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-100 space-y-3">
                         <div className="flex items-center justify-between">

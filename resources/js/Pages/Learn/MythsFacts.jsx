@@ -3,14 +3,14 @@ import { Head, Link, router } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
 import MarkdownRenderer, { formatInlineText } from '@/Components/MarkdownRenderer';
 import { useTranslation } from '@/i18n/LanguageContext';
-import { 
-    ArrowLeft, 
-    CheckCircle2, 
-    XCircle, 
-    RotateCw, 
-    Sparkles, 
-    CheckCircle, 
-    Share2 
+import {
+    ArrowLeft,
+    CheckCircle2,
+    XCircle,
+    RotateCw,
+    Sparkles,
+    CheckCircle,
+    Share2
 } from 'lucide-react';
 
 export default function MythsFacts({ myths = [], currentLocale = 'en' }) {
@@ -37,20 +37,13 @@ export default function MythsFacts({ myths = [], currentLocale = 'en' }) {
     const bustedCount = Object.values(flippedCards).filter(Boolean).length;
 
     return (
-        <MobileAppLayout title="Myths vs. Facts" subtitle="Ending Menstrual Taboos">
+        <MobileAppLayout title="Myths vs. Facts" backUrl="/learn">
             <Head title="Myths vs Facts - Stigma Busting - Mwezi" />
 
             <div className="space-y-4">
-                
-                {/* Top Nav Back */}
-                <div className="flex items-center justify-between">
-                    <Link
-                        href="/learn"
-                        className="p-2 rounded-xl bg-white text-gray-700 hover:bg-gray-100 transition shadow-sm flex items-center space-x-1 text-xs font-semibold"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>Learn Hub</span>
-                    </Link>
+
+                {/* Status Bar */}
+                <div className="flex items-center justify-end">
 
                     <div className="flex items-center space-x-1 text-xs font-bold text-mwezi-tertiary bg-mwezi-secondary/60 px-3 py-1.5 rounded-full">
                         <Sparkles className="w-3.5 h-3.5 text-mwezi-accent" />
@@ -77,16 +70,14 @@ export default function MythsFacts({ myths = [], currentLocale = 'en' }) {
                             <div
                                 key={item.id}
                                 onClick={() => toggleFlip(item.id)}
-                                className={`p-5 rounded-[20px] shadow-sm transition-all duration-300 cursor-pointer border relative ${
-                                    isFlipped 
-                                        ? 'bg-emerald-50/90 border-emerald-300' 
-                                        : 'bg-white border-mwezi-accent/40 hover:border-mwezi-accent'
-                                }`}
+                                className={`p-5 rounded-[20px] shadow-sm transition-all duration-300 cursor-pointer border relative ${isFlipped
+                                    ? 'bg-emerald-50/90 border-emerald-300'
+                                    : 'bg-white border-mwezi-accent/40 hover:border-mwezi-accent'
+                                    }`}
                             >
                                 <div className="flex items-center justify-between mb-3">
-                                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase flex items-center space-x-1 ${
-                                        isFlipped ? 'bg-emerald-200 text-emerald-900' : 'bg-red-100 text-red-700'
-                                    }`}>
+                                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase flex items-center space-x-1 ${isFlipped ? 'bg-emerald-200 text-emerald-900' : 'bg-red-100 text-red-700'
+                                        }`}>
                                         {isFlipped ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                                         <span>{isFlipped ? 'Verified Scientific Fact' : 'Common Myth / Taboo'}</span>
                                     </span>

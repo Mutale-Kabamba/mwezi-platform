@@ -14,6 +14,9 @@ class LunaMessage extends Model
         'conversation_id',
         'sender',
         'message_text',
+        'attachments',
+        'audio_url',
+        'audio_duration',
         'referenced_resources',
         'safety_flag',
         'helpful_rating',
@@ -23,6 +26,8 @@ class LunaMessage extends Model
     {
         return [
             'message_text' => 'encrypted',
+            'attachments' => 'array',
+            'audio_duration' => 'integer',
             'referenced_resources' => 'array',
             'helpful_rating' => 'boolean',
         ];

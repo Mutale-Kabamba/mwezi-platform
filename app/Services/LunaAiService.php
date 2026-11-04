@@ -15,9 +15,20 @@ class LunaAiService
     /**
      * Process user prompt with safety checks, RAG retrieval, and Gemini AI synthesis.
      */
-    public function respond(string $userMessage, ?int $userId = null, array $conversationHistory = [], ?string $overrideLocale = null): array
+    public function respond(string $userMessage, ?int $userId = null, array $conversationHistory = [], ?string $overrideLocale = null, array $mediaContext = []): array
     {
-        $normalized = Str::lower($userMessage);
+        // Enrich prompt with media context if attachments or voice notes were sent
+        $fullUserMessage = $userMessage;
+        if (!empty($mediaContext['files_count'])) {
+            $fileNames = implode(', ', $mediaContext['file_names'] ?? []);
+            $fullUserMessage .= "\n[User attached {$mediaContext['files_count']} file(s): {$fileNames}]";
+        }
+        if (!empty($mediaContext['has_audio'])) {
+            $duration = $mediaContext['audio_duration'] ?? 'voice';
+            $fullUserMessage .= "\n[User recorded and sent a voice audio note ({$duration}s)]";
+        }
+
+        $normalized = Str::lower($userMessage . ' ' . ($mediaContext['file_names_str'] ?? ''));
 
         // 1. HARD SAFETY BOUNDARY: Clinical & Safeguarding Escalation Checks
         $clinicalFlags = [
@@ -140,7 +151,7 @@ class LunaAiService
         $userDistrict = $user?->district;
         $userProvince = $user?->province;
 
-        $geminiResponse = $this->callGeminiApi($userMessage, $groundingContext, $conversationHistory, $userLocale, $ageCohort);
+        $geminiResponse = $this->callGeminiApi($fullUserMessage, $groundingContext, $conversationHistory, $userLocale, $ageCohort);
 
         // Fallback response if Gemini is unavailable
         if (empty($geminiResponse)) {

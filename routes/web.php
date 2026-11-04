@@ -67,6 +67,9 @@ Route::middleware(['auth'])->group(function () {
     // 4. Luna AI Assistant
     Route::prefix('luna')->name('luna.')->group(function () {
         Route::get('/', [LunaAiController::class, 'index'])->name('index');
+        Route::post('/conversations', [LunaAiController::class, 'createConversation'])->name('conversation.create');
+        Route::get('/chat/{conversation}', [LunaAiController::class, 'chat'])->name('chat');
+        Route::delete('/conversations/{conversation}', [LunaAiController::class, 'deleteConversation'])->name('conversation.destroy');
         Route::post('/message', [LunaAiController::class, 'sendMessage'])->name('message');
         Route::delete('/clear', [LunaAiController::class, 'clear'])->name('clear');
         Route::patch('/message/{message}/rate', [LunaAiController::class, 'rateMessage'])->name('message.rate');

@@ -90,20 +90,13 @@ export default function DirectoryMap({
     };
 
     return (
-        <MobileAppLayout title={t('support_map_btn', 'Hub Locator')} subtitle={t('support_subtitle', 'Verified Free Pad Stocks')}>
+        <MobileAppLayout title={t('support_map_btn', 'Hub Locator')} backUrl="/support">
             <Head title="Service Directory & Free Pad Map - Mwezi" />
 
             <div className="space-y-3">
 
-                {/* Header Back & Filters */}
-                <div className="flex items-center justify-between">
-                    <Link
-                        href="/support"
-                        className="p-2 rounded-xl bg-white text-gray-700 hover:bg-gray-100 transition shadow-sm flex items-center space-x-1 text-xs font-semibold"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>{t('back', 'Support')}</span>
-                    </Link>
+                {/* Filters */}
+                <div className="flex items-center justify-end">
 
                     <div className="flex items-center space-x-1.5">
                         <select
@@ -153,8 +146,8 @@ export default function DirectoryMap({
                             </div>
 
                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${activeHub.free_pad_stock_level === 'in_stock'
-                                    ? 'bg-emerald-100 text-emerald-800'
-                                    : 'bg-amber-100 text-amber-800'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-amber-100 text-amber-800'
                                 }`}>
                                 {activeHub.free_pad_stock_level === 'in_stock' ? 'Pads In Stock' : 'Low Stock'}
                             </span>
@@ -205,8 +198,8 @@ export default function DirectoryMap({
                                 }
                             }}
                             className={`p-3 rounded-[16px] border transition cursor-pointer flex items-center justify-between ${activeHub?.id === hub.id
-                                    ? 'bg-mwezi-primary/30 border-mwezi-tertiary'
-                                    : 'bg-white border-gray-100 hover:bg-gray-50'
+                                ? 'bg-mwezi-primary/30 border-mwezi-tertiary'
+                                : 'bg-white border-gray-100 hover:bg-gray-50'
                                 }`}
                         >
                             <div>

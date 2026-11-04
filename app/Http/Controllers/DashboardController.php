@@ -19,8 +19,15 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        // 1. Fetch Cycle Profile & Prediction
-        $profile = CycleProfile::where('user_id', $user->id)->first();
+        // 1. Fetch or initialize Cycle Profile & Prediction (Available to all users)
+        $profile = CycleProfile::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'average_cycle_length' => 28,
+                'average_period_length' => 5,
+                'last_period_start' => Carbon::now()->subDays(14)->toDateString(),
+            ]
+        );
         $prediction = CyclePrediction::where('user_id', $user->id)->latest()->first();
 
         // Calculate cycle phase and countdown
@@ -126,6 +133,50 @@ class DashboardController extends Controller
                 ];
             });
 
+        // 6. Role-Specific Operational Management Data
+        $partnerManagement = null;
+        if ($user->role === 'community_partner' || $user->role === 'admin') {
+            $hub = CommunityServiceHub::where('manager_user_id', $user->id)->first()
+                ?? ($user->role === 'admin' ? CommunityServiceHub::first() : null);
+
+            if ($hub) {
+                $pendingHubRequests = ProductAndEmergencyRequest::where('assigned_hub_id', $hub->id)
+                    ->whereIn('status', ['submitted', 'acknowledged'])
+                    ->with('user:id,name,phone')
+                    ->latest()
+                    ->get();
+
+                $partnerManagement = [
+                    'hub_id' => $hub->id,
+                    'hub_name' => $hub->organization_name,
+                    'hub_type' => $hub->hub_type,
+                    'location' => "{$hub->district}, {$hub->province}",
+                    'free_pads_qty' => $hub->free_pads_qty ?? 0,
+                    'emergency_kits_qty' => $hub->emergency_kits_qty ?? 0,
+                    'reusable_pads_stock' => $hub->current_reusable_pads_stock ?? 0,
+                    'stock_status' => $hub->free_pad_stock_level ?? 'in_stock',
+                    'pending_requests_count' => $pendingHubRequests->count(),
+                    'recent_pending_requests' => $pendingHubRequests->take(3),
+                ];
+            }
+        }
+
+        $reviewerManagement = null;
+        if ($user->role === 'health_reviewer' || $user->role === 'admin') {
+            $pendingArticles = EducationalResource::where('review_status', 'pending_medical_review')
+                ->with('category')
+                ->latest()
+                ->get();
+
+            $reviewerManagement = [
+                'pending_articles_count' => $pendingArticles->count(),
+                'approved_articles_count' => EducationalResource::where('review_status', 'approved')->count(),
+                'myths_count' => \App\Models\MythAndFact::count(),
+                'referrals_count' => \App\Models\HealthReferral::where('status', 'referred')->count(),
+                'recent_pending_articles' => $pendingArticles->take(3),
+            ];
+        }
+
         return Inertia::render('Dashboard', [
             'cycleInfo' => $cycleInfo,
             'cycleProfile' => $profile,
@@ -136,6 +187,8 @@ class DashboardController extends Controller
             'dailyTip' => $dailyTip,
             'pendingCompanionRequests' => $pendingCompanionRequests,
             'companionCareSummaries' => $companionCareSummaries,
+            'partnerManagement' => $partnerManagement,
+            'reviewerManagement' => $reviewerManagement,
         ]);
     }
 }

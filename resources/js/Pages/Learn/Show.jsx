@@ -130,20 +130,13 @@ export default function LearnShow({
     const isReusableGuide = resource.slug.includes('reusable') || resource.slug.includes('washing');
 
     return (
-        <MobileAppLayout title="Article" subtitle="Verified Health Education">
+        <MobileAppLayout title="Guide" backUrl="/learn">
             <Head title={`${title} - Mwezi Learn`} />
 
             <div className="space-y-4">
 
-                {/* Top Nav Back & Controls */}
-                <div className="flex items-center justify-between">
-                    <Link
-                        href="/learn"
-                        className="p-2 rounded-xl bg-white text-gray-700 hover:bg-gray-100 transition shadow-sm flex items-center space-x-1 text-xs font-semibold"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>All Guides</span>
-                    </Link>
+                {/* Controls */}
+                <div className="flex items-center justify-end">
 
                     <div className="flex items-center space-x-2">
                         {!audioUrl && (

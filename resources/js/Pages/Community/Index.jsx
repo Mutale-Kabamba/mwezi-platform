@@ -67,7 +67,7 @@ export default function CommunityIndex({
     };
 
     return (
-        <MobileAppLayout title={t('drawer_community', 'Community')} subtitle="Safe • Stigma-Free • Supportive">
+        <MobileAppLayout title={t('drawer_community', 'Community')}>
             <Head title="Community Forums - Mwezi" />
 
             <div className="space-y-4 relative pb-16">

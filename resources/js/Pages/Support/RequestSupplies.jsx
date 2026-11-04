@@ -61,20 +61,13 @@ export default function RequestSupplies({ hubs = [], products = [], defaultHubId
     const selectedHub = hubs.find(h => h.id === parseInt(data.assigned_hub_id)) || hubs[0];
 
     return (
-        <MobileAppLayout title={t('request_supplies_title', 'Request Supplies')} subtitle={t('request_supplies_subtitle', 'Discreet • Free • Safe')}>
+        <MobileAppLayout title={t('request_supplies_title', 'Request Supplies')} backUrl="/support">
             <Head title="Request Emergency Supplies - Mwezi" />
 
             <div className="space-y-4">
                 
-                {/* Top Nav Back & Step Indicator */}
-                <div className="flex items-center justify-between">
-                    <Link
-                        href="/support"
-                        className="p-2 rounded-xl bg-white text-gray-700 hover:bg-gray-100 transition shadow-sm flex items-center space-x-1 text-xs font-semibold"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>Support</span>
-                    </Link>
+                {/* Step Indicator */}
+                <div className="flex items-center justify-end">
 
                     {/* Step pills */}
                     <div className="flex items-center space-x-1.5 text-xs font-bold text-mwezi-tertiary">

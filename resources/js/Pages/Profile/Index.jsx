@@ -61,7 +61,7 @@ export default function ProfileIndex({ auth, privacy, stats = {} }) {
     };
 
     return (
-        <MobileAppLayout title={t('profile_title', 'Profile & Privacy')} subtitle={t('profile_subtitle', 'Manage Identity & Security')}>
+        <MobileAppLayout title={t('profile_title', 'Profile & Privacy')}>
             <Head title="Profile & Privacy Center - Mwezi" />
 
             <div className="space-y-4">

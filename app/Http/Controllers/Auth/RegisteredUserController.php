@@ -91,17 +91,15 @@ class RegisteredUserController extends Controller
             'data_retention_consent_at' => now(),
         ]);
 
-        // If primary user, set default cycle profile without fabricating fake period dates
-        if ($role === 'primary_user') {
-            CycleProfile::firstOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'average_cycle_length' => 28,
-                    'average_period_length' => 5,
-                    'last_period_start' => null,
-                ]
-            );
-        }
+        // All roles have primary user cycle tracking features
+        CycleProfile::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'average_cycle_length' => 28,
+                'average_period_length' => 5,
+                'last_period_start' => null,
+            ]
+        );
 
         // Link invite if present
         if ($trustedConnection) {

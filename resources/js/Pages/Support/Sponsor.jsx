@@ -203,20 +203,13 @@ export default function SponsorPortal({ campaign, recentDonations = [], hubs = [
         : 60;
 
     return (
-        <MobileAppLayout title="Sponsor a Girl" subtitle="Dignity & School Retention">
+        <MobileAppLayout title="Sponsor a Girl" backUrl="/support">
             <Head title="Sponsor a Girl - Mwezi Platform" />
 
             <div className="space-y-4 pb-8">
                 
-                {/* Top Nav Back */}
-                <div className="flex items-center justify-between">
-                    <Link
-                        href="/support"
-                        className="p-1.5 rounded-xl bg-white text-slate-700 hover:bg-slate-100 transition shadow-xs flex items-center space-x-1 text-xs font-semibold"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>Back</span>
-                    </Link>
+                {/* User Status Bar */}
+                <div className="flex items-center justify-end">
 
                     {user ? (
                         <span className="text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200/60 px-2.5 py-1 rounded-full">

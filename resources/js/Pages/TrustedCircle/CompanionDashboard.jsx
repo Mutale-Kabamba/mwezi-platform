@@ -20,7 +20,7 @@ export default function CompanionDashboard({
 }) {
     const { t } = useTranslation();
     return (
-        <MobileAppLayout title={t('trusted_title', 'Companion View')} subtitle={t('trusted_subtitle', 'Supportive Family Ally')}>
+        <MobileAppLayout title={t('trusted_title', 'Companion View')} backUrl="/dashboard">
             <Head title="Trusted Companion View - Mwezi" />
 
             <div className="space-y-4">

@@ -9,15 +9,39 @@ import {
     MicOff,
     Trash2,
     ShieldAlert,
-    PhoneCall,
     BookOpen,
     ChevronRight,
-    MapPin,
-    AlertTriangle,
+    ChevronLeft,
     CheckCircle,
     Lock,
-    ShieldCheck
+    Paperclip,
+    FileText,
+    Image as ImageIcon,
+    X,
+    Play,
+    Pause,
+    Volume2,
+    VolumeX,
+    AlertCircle,
+    Loader2,
+    File
 } from 'lucide-react';
+
+// Helper to format bytes into readable KB / MB
+const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+};
+
+// Helper to format seconds into mm:ss
+const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+};
 
 // Helper to parse inline markdown (bold, italic, code, links)
 const formatInline = (text) => {
@@ -26,7 +50,6 @@ const formatInline = (text) => {
     let remaining = text;
     let keyIdx = 0;
 
-    // Matches bold (**text** or __text__), italic (*text* or _text_), code (`code`), or links ([text](url))
     const tokenRegex = /(\*\*|__)(.*?)\1|(\*|_)(.*?)\3|(`)(.*?)\5|\[(.*?)\]\((.*?)\)/;
 
     while (remaining) {
@@ -42,28 +65,24 @@ const formatInline = (text) => {
         }
 
         if (match[2] !== undefined) {
-            // Bold
             parts.push(
                 <strong key={`b-${keyIdx++}`} className="font-bold text-slate-900">
                     {formatInline(match[2])}
                 </strong>
             );
         } else if (match[4] !== undefined) {
-            // Italic
             parts.push(
                 <em key={`i-${keyIdx++}`} className="italic">
                     {formatInline(match[4])}
                 </em>
             );
         } else if (match[6] !== undefined) {
-            // Code
             parts.push(
                 <code key={`c-${keyIdx++}`} className="bg-rose-50 text-rose-700 px-1 py-0.5 rounded text-[11px] font-mono border border-rose-100">
                     {match[6]}
                 </code>
             );
         } else if (match[7] !== undefined && match[8] !== undefined) {
-            // Link
             parts.push(
                 <a
                     key={`a-${keyIdx++}`}
@@ -83,7 +102,7 @@ const formatInline = (text) => {
     return parts;
 };
 
-// Component to parse and format block-level markdown with native mobile styling
+// Block Markdown Renderer
 function FormattedMessage({ content, isUser }) {
     if (!content) return null;
     if (isUser) {
@@ -92,7 +111,7 @@ function FormattedMessage({ content, isUser }) {
 
     const lines = content.split('\n');
     const elements = [];
-    let currentList = null; // { type: 'ul' | 'ol', items: [] }
+    let currentList = null;
 
     const flushList = () => {
         if (!currentList) return;
@@ -128,13 +147,11 @@ function FormattedMessage({ content, isUser }) {
         const line = lines[i];
         const trimmed = line.trim();
 
-        // Empty line
         if (!trimmed) {
             flushList();
             continue;
         }
 
-        // Headings: ###, ##, #
         const headingMatch = trimmed.match(/^(#{1,4})\s+(.+)$/);
         if (headingMatch) {
             flushList();
@@ -152,33 +169,22 @@ function FormattedMessage({ content, isUser }) {
             continue;
         }
 
-        // Unordered list item: * or - or •
         const ulMatch = trimmed.match(/^[-*•]\s+(.+)$/);
         if (ulMatch) {
-            if (currentList && currentList.type !== 'ul') {
-                flushList();
-            }
-            if (!currentList) {
-                currentList = { type: 'ul', items: [] };
-            }
+            if (currentList && currentList.type !== 'ul') flushList();
+            if (!currentList) currentList = { type: 'ul', items: [] };
             currentList.items.push(ulMatch[1]);
             continue;
         }
 
-        // Ordered list item: 1. or 1)
         const olMatch = trimmed.match(/^(\d+)[.)]\s+(.+)$/);
         if (olMatch) {
-            if (currentList && currentList.type !== 'ol') {
-                flushList();
-            }
-            if (!currentList) {
-                currentList = { type: 'ol', items: [] };
-            }
+            if (currentList && currentList.type !== 'ol') flushList();
+            if (!currentList) currentList = { type: 'ol', items: [] };
             currentList.items.push(olMatch[2]);
             continue;
         }
 
-        // Blockquote: >
         const quoteMatch = trimmed.match(/^>\s*(.+)$/);
         if (quoteMatch) {
             flushList();
@@ -193,7 +199,6 @@ function FormattedMessage({ content, isUser }) {
             continue;
         }
 
-        // Standard paragraph
         flushList();
         elements.push(
             <p key={`p-${i}`} className="text-xs leading-relaxed text-slate-700 my-1 first:mt-0 last:mb-0">
@@ -203,8 +208,92 @@ function FormattedMessage({ content, isUser }) {
     }
 
     flushList();
-
     return <div className="space-y-1">{elements}</div>;
+}
+
+// Custom Audio Player for Voice Notes
+function AudioPlayerBubble({ src, duration = null, isUser = false }) {
+    const audioRef = useRef(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [audioDuration, setAudioDuration] = useState(duration || 0);
+
+    const togglePlay = () => {
+        if (!audioRef.current) return;
+        if (isPlaying) {
+            audioRef.current.pause();
+            setIsPlaying(false);
+        } else {
+            audioRef.current.play();
+            setIsPlaying(true);
+        }
+    };
+
+    const handleTimeUpdate = () => {
+        if (!audioRef.current) return;
+        setCurrentTime(audioRef.current.currentTime);
+        if (!audioDuration && audioRef.current.duration) {
+            setAudioDuration(audioRef.current.duration);
+        }
+    };
+
+    const handleEnded = () => {
+        setIsPlaying(false);
+        setCurrentTime(0);
+    };
+
+    const progressPercent = audioDuration > 0 ? (currentTime / audioDuration) * 100 : 0;
+
+    return (
+        <div className={`flex items-center space-x-2.5 py-1 px-1 rounded-xl ${isUser ? 'text-white' : 'text-slate-800'}`}>
+            <audio
+                ref={audioRef}
+                src={src}
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={handleEnded}
+                onLoadedMetadata={(e) => {
+                    if (e.target.duration && !audioDuration) {
+                        setAudioDuration(e.target.duration);
+                    }
+                }}
+            />
+
+            <button
+                type="button"
+                onClick={togglePlay}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition shrink-0 ${isUser
+                    ? 'bg-white text-rose-700 hover:bg-rose-50 shadow-xs'
+                    : 'bg-rose-600 text-white hover:bg-rose-700 shadow-xs'
+                    }`}
+            >
+                {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 ml-0.5 fill-current" />}
+            </button>
+
+            <div className="flex-1 min-w-[120px]">
+                {/* Progress bar */}
+                <div
+                    className={`h-1.5 rounded-full overflow-hidden cursor-pointer ${isUser ? 'bg-white/30' : 'bg-slate-200'}`}
+                    onClick={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const pos = (e.clientX - rect.left) / rect.width;
+                        if (audioRef.current && audioDuration) {
+                            audioRef.current.currentTime = pos * audioDuration;
+                        }
+                    }}
+                >
+                    <div
+                        className={`h-full rounded-full transition-all duration-100 ${isUser ? 'bg-white' : 'bg-rose-600'}`}
+                        style={{ width: `${progressPercent}%` }}
+                    />
+                </div>
+
+                <div className="flex justify-between items-center text-[10px] mt-1 font-mono opacity-80">
+                    <span>{formatDuration(currentTime)}</span>
+                    <span>{audioDuration ? formatDuration(audioDuration) : 'Voice note'}</span>
+                </div>
+            </div>
+        </div>
+    );
 }
 
 export default function LunaChat({
@@ -215,9 +304,22 @@ export default function LunaChat({
     const { t, locale } = useTranslation();
     const [messages, setMessages] = useState(initialMessages);
     const [inputText, setInputText] = useState('');
-    const [isListening, setIsListening] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const [isEphemeral, setIsEphemeral] = useState(conversation?.is_ephemeral || false);
+    const [speakingMsgId, setSpeakingMsgId] = useState(null);
+
+    // File Upload State (Max 2MB per file, up to 5 files)
+    const [attachedFiles, setAttachedFiles] = useState([]);
+    const [fileError, setFileError] = useState('');
+    const fileInputRef = useRef(null);
+
+    // Audio Recording State
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingTime, setRecordingTime] = useState(0);
+    const mediaRecorderRef = useRef(null);
+    const audioChunksRef = useRef([]);
+    const recordingTimerRef = useRef(null);
+
     const messagesEndRef = useRef(null);
 
     const scrollToBottom = () => {
@@ -226,72 +328,234 @@ export default function LunaChat({
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages, isSending]);
+    }, [messages, isSending, attachedFiles]);
 
-    // Web Speech API Voice Recognition
-    const toggleSpeechRecognition = () => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            alert('Speech recognition is not supported in this browser.');
+    // Handle File Selection with 2MB & 5 files limits
+    const handleFileSelect = (e) => {
+        const files = Array.from(e.target.files || []);
+        setFileError('');
+
+        if (attachedFiles.length + files.length > 5) {
+            setFileError('You can attach a maximum of 5 files.');
             return;
         }
 
-        if (isListening) {
-            setIsListening(false);
-            return;
+        const validFiles = [];
+        for (const file of files) {
+            // 2MB = 2048 * 1024 bytes = 2,097,152 bytes
+            if (file.size > 2 * 1024 * 1024) {
+                setFileError(`"${file.name}" exceeds the 2MB size limit.`);
+                return;
+            }
+            validFiles.push(file);
         }
 
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'en-US';
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
-        recognition.onstart = () => setIsListening(true);
-        recognition.onend = () => setIsListening(false);
-        recognition.onerror = () => setIsListening(false);
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            setInputText(prev => (prev ? prev + ' ' + transcript : transcript));
-            setIsListening(false);
-        };
-
-        recognition.start();
+        setAttachedFiles(prev => [...prev, ...validFiles]);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     };
 
-    const handleSendMessage = async (textToSend) => {
-        const text = textToSend || inputText;
-        if (!text.trim() || isSending) return;
+    const removeAttachedFile = (index) => {
+        setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
+    // Audio Recording Handling
+    const startRecording = async () => {
+        setFileError('');
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioChunksRef.current = [];
+
+            const mediaRecorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = mediaRecorder;
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                stream.getTracks().forEach(track => track.stop());
+
+                if (audioBlob.size > 2 * 1024 * 1024) {
+                    setFileError('Recorded audio exceeds 2MB limit.');
+                    return;
+                }
+
+                // Send voice note
+                handleSendVoiceNote(audioBlob, recordingTime);
+            };
+
+            mediaRecorder.start();
+            setIsRecording(true);
+            setRecordingTime(0);
+
+            recordingTimerRef.current = setInterval(() => {
+                setRecordingTime(prev => prev + 1);
+            }, 1000);
+        } catch (err) {
+            alert('Microphone permission is required to record audio notes.');
+            console.error('Audio record error:', err);
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current && isRecording) {
+            mediaRecorderRef.current.stop();
+            setIsRecording(false);
+            if (recordingTimerRef.current) {
+                clearInterval(recordingTimerRef.current);
+            }
+        }
+    };
+
+    const cancelRecording = () => {
+        if (mediaRecorderRef.current && isRecording) {
+            mediaRecorderRef.current.ondataavailable = null;
+            mediaRecorderRef.current.onstop = null;
+            mediaRecorderRef.current.stop();
+            setIsRecording(false);
+            if (recordingTimerRef.current) {
+                clearInterval(recordingTimerRef.current);
+            }
+        }
+    };
+
+    // Live Speech Synthesis (Luna reads answer aloud)
+    const toggleSpeechSynthesis = (msgId, text) => {
+        if (!('speechSynthesis' in window)) return;
+
+        if (speakingMsgId === msgId) {
+            window.speechSynthesis.cancel();
+            setSpeakingMsgId(null);
+            return;
+        }
+
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.95;
+        utterance.pitch = 1.05;
+        utterance.onend = () => setSpeakingMsgId(null);
+        utterance.onerror = () => setSpeakingMsgId(null);
+
+        setSpeakingMsgId(msgId);
+        window.speechSynthesis.speak(utterance);
+    };
+
+    // Send Message with Text & Attached Files
+    const handleSendMessage = async (textToSend = null) => {
+        const text = textToSend !== null ? textToSend : inputText;
+        if ((!text.trim() && attachedFiles.length === 0) || isSending) return;
+
+        const formData = new FormData();
+        formData.append('conversation_id', conversation.id);
+        if (text.trim()) {
+            formData.append('message', text.trim());
+        }
+        formData.append('locale', locale);
+        formData.append('is_ephemeral', isEphemeral ? 1 : 0);
+
+        attachedFiles.forEach((file) => {
+            formData.append('files[]', file);
+        });
+
+        // Optimistic UI display
+        const tempAttachments = attachedFiles.map(f => ({
+            name: f.name,
+            size: f.size,
+            type: f.type,
+            is_image: f.type.startsWith('image/'),
+            url: URL.createObjectURL(f),
+        }));
 
         const optimisticUserMessage = {
             id: 'temp-' + Date.now(),
             sender: 'user',
-            message_text: text,
+            message_text: text || (attachedFiles.length > 0 ? `Shared ${attachedFiles.length} file(s)` : ''),
+            attachments: tempAttachments.length > 0 ? tempAttachments : null,
             safety_flag: 'none',
         };
 
         setMessages(prev => [...prev, optimisticUserMessage]);
         setInputText('');
+        setAttachedFiles([]);
+        setFileError('');
         setIsSending(true);
 
         try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const res = await fetch(route('luna.message'), {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
                 },
-                body: JSON.stringify({
-                    message: text,
-                    is_ephemeral: isEphemeral,
-                    locale: locale,
-                }),
+                body: formData,
             });
 
             const data = await res.json();
             if (data.success) {
                 setMessages(prev => [
-                    ...prev,
+                    ...prev.slice(0, -1), // Replace optimistic message with persistent model
+                    data.user_message,
+                    {
+                        ...data.luna_message,
+                        escalation: data.escalation,
+                        referenced_resources: data.referenced_resources,
+                    }
+                ]);
+            } else {
+                setFileError(data.message || 'Error sending message.');
+            }
+        } catch (err) {
+            console.error('Error sending message to Luna:', err);
+            setFileError('Failed to send. Please check your connection.');
+        } finally {
+            setIsSending(false);
+        }
+    };
+
+    // Send Voice Note Audio
+    const handleSendVoiceNote = async (audioBlob, duration) => {
+        setIsSending(true);
+
+        const formData = new FormData();
+        formData.append('conversation_id', conversation.id);
+        formData.append('audio', audioBlob, 'voicenote.webm');
+        formData.append('audio_duration', duration);
+        formData.append('locale', locale);
+        formData.append('is_ephemeral', isEphemeral ? 1 : 0);
+
+        const optimisticUserMessage = {
+            id: 'temp-' + Date.now(),
+            sender: 'user',
+            message_text: `Voice message (${duration}s)`,
+            audio_url: URL.createObjectURL(audioBlob),
+            audio_duration: duration,
+            safety_flag: 'none',
+        };
+
+        setMessages(prev => [...prev, optimisticUserMessage]);
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const res = await fetch(route('luna.message'), {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
+                },
+                body: formData,
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                setMessages(prev => [
+                    ...prev.slice(0, -1),
+                    data.user_message,
                     {
                         ...data.luna_message,
                         escalation: data.escalation,
@@ -300,14 +564,14 @@ export default function LunaChat({
                 ]);
             }
         } catch (err) {
-            console.error('Error sending message to Luna:', err);
+            console.error('Error sending voice note:', err);
         } finally {
             setIsSending(false);
         }
     };
 
     const handleClearHistory = () => {
-        if (confirm('Clear all conversation messages for privacy?')) {
+        if (confirm('Clear messages in this consultation?')) {
             router.delete(route('luna.clear'), {
                 onSuccess: () => setMessages([]),
             });
@@ -316,44 +580,25 @@ export default function LunaChat({
 
     return (
         <MobileAppLayout
-            title="Luna AI Assistant"
-            subtitle="Confidential • Safe • Verified 24/7"
+            title={conversation?.title || 'Luna AI'}
+            backUrl={route('luna.index')}
+            showNav={false}
             fullHeight={true}
-            actionButton={
-                <button
-                    onClick={handleClearHistory}
-                    className="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition"
-                    title="Clear Chat History"
-                >
-                    <Trash2 className="w-4 h-4" />
-                </button>
-            }
         >
-            <Head title="Ask Luna AI - Menstrual Health Companion" />
+            <Head title={`Luna AI - ${conversation?.title || 'Chat'}`} />
 
             <div className="flex flex-col h-full w-full min-w-0 overflow-hidden">
 
-                {/* 1. HEALTHCARE DISCLAIMER & PRIVACY PILL BAR (Clean, Non-Clipping) */}
-                <div className="bg-white/95 backdrop-blur-md rounded-2xl py-1.5 px-3 shadow-2xs border border-rose-150/80 flex items-center justify-between text-xs w-full min-w-0 shrink-0 mb-2 gap-2">
-                    <div className="flex items-center space-x-1.5 text-slate-600 min-w-0 flex-1">
-                        <div className="w-5 h-5 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-                            <Sparkles className="w-3 h-3" />
-                        </div>
-                        <span className="text-[10px] font-medium text-slate-600 leading-snug">
-                            {t('luna_disclaimer', 'Health guidance • Non-diagnostic')}
-                        </span>
-                    </div>
-
-                    <div className="shrink-0">
-                        <span className="inline-flex items-center space-x-1 text-[9.5px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-bold border border-emerald-200/50 whitespace-nowrap">
-                            <Lock className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
-                            <span>{t('luna_encrypted', 'Private & Encrypted')}</span>
-                        </span>
-                    </div>
-                </div>
-
-                {/* 2. CHAT SCROLL AREA */}
+                {/* 1. CHAT SCROLL AREA */}
                 <div className="flex-1 min-h-0 overflow-y-auto space-y-3.5 pr-1 hide-scrollbar min-w-0 w-full pb-2">
+                    {/* Privacy Note */}
+                    <div className="flex justify-center pt-1 pb-0.5">
+                        <span className="inline-flex items-center space-x-1 text-[10px] text-slate-400 bg-slate-100/70 px-2.5 py-0.5 rounded-full font-medium">
+                            <Lock className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                            <span>Private & Encrypted Health AI</span>
+                        </span>
+                    </div>
+
                     {/* Welcome Bubble from Luna */}
                     <div className="flex items-start space-x-2.5 w-full min-w-0">
                         <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-white shrink-0 shadow-xs mt-0.5">
@@ -364,7 +609,7 @@ export default function LunaChat({
                                 {t('luna_welcome_title', "Hello, I'm Luna!")}
                             </p>
                             <p className="text-slate-600">
-                                {t('luna_welcome_desc', "I'm your private, judgment-free companion. You can ask me anything about period pain, cycle irregularities, washing and sun-drying reusable pads, or finding free pads in Zambia. What's on your mind today?")}
+                                {t('luna_welcome_desc', "I'm your confidential companion. Ask me anything, attach photos/reports (up to 5 files, 2MB each), or record a voice note. How can I support you today?")}
                             </p>
                         </div>
                     </div>
@@ -388,7 +633,85 @@ export default function LunaChat({
                                             : 'bg-white text-slate-800 rounded-tl-xs border border-rose-100/90'
                                             }`}
                                     >
-                                        <FormattedMessage content={msg.message_text} isUser={isUser} />
+                                        {/* Audio Voice Note Bubble */}
+                                        {msg.audio_url && (
+                                            <div className="mb-2">
+                                                <AudioPlayerBubble
+                                                    src={msg.audio_url}
+                                                    duration={msg.audio_duration}
+                                                    isUser={isUser}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {/* Attachments Preview (Images / Documents) */}
+                                        {msg.attachments && msg.attachments.length > 0 && (
+                                            <div className="mb-2 space-y-1.5">
+                                                <div className="grid grid-cols-2 gap-1.5">
+                                                    {msg.attachments.map((att, aIdx) => (
+                                                        att.is_image ? (
+                                                            <a
+                                                                key={aIdx}
+                                                                href={att.url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="block rounded-xl overflow-hidden border border-black/10 hover:opacity-90 transition"
+                                                            >
+                                                                <img
+                                                                    src={att.url}
+                                                                    alt={att.name}
+                                                                    className="w-full h-24 object-cover"
+                                                                />
+                                                            </a>
+                                                        ) : (
+                                                            <a
+                                                                key={aIdx}
+                                                                href={att.url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                download
+                                                                className={`flex items-center space-x-1.5 p-2 rounded-xl text-[10px] font-medium border truncate transition ${isUser
+                                                                    ? 'bg-white/15 border-white/20 text-white hover:bg-white/25'
+                                                                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                                                                    }`}
+                                                            >
+                                                                <FileText className="w-3.5 h-3.5 shrink-0" />
+                                                                <span className="truncate">{att.name}</span>
+                                                            </a>
+                                                        )
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Text content */}
+                                        {msg.message_text && (!msg.audio_url || msg.message_text !== 'Voice message') && (
+                                            <FormattedMessage content={msg.message_text} isUser={isUser} />
+                                        )}
+
+                                        {/* Audio Playback of Luna's Response (Speech Synthesis) */}
+                                        {!isUser && msg.message_text && (
+                                            <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleSpeechSynthesis(msg.id || idx, msg.message_text)}
+                                                    className="inline-flex items-center space-x-1 text-[10px] font-bold text-rose-600 hover:text-rose-700 transition"
+                                                >
+                                                    {speakingMsgId === (msg.id || idx) ? (
+                                                        <>
+                                                            <VolumeX className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
+                                                            <span>Stop Listening</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Volume2 className="w-3.5 h-3.5 text-rose-600" />
+                                                            <span>Listen to Luna</span>
+                                                        </>
+                                                    )}
+                                                </button>
+                                                <span className="text-[9px] text-slate-400 font-medium">Grounded AI</span>
+                                            </div>
+                                        )}
 
                                         {/* CRITICAL SAFETY ESCALATION CARD */}
                                         {msg.escalation && (
@@ -418,15 +741,6 @@ export default function LunaChat({
                                                             Call Toll-Free 116 (Childline Zambia)
                                                         </a>
                                                     </div>
-                                                )}
-
-                                                {msg.escalation.action_url && (
-                                                    <Link
-                                                        href={msg.escalation.action_url}
-                                                        className="block text-center py-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-xs rounded-xl shadow-xs transition"
-                                                    >
-                                                        {msg.escalation.action_text || 'Find Immediate Clinic'}
-                                                    </Link>
                                                 )}
                                             </div>
                                         )}
@@ -470,56 +784,142 @@ export default function LunaChat({
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* 3. SUGGESTED CHIPS & INPUT DOCK PINNED AT BOTTOM */}
-                <div className="space-y-2 pt-2 shrink-0 w-full min-w-0 bg-[#FAF6F7]">
-                    {/* Prompt Chips Carousel (Strictly Overflow-X-Auto bounded to parent) */}
-                    <div className="w-full min-w-0 overflow-x-auto hide-scrollbar py-0.5">
-                        <div className="flex items-center space-x-1.5 whitespace-nowrap">
-                            {suggestedPrompts.map((prompt, idx) => (
-                                <button
-                                    key={idx}
-                                    type="button"
-                                    onClick={() => handleSendMessage(prompt)}
-                                    className="px-3 py-1 bg-white border border-rose-200/70 text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 rounded-full text-[11px] font-medium shrink-0 transition shadow-2xs active:scale-95"
-                                >
-                                    {prompt}
-                                </button>
-                            ))}
+                {/* 3. INPUT DOCK PINNED AT BOTTOM */}
+                <div className="space-y-2 pt-1.5 shrink-0 w-full min-w-0 bg-[#FAF6F7]">
+
+                    {/* File Attachment Previews Shelf (Max 5 files, 2MB each) */}
+                    {attachedFiles.length > 0 && (
+                        <div className="bg-white p-2.5 rounded-2xl border border-rose-100 shadow-2xs space-y-1 animate-fadeIn">
+                            <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
+                                <span>Attached Files ({attachedFiles.length}/5)</span>
+                                <span className="text-[10px] text-slate-400 font-normal">Max 2MB each</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                                {attachedFiles.map((file, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="flex items-center space-x-1.5 pl-2 pr-1.5 py-1 bg-rose-50 border border-rose-200/80 rounded-xl text-xs text-slate-800"
+                                    >
+                                        {file.type.startsWith('image/') ? (
+                                            <ImageIcon className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                                        ) : (
+                                            <FileText className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                                        )}
+                                        <span className="truncate max-w-[110px] text-[11px] font-medium">{file.name}</span>
+                                        <span className="text-[9.5px] text-slate-400">({formatFileSize(file.size)})</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeAttachedFile(idx)}
+                                            className="p-0.5 rounded-full hover:bg-rose-200 text-rose-700 transition"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
-                    {/* Modern Native Input Bar */}
-                    <div className="flex items-center space-x-1.5 bg-white p-1.5 pl-2.5 rounded-2xl shadow-xs border border-rose-200/80 focus-within:border-rose-400 focus-within:ring-2 focus-within:ring-rose-100 transition w-full min-w-0">
-                        <button
-                            type="button"
-                            onClick={toggleSpeechRecognition}
-                            className={`p-2 rounded-xl transition shrink-0 ${isListening
-                                ? 'bg-red-500 text-white animate-pulse'
-                                : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800'
-                                }`}
-                            title="Voice Input (Microphone)"
-                        >
-                            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                        </button>
+                    {/* Error Notice */}
+                    {fileError && (
+                        <div className="px-3 py-1.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center space-x-1.5">
+                            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                            <span>{fileError}</span>
+                        </div>
+                    )}
 
-                        <input
-                            type="text"
-                            value={inputText}
-                            onChange={(e) => setInputText(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                            placeholder={t('luna_input_placeholder', 'Ask Luna about cramps, flow, or pads...')}
-                            className="flex-1 min-w-0 border-0 focus:ring-0 text-xs px-2 py-1 placeholder-slate-400 font-sans bg-transparent"
-                        />
+                    {/* Hidden File Input */}
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.doc,.docx,.txt"
+                        className="hidden"
+                        onChange={handleFileSelect}
+                    />
 
-                        <button
-                            type="button"
-                            onClick={() => handleSendMessage()}
-                            disabled={!inputText.trim() || isSending}
-                            className="p-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white disabled:opacity-40 transition shadow-2xs shrink-0"
-                        >
-                            <Send className="w-4 h-4" />
-                        </button>
-                    </div>
+                    {/* LIVE AUDIO RECORDING BAR (Active Mode) */}
+                    {isRecording ? (
+                        <div className="flex items-center justify-between bg-gradient-to-r from-red-600 to-rose-600 text-white p-2 px-4 rounded-2xl shadow-md animate-pulse">
+                            <div className="flex items-center space-x-2">
+                                <span className="w-3 h-3 rounded-full bg-white animate-ping" />
+                                <span className="font-bold text-xs">Recording Voice Note</span>
+                                <span className="font-mono text-xs font-black bg-black/20 px-2 py-0.5 rounded-md">
+                                    {formatDuration(recordingTime)}
+                                </span>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                                <button
+                                    type="button"
+                                    onClick={cancelRecording}
+                                    className="px-2.5 py-1 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-semibold transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={stopRecording}
+                                    className="px-3 py-1 bg-white text-rose-700 rounded-xl text-xs font-bold shadow-xs hover:bg-rose-50 transition"
+                                >
+                                    Send Voice Note
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        /* STANDARD INPUT DOCK */
+                        <div className="flex items-center space-x-1.5 bg-white p-1.5 pl-2 rounded-2xl shadow-xs border border-rose-200/80 focus-within:border-rose-400 focus-within:ring-2 focus-within:ring-rose-100 transition w-full min-w-0">
+
+                            {/* File Attachment Button */}
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={attachedFiles.length >= 5}
+                                className={`p-2 rounded-xl transition shrink-0 relative ${attachedFiles.length > 0
+                                    ? 'bg-rose-100 text-rose-700'
+                                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800'
+                                    }`}
+                                title="Attach files (Max 5, 2MB each)"
+                            >
+                                <Paperclip className="w-4 h-4" />
+                                {attachedFiles.length > 0 && (
+                                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center">
+                                        {attachedFiles.length}
+                                    </span>
+                                )}
+                            </button>
+
+                            {/* Audio Record Button */}
+                            <button
+                                type="button"
+                                onClick={startRecording}
+                                className="p-2 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 transition shrink-0"
+                                title="Record voice note"
+                            >
+                                <Mic className="w-4 h-4" />
+                            </button>
+
+                            {/* Text Input */}
+                            <input
+                                type="text"
+                                value={inputText}
+                                onChange={(e) => setInputText(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                                placeholder={t('luna_input_placeholder', 'Ask Luna about cramps, flow, or pads...')}
+                                className="flex-1 min-w-0 border-0 focus:ring-0 text-xs px-2 py-1 placeholder-slate-400 font-sans bg-transparent"
+                            />
+
+                            {/* Send Button */}
+                            <button
+                                type="button"
+                                onClick={() => handleSendMessage()}
+                                disabled={(!inputText.trim() && attachedFiles.length === 0) || isSending}
+                                className="p-2.5 rounded-xl bg-[#BE123C] hover:bg-[#9F1239] active:scale-95 text-white disabled:opacity-40 transition shadow-2xs shrink-0"
+                            >
+                                {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </MobileAppLayout>

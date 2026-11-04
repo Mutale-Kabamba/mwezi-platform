@@ -135,8 +135,7 @@ export default function RoleOnboardingWizard({
 
     return (
         <MobileAppLayout
-            title="Step 2: Setup"
-            subtitle="Intelligence Calibration"
+            title="Setup & Calibration"
             showNav={false}
         >
             <Head title="Setup & Calibration - Mwezi" />

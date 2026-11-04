@@ -44,7 +44,7 @@ export default function SupportIndex({ faqs = [], activeRequests = [], campaign 
     };
 
     return (
-        <MobileAppLayout title={t('support_title', 'Support & Hubs')} subtitle={t('support_subtitle', 'Emergency Supplies & Care')}>
+        <MobileAppLayout title={t('support_title', 'Support & Hubs')}>
             <Head title="Get Support & FAQ - Mwezi" />
 
             <div className="space-y-4">

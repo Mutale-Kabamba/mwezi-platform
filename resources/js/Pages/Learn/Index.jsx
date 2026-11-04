@@ -68,7 +68,7 @@ export default function LearnIndex({
     };
 
     return (
-        <MobileAppLayout title="Learn & Dignity" subtitle="Verified Health Education">
+        <MobileAppLayout title="Learn">
             <Head title="Learn Hub & Reusable Pad Guides - Mwezi" />
 
             <div className="space-y-4">

@@ -17,21 +17,27 @@ import {
     LogOut,
     CheckCircle2,
     ChevronRight,
+    ChevronLeft,
     Wifi,
     BatteryMedium,
     ArrowLeft,
     Globe,
-    Moon
+    Moon,
+    Building,
+    Stethoscope,
+    HeartHandshake,
+    ShieldCheck
 } from 'lucide-react';
 import { useTranslation } from '@/i18n/LanguageContext';
 
 export default function MobileAppLayout({
     children,
     title = 'Mwezi',
-    subtitle = 'Menstrual Health & Dignity',
+    subtitle = '',
     showNav = true,
     actionButton = null,
-    fullHeight = false
+    fullHeight = false,
+    backUrl = null,
 }) {
     const { auth } = usePage().props;
     const user = auth?.user;
@@ -323,79 +329,43 @@ export default function MobileAppLayout({
                 ) : (
                     <>
                         {/* 2. NATIVE APP TOP BAR */}
-                        <header className="bg-white/90 backdrop-blur-xl px-4 py-2.5 border-b border-rose-100/70 flex items-center justify-between sticky top-0 z-40 shadow-[0_2px_12px_rgba(112,38,56,0.03)] shrink-0">
-                            {/* Left: Brand Icon + Title */}
-                            <Link href="/dashboard" className="flex items-center space-x-2.5 group">
-                                <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-white shadow-xs group-active:scale-95 transition">
-                                    <Moon className="w-4 h-4 text-white fill-white/20" />
-                                </div>
-                                <div>
-                                    <span className="font-extrabold text-base text-slate-900 tracking-tight leading-none block">
+                        <header className="bg-white/95 backdrop-blur-xl px-3.5 py-2 border-b border-rose-100/70 flex items-center justify-between sticky top-0 z-40 shadow-[0_2px_12px_rgba(112,38,56,0.03)] shrink-0 gap-2">
+                            {/* Left: Back Button OR Brand Icon + Title */}
+                            <div className="flex items-center space-x-2 min-w-0 flex-1">
+                                {backUrl ? (
+                                    <Link
+                                        href={backUrl}
+                                        className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 flex items-center justify-center shrink-0 transition active:scale-90"
+                                        aria-label="Back"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </Link>
+                                ) : (
+                                    <Link href="/dashboard" className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-white shrink-0 shadow-xs active:scale-95 transition">
+                                        <Moon className="w-4 h-4 text-white fill-white/20" />
+                                    </Link>
+                                )}
+                                <div className="min-w-0 flex-1">
+                                    <span className="font-extrabold text-sm text-slate-900 tracking-tight leading-tight block truncate">
                                         {title}
                                     </span>
-                                    <span className="text-[10px] text-slate-500 font-medium block truncate max-w-[170px] leading-tight">
-                                        {subtitle}
-                                    </span>
+                                    {subtitle ? (
+                                        <span className="text-[10px] text-slate-400 font-medium block truncate leading-tight">
+                                            {subtitle}
+                                        </span>
+                                    ) : null}
                                 </div>
-                            </Link>
+                            </div>
 
-                            {/* Right: Action Button, Language, Quick Exit & Menu Trigger */}
-                            <div className="flex items-center space-x-1.5">
+                            {/* Right: Action Button, Quick Exit & Menu Trigger */}
+                            <div className="flex items-center space-x-1.5 shrink-0">
                                 {actionButton}
-
-                                {/* Global Language Selector Button */}
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setShowLangMenu(prev => !prev)}
-                                        title="Select Language (Bemba, Nyanja, Tonga, Lozi, English)"
-                                        className="p-1.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center space-x-1 text-xs font-bold transition active:scale-90"
-                                        aria-label="Language Selector"
-                                    >
-                                        <Globe className="w-3.5 h-3.5 text-rose-600" />
-                                        <span className="uppercase text-[10px] tracking-wide font-black">{locale}</span>
-                                    </button>
-
-                                    {/* Language Dropdown Popover */}
-                                    {showLangMenu && (
-                                        <>
-                                            <div
-                                                className="fixed inset-0 z-40 bg-transparent"
-                                                onClick={() => setShowLangMenu(false)}
-                                            />
-                                            <div className="absolute right-0 top-full mt-1.5 w-44 bg-white rounded-2xl shadow-xl border border-rose-100 py-1.5 z-50 animate-fadeIn">
-                                                <div className="px-3 py-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider border-b border-slate-100">
-                                                    Select Language
-                                                </div>
-                                                {languages.map((lang) => (
-                                                    <button
-                                                        key={lang.code}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setLocale(lang.code);
-                                                            setShowLangMenu(false);
-                                                        }}
-                                                        className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition ${
-                                                            locale === lang.code
-                                                                ? 'bg-rose-50 text-rose-700 font-bold'
-                                                                : 'text-slate-700 hover:bg-slate-50'
-                                                        }`}
-                                                    >
-                                                        <span>{lang.localName}</span>
-                                                        {locale === lang.code && (
-                                                            <CheckCircle2 className="w-3.5 h-3.5 text-rose-600" />
-                                                        )}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
 
                                 {/* Discreet Safety Mode Trigger */}
                                 <button
                                     onClick={() => setDiscreetMode(true)}
                                     title="Discreet Mode / Quick Disguise (ESC)"
-                                    className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/50 flex items-center justify-center shadow-xs transition active:scale-90"
+                                    className="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/50 flex items-center justify-center shadow-xs transition active:scale-90"
                                     aria-label="Quick Exit"
                                 >
                                     <Shield className="w-4 h-4 text-rose-600" />
@@ -476,9 +446,14 @@ export default function MobileAppLayout({
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-sm text-slate-900 leading-tight">{user?.name || t('drawer_title', 'Mwezi Member')}</h3>
-                                    <p className="text-[10px] text-rose-600 font-semibold capitalize mt-0.5">
-                                        {user?.role?.replace('_', ' ') || 'Primary User'}
-                                    </p>
+                                    <span className="inline-block text-[9.5px] font-bold px-2 py-0.5 rounded-full capitalize mt-1 border border-rose-200/60 bg-rose-50 text-rose-700">
+                                        {user?.role === 'health_reviewer' ? '🩺 Clinician / Midwife' :
+                                         user?.role === 'community_partner' ? '🏫 School / NGO Hub' :
+                                         user?.role === 'trusted_contact' ? '🤝 Trusted Companion' :
+                                         user?.role === 'donor_sponsor' ? '✨ Dignity Sponsor' :
+                                         user?.role === 'admin' ? '👑 Administrator' :
+                                         '🌸 Primary Member'}
+                                    </span>
                                 </div>
                             </div>
                             <button
@@ -546,34 +521,47 @@ export default function MobileAppLayout({
                             </div>
                         </div>
 
-                        {/* Special Operational Portals */}
-                        {(user?.role === 'admin' || user?.role === 'community_partner' || user?.role === 'health_reviewer') && (
+                        {/* Special Operational Functions & Management */}
+                        {(user?.role === 'admin' || user?.role === 'community_partner' || user?.role === 'health_reviewer' || user?.role === 'trusted_contact') && (
                             <div className="mt-4 pt-3 border-t border-rose-100">
-                                <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider px-2">Operational Portals</span>
+                                <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider px-2">Operational Functions & Management</span>
                                 {user?.role === 'community_partner' && (
                                     <Link
                                         href="/portal/partner"
-                                        className="flex items-center space-x-2 px-3 py-2 rounded-2xl bg-amber-50 text-amber-900 font-semibold text-xs mt-1.5"
+                                        className="flex items-center space-x-2.5 px-3 py-2.5 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-950 font-semibold text-xs mt-1.5 transition active:scale-95"
                                         onClick={() => setDrawerOpen(false)}
                                     >
-                                        <span>Hub Distribution Portal</span>
+                                        <Building className="w-4 h-4 text-amber-700" />
+                                        <span>Hub & Inventory Management</span>
                                     </Link>
                                 )}
                                 {user?.role === 'health_reviewer' && (
                                     <Link
                                         href="/portal/reviewer"
-                                        className="flex items-center space-x-2 px-3 py-2 rounded-2xl bg-teal-50 text-teal-900 font-semibold text-xs mt-1.5"
+                                        className="flex items-center space-x-2.5 px-3 py-2.5 rounded-2xl bg-teal-50 hover:bg-teal-100 text-teal-950 font-semibold text-xs mt-1.5 transition active:scale-95"
                                         onClick={() => setDrawerOpen(false)}
                                     >
-                                        <span>Medical Review Portal</span>
+                                        <Stethoscope className="w-4 h-4 text-teal-700" />
+                                        <span>Medical Review Workspace</span>
+                                    </Link>
+                                )}
+                                {(user?.role === 'trusted_contact' || user?.role === 'admin') && (
+                                    <Link
+                                        href="/trusted-circle/companion"
+                                        className="flex items-center space-x-2.5 px-3 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-950 font-semibold text-xs mt-1.5 transition active:scale-95"
+                                        onClick={() => setDrawerOpen(false)}
+                                    >
+                                        <HeartHandshake className="w-4 h-4 text-rose-600" />
+                                        <span>Companion Care Hub</span>
                                     </Link>
                                 )}
                                 {user?.role === 'admin' && (
                                     <Link
                                         href="/portal/admin"
-                                        className="flex items-center space-x-2 px-3 py-2 rounded-2xl bg-purple-50 text-purple-900 font-semibold text-xs mt-1.5"
+                                        className="flex items-center space-x-2.5 px-3 py-2.5 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-950 font-semibold text-xs mt-1.5 transition active:scale-95"
                                         onClick={() => setDrawerOpen(false)}
                                     >
+                                        <ShieldCheck className="w-4 h-4 text-purple-700" />
                                         <span>Admin & M&E Dashboard</span>
                                     </Link>
                                 )}

@@ -33,5 +33,10 @@ class LunaConversation extends Model
     {
         return $this->hasMany(LunaMessage::class, 'conversation_id')->oldest();
     }
+
+    public function latestMessage()
+    {
+        return $this->hasOne(LunaMessage::class, 'conversation_id')->latestOfMany();
+    }
 }
 

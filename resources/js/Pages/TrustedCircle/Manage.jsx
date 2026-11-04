@@ -78,7 +78,7 @@ export default function TrustedCircleManage({
     };
 
     return (
-        <MobileAppLayout title={t('trusted_title', 'Trusted Circle')} subtitle={t('trusted_subtitle', 'Safe Family & Partner Sharing')}>
+        <MobileAppLayout title={t('trusted_title', 'Trusted Circle')}>
             <Head title="Trusted Circle - Family & Partner Sharing - Mwezi" />
 
             <div className="space-y-4">
