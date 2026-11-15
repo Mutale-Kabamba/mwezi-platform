@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
 import { useTranslation } from '@/i18n/LanguageContext';
+import { getQueuedCycleLogs, queueCycleLog, syncQueuedCycleLogs } from '@/utils/offlineCycleSync';
 import {
     Calendar as CalendarIcon,
     Droplet,
@@ -24,7 +25,9 @@ import {
     Heart,
     Smile,
     Activity,
-    RotateCcw
+    RotateCcw,
+    WifiOff,
+    RefreshCw
 } from 'lucide-react';
 
 export default function CycleIndex({
@@ -296,10 +299,68 @@ export default function CycleIndex({
         setShowLoggerModal(true);
     };
 
+    const { auth } = usePage().props;
+    const isTier1 = Boolean(auth?.tierPolicy?.is_tier_1);
+    const canExportCycleData = auth?.tierPolicy?.can_export_cycle_data ?? true;
+    const canViewFertility = auth?.tierPolicy?.can_view_fertility_analytics ?? true;
+
+    // Offline-first cycle sync state
+    const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+    const [queuedCount, setQueuedCount] = useState(() => (typeof window !== 'undefined' ? getQueuedCycleLogs().length : 0));
+    const [syncing, setSyncing] = useState(false);
+    const [syncMessage, setSyncMessage] = useState('');
+
+    const handleSyncNow = async () => {
+        if (syncing || (typeof navigator !== 'undefined' && !navigator.onLine)) return;
+        setSyncing(true);
+        const result = await syncQueuedCycleLogs(route('cycle.log.store'));
+        setQueuedCount(result.remaining);
+        setSyncing(false);
+        if (result.synced > 0) {
+            setSyncMessage(`Synced ${result.synced} offline log${result.synced > 1 ? 's' : ''} to cloud.`);
+            router.reload({ only: ['profile', 'logs', 'prediction'] });
+        }
+    };
+
+    useEffect(() => {
+        const onOnline = () => {
+            setIsOnline(true);
+            handleSyncNow();
+        };
+        const onOffline = () => setIsOnline(false);
+
+        window.addEventListener('online', onOnline);
+        window.addEventListener('offline', onOffline);
+
+        if (navigator.onLine && getQueuedCycleLogs().length > 0) {
+            handleSyncNow();
+        }
+
+        return () => {
+            window.removeEventListener('online', onOnline);
+            window.removeEventListener('offline', onOffline);
+        };
+    }, []);
+
     const handleSaveLog = (e) => {
         e.preventDefault();
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            const updated = queueCycleLog(data);
+            setQueuedCount(updated.length);
+            setSyncMessage('Saved offline. Will auto-sync when connected.');
+            setShowLoggerModal(false);
+            return;
+        }
         post(route('cycle.log.store'), {
             onSuccess: () => setShowLoggerModal(false),
+            onError: () => {
+                if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                    const updated = queueCycleLog(data);
+                    setQueuedCount(updated.length);
+                    setSyncMessage('Saved offline. Will auto-sync when connected.');
+                    setShowLoggerModal(false);
+                }
+            },
         });
     };
 
@@ -381,7 +442,7 @@ export default function CycleIndex({
 
             const log = logsMap[fullDateStr];
             const isLoggedPeriod = log && log.flow_intensity && log.flow_intensity !== 'none';
-            
+
             let isPredictedPeriod = false;
             if (predictedStart && predictedEnd && dayDate >= predictedStart && dayDate <= predictedEnd) {
                 isPredictedPeriod = true;
@@ -413,19 +474,48 @@ export default function CycleIndex({
         <MobileAppLayout
             title={t('cycle_title', 'Cycle Tracker')}
             actionButton={
-                <button
-                    onClick={() => setShowExportModal(true)}
-                    className="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/50 flex items-center justify-center transition active:scale-90"
-                    title={t('cycle_summary_btn', 'Healthcare Summary')}
-                    aria-label="Export Summary"
-                >
-                    <FileText className="w-4 h-4 text-rose-600" />
-                </button>
+                canExportCycleData ? (
+                    <button
+                        onClick={() => setShowExportModal(true)}
+                        className="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/50 flex items-center justify-center transition active:scale-90"
+                        title={t('cycle_summary_btn', 'Healthcare Summary')}
+                        aria-label="Export Summary"
+                    >
+                        <FileText className="w-4 h-4 text-rose-600" />
+                    </button>
+                ) : null
             }
         >
             <Head title="Cycle Tracker & Calendar - Mwezi" />
 
             <div className="space-y-3.5 pb-6">
+
+                {/* OFFLINE SYNC STATUS BANNER */}
+                {(!isOnline || queuedCount > 0 || syncMessage) && (
+                    <div className="bg-rose-50 border border-rose-200 rounded-2xl px-3.5 py-2.5 flex items-center justify-between gap-2">
+                        <div className="flex items-center space-x-2 text-xs text-rose-900">
+                            <WifiOff className="w-4 h-4 text-[#BE123C] shrink-0" />
+                            <span className="font-medium">
+                                {!isOnline
+                                    ? `Offline mode • ${queuedCount} log${queuedCount === 1 ? '' : 's'} queued locally`
+                                    : queuedCount > 0
+                                        ? `${queuedCount} offline log${queuedCount === 1 ? '' : 's'} ready to sync`
+                                        : syncMessage}
+                            </span>
+                        </div>
+                        {isOnline && queuedCount > 0 && (
+                            <button
+                                type="button"
+                                onClick={handleSyncNow}
+                                disabled={syncing}
+                                className="px-2.5 py-1 bg-[#BE123C] hover:bg-rose-800 text-white rounded-xl text-[11px] font-bold flex items-center space-x-1 transition disabled:opacity-50"
+                            >
+                                <RefreshCw className={`w-3 h-3 ${syncing ? 'animate-spin' : ''}`} />
+                                <span>{syncing ? 'Syncing...' : 'Sync Now'}</span>
+                            </button>
+                        )}
+                    </div>
+                )}
 
                 {/* 1. THREE TOP METRIC TILES */}
                 <div className="grid grid-cols-3 gap-2">
@@ -491,11 +581,10 @@ export default function CycleIndex({
                     <button
                         type="button"
                         onClick={() => setViewMode('doughnut')}
-                        className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition active:scale-95 ${
-                            viewMode === 'doughnut'
-                                ? 'bg-white text-rose-700 shadow-xs border border-rose-100'
-                                : 'text-slate-500 hover:text-slate-800'
-                        }`}
+                        className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition active:scale-95 ${viewMode === 'doughnut'
+                            ? 'bg-white text-rose-700 shadow-xs border border-rose-100'
+                            : 'text-slate-500 hover:text-slate-800'
+                            }`}
                     >
                         <CircleDot className="w-3.5 h-3.5 text-rose-600" />
                         <span>Cycle Wheel</span>
@@ -503,11 +592,10 @@ export default function CycleIndex({
                     <button
                         type="button"
                         onClick={() => setViewMode('calendar')}
-                        className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition active:scale-95 ${
-                            viewMode === 'calendar'
-                                ? 'bg-white text-rose-700 shadow-xs border border-rose-100'
-                                : 'text-slate-500 hover:text-slate-800'
-                        }`}
+                        className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition active:scale-95 ${viewMode === 'calendar'
+                            ? 'bg-white text-rose-700 shadow-xs border border-rose-100'
+                            : 'text-slate-500 hover:text-slate-800'
+                            }`}
                     >
                         <CalendarIcon className="w-3.5 h-3.5 text-rose-600" />
                         <span>Full Calendar</span>
@@ -519,7 +607,7 @@ export default function CycleIndex({
                     <div className="space-y-3.5 animate-fadeIn">
                         {/* Interactive Circular Wheel Container */}
                         <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-150/80 flex flex-col items-center">
-                            
+
                             {/* Doughnut SVG Container */}
                             <div className="relative w-[260px] h-[260px] flex items-center justify-center my-1">
                                 <svg
@@ -608,8 +696,8 @@ export default function CycleIndex({
                                         {currentPhase.shortName}
                                     </div>
                                     <span className="text-[10px] text-slate-500 font-semibold mt-1">
-                                        {daysUntilNextPeriod === 0 
-                                            ? 'Period expected today' 
+                                        {daysUntilNextPeriod === 0
+                                            ? 'Period expected today'
                                             : `Next period in ~${daysUntilNextPeriod} days`}
                                     </span>
                                     <span className="text-[9px] text-slate-400 font-medium mt-0.5">
@@ -627,14 +715,13 @@ export default function CycleIndex({
                                             key={p.id}
                                             type="button"
                                             onClick={() => setSelectedPhaseTab(p.id)}
-                                            className={`p-1.5 rounded-xl transition text-[9.5px] flex flex-col items-center ${
-                                                isSelected 
-                                                    ? `${p.bgColor} ${p.textColor} font-bold ring-1 ring-${p.color}/40` 
-                                                    : 'hover:bg-slate-50 text-slate-500 font-medium'
-                                            }`}
+                                            className={`p-1.5 rounded-xl transition text-[9.5px] flex flex-col items-center ${isSelected
+                                                ? `${p.bgColor} ${p.textColor} font-bold ring-1 ring-${p.color}/40`
+                                                : 'hover:bg-slate-50 text-slate-500 font-medium'
+                                                }`}
                                         >
-                                            <span 
-                                                className="w-2 h-2 rounded-full mb-1 shrink-0" 
+                                            <span
+                                                className="w-2 h-2 rounded-full mb-1 shrink-0"
                                                 style={{ backgroundColor: p.color }}
                                             />
                                             <span className="truncate w-full">{p.shortName}</span>
@@ -652,8 +739,8 @@ export default function CycleIndex({
                         >
                             <Plus className="w-4 h-4" />
                             <span>
-                                {logsMap[todayYmd] 
-                                    ? `Update Symptoms for Today (Day ${currentCycleDay})` 
+                                {logsMap[todayYmd]
+                                    ? `Update Symptoms for Today (Day ${currentCycleDay})`
                                     : `Log Symptoms for Today (Day ${currentCycleDay})`}
                             </span>
                         </button>
@@ -716,7 +803,7 @@ export default function CycleIndex({
                     <div className="space-y-3.5 animate-fadeIn">
                         {/* Month Calendar Card */}
                         <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-150/80">
-                            
+
                             {/* Month Header with Navigation Controls */}
                             <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-slate-100">
                                 <div>
@@ -725,7 +812,7 @@ export default function CycleIndex({
                                     </h2>
                                     <p className="text-[10px] text-slate-400 font-medium">Tap any date to view or record symptoms</p>
                                 </div>
-                                
+
                                 <div className="flex items-center space-x-1.5">
                                     <button
                                         type="button"
@@ -779,7 +866,7 @@ export default function CycleIndex({
                                         bgClass = "bg-[#BE123C] text-white font-bold shadow-2xs border-[#BE123C]";
                                     } else if (item.isPredictedPeriod) {
                                         bgClass = "bg-rose-100/80 text-rose-900 font-bold border-rose-200";
-                                    } else if (item.isOvulation) {
+                                    } else if (canViewFertility && item.isOvulation) {
                                         bgClass = "bg-purple-100/90 text-purple-900 font-bold border-purple-200";
                                     }
 
@@ -797,18 +884,16 @@ export default function CycleIndex({
                                             className={`h-11 rounded-2xl flex flex-col items-center justify-center text-xs relative transition active:scale-90 ${bgClass} ${ringClass}`}
                                         >
                                             <span className="text-xs">{item.dayNum}</span>
-                                            
+
                                             {/* Micro-indicators for symptoms/pads */}
                                             <div className="flex items-center space-x-0.5 absolute bottom-1">
                                                 {item.log?.symptoms?.length > 0 && (
-                                                    <span className={`w-1.5 h-1.5 rounded-full ${
-                                                        item.isLoggedPeriod ? 'bg-white' : 'bg-rose-500'
-                                                    }`} />
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${item.isLoggedPeriod ? 'bg-white' : 'bg-rose-500'
+                                                        }`} />
                                                 )}
                                                 {item.log?.moods?.length > 0 && (
-                                                    <span className={`w-1.5 h-1.5 rounded-full ${
-                                                        item.isLoggedPeriod ? 'bg-rose-200' : 'bg-purple-400'
-                                                    }`} />
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${item.isLoggedPeriod ? 'bg-rose-200' : 'bg-purple-400'
+                                                        }`} />
                                                 )}
                                             </div>
                                         </button>
@@ -826,10 +911,12 @@ export default function CycleIndex({
                                     <span className="w-2.5 h-2.5 rounded-full bg-rose-200" />
                                     <span>Predicted</span>
                                 </div>
-                                <div className="flex items-center space-x-1.5">
-                                    <span className="w-2.5 h-2.5 rounded-full bg-purple-200" />
-                                    <span>Ovulation</span>
-                                </div>
+                                {canViewFertility && (
+                                    <div className="flex items-center space-x-1.5">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-purple-200" />
+                                        <span>Ovulation</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -899,8 +986,8 @@ export default function CycleIndex({
                             >
                                 <Plus className="w-4 h-4" />
                                 <span>
-                                    {selectedLog 
-                                        ? `Edit Record for ${formatDisplayDate(selectedDate)}` 
+                                    {selectedLog
+                                        ? `Edit Record for ${formatDisplayDate(selectedDate)}`
                                         : `Log Symptoms for ${formatDisplayDate(selectedDate)}`}
                                 </span>
                             </button>
@@ -990,8 +1077,8 @@ export default function CycleIndex({
                                             type="button"
                                             onClick={() => setData('flow_intensity', flow)}
                                             className={`py-2 px-1 rounded-2xl text-[10px] font-bold uppercase transition ${data.flow_intensity === flow
-                                                    ? 'bg-[#BE123C] text-white shadow-xs'
-                                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                ? 'bg-[#BE123C] text-white shadow-xs'
+                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                                 }`}
                                         >
                                             {t(`cycle_flow_${flow}`, flow)}
@@ -1041,8 +1128,8 @@ export default function CycleIndex({
                                                 type="button"
                                                 onClick={() => toggleSymptom(sym)}
                                                 className={`px-3 py-1 rounded-full text-xs font-medium transition ${selected
-                                                        ? 'bg-rose-100 text-rose-800 border border-rose-300 font-bold'
-                                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent'
+                                                    ? 'bg-rose-100 text-rose-800 border border-rose-300 font-bold'
+                                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent'
                                                     }`}
                                             >
                                                 {t(symKey, sym)}
@@ -1067,8 +1154,8 @@ export default function CycleIndex({
                                                 type="button"
                                                 onClick={() => toggleMood(mood)}
                                                 className={`px-3 py-1 rounded-full text-xs font-medium transition ${selected
-                                                        ? 'bg-purple-100 text-purple-800 border border-purple-300 font-bold'
-                                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent'
+                                                    ? 'bg-purple-100 text-purple-800 border border-purple-300 font-bold'
+                                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent'
                                                     }`}
                                             >
                                                 {t(moodKey, mood)}

@@ -62,4 +62,16 @@ return [
         'base_url' => env('ZEDTRANSLATE_BASE_URL', 'https://api.zedtranslate.com/v1'),
     ],
 
+    'hpcz' => [
+        'endpoint' => env('HPCZ_VERIFICATION_ENDPOINT', ''),
+        'api_key' => env('HPCZ_VERIFICATION_API_KEY', ''),
+    ],
+
+    'sms' => [
+        'driver' => env('MWEZI_SMS_DRIVER', 'log'),
+        'endpoint' => env('AFRICASTALKING_SMS_ENDPOINT', 'https://api.africastalking.com/version1/messaging'),
+        'username' => env('AFRICASTALKING_USERNAME', 'sandbox'),
+        'api_key' => env('AFRICASTALKING_API_KEY', ''),
+    ],
+
 ];

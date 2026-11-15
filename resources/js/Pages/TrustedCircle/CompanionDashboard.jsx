@@ -1,5 +1,5 @@
-import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { 
@@ -19,6 +19,36 @@ export default function CompanionDashboard({
     allyArticles = [] 
 }) {
     const { t } = useTranslation();
+    const [childGroupSelection, setChildGroupSelection] = useState('tier_1');
+    const { data, setData, post, processing, reset, errors } = useForm({
+        tier: 'tier_1_10_14',
+        child_name: '',
+        child_age: 12,
+        username: '',
+        pin_code: '',
+        contact_channel: '',
+        luna_ai_level: 'guided',
+        emergency_alerts: true,
+        tip_sharing: true,
+    });
+
+    const handleTierGroupSelect = (group) => {
+        setChildGroupSelection(group);
+        if (group === 'tier_2') {
+            setData((prev) => ({ ...prev, tier: 'tier_2_15_19', child_age: 16 }));
+        } else {
+            setData((prev) => ({ ...prev, tier: 'tier_1_10_14', child_age: 12 }));
+        }
+    };
+
+    const handleSubmitDependent = (e) => {
+        e.preventDefault();
+        post(route('trusted-circle.dependents.store'), {
+            preserveScroll: true,
+            onSuccess: () => reset('child_name', 'username', 'pin_code', 'contact_channel'),
+        });
+    };
+
     return (
         <MobileAppLayout title={t('trusted_title', 'Companion View')} backUrl="/dashboard">
             <Head title="Trusted Companion View - Mwezi" />
@@ -123,6 +153,167 @@ export default function CompanionDashboard({
                             </div>
                         </Link>
                     ))}
+                </div>
+
+                {/* 4. PARENT & GUARDIAN MULTI-TIER CHILD MANAGEMENT */}
+                <div className="bg-white rounded-[20px] p-4 shadow-sm border border-rose-100 space-y-3">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#BE123C]">Parent & Guardian Controls</span>
+                            <h3 className="font-heading font-bold text-sm text-gray-900">Multi-Tier Child Selection</h3>
+                        </div>
+                        <ShieldCheck className="w-5 h-5 text-[#BE123C]" />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-1.5">
+                        {[
+                            { id: 'tier_1', label: 'Tier 1 (10–14)' },
+                            { id: 'tier_2', label: 'Tier 2 (15–19)' },
+                            { id: 'both', label: 'Both Tiers' },
+                        ].map((opt) => (
+                            <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => handleTierGroupSelect(opt.id)}
+                                className={`py-2 px-2 rounded-xl text-[11px] font-bold border transition ${
+                                    childGroupSelection === opt.id
+                                        ? 'bg-[#BE123C] text-white border-[#BE123C]'
+                                        : 'bg-gray-50 text-gray-700 border-gray-200'
+                                }`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {childGroupSelection === 'both' && (
+                        <div className="flex space-x-2">
+                            <button
+                                type="button"
+                                onClick={() => setData((prev) => ({ ...prev, tier: 'tier_1_10_14', child_age: 12 }))}
+                                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold border ${
+                                    data.tier === 'tier_1_10_14' ? 'bg-rose-50 text-[#BE123C] border-rose-300' : 'bg-white text-gray-600 border-gray-200'
+                                }`}
+                            >
+                                Add Tier 1 Child
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setData((prev) => ({ ...prev, tier: 'tier_2_15_19', child_age: 16 }))}
+                                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold border ${
+                                    data.tier === 'tier_2_15_19' ? 'bg-rose-50 text-[#BE123C] border-rose-300' : 'bg-white text-gray-600 border-gray-200'
+                                }`}
+                            >
+                                Invite Tier 2 Teen
+                            </button>
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmitDependent} className="space-y-2.5 pt-1">
+                        <div className="grid grid-cols-3 gap-2">
+                            <input
+                                type="text"
+                                value={data.child_name}
+                                onChange={(e) => setData('child_name', e.target.value)}
+                                placeholder="Child First Name"
+                                required
+                                className="col-span-2 px-3 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#BE123C]"
+                            />
+                            <input
+                                type="number"
+                                min={data.tier === 'tier_1_10_14' ? 10 : 15}
+                                max={data.tier === 'tier_1_10_14' ? 14 : 19}
+                                value={data.child_age}
+                                onChange={(e) => setData('child_age', Number(e.target.value))}
+                                placeholder="Age"
+                                className="px-3 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#BE123C]"
+                            />
+                        </div>
+
+                        {data.tier === 'tier_1_10_14' ? (
+                            <div className="space-y-2 bg-rose-50/50 p-3 rounded-xl border border-rose-100">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <input
+                                        type="text"
+                                        value={data.username}
+                                        onChange={(e) => setData('username', e.target.value)}
+                                        placeholder="Child Username"
+                                        required
+                                        className="px-3 py-2 rounded-xl border border-gray-200 text-xs bg-white focus:outline-none focus:border-[#BE123C]"
+                                    />
+                                    <input
+                                        type="password"
+                                        inputMode="numeric"
+                                        maxLength={4}
+                                        value={data.pin_code}
+                                        onChange={(e) => setData('pin_code', e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                        placeholder="4-Digit PIN"
+                                        required
+                                        className="px-3 py-2 rounded-xl border border-gray-200 text-xs bg-white focus:outline-none focus:border-[#BE123C]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-700 mb-1">Luna AI Access Level</label>
+                                    <select
+                                        value={data.luna_ai_level}
+                                        onChange={(e) => setData('luna_ai_level', e.target.value)}
+                                        className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs bg-white focus:outline-none focus:border-[#BE123C]"
+                                    >
+                                        <option value="guided">Guided (Age-Appropriate Health Education)</option>
+                                        <option value="restricted">Restricted (Basic FAQ Only)</option>
+                                        <option value="full">Full Access</option>
+                                    </select>
+                                </div>
+                                <div className="flex items-center justify-between text-[11px] text-gray-700 pt-1">
+                                    <label className="flex items-center space-x-1.5 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.emergency_alerts}
+                                            onChange={(e) => setData('emergency_alerts', e.target.checked)}
+                                            className="rounded text-[#BE123C]"
+                                        />
+                                        <span>Emergency Alerts</span>
+                                    </label>
+                                    <label className="flex items-center space-x-1.5 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.tip_sharing}
+                                            onChange={(e) => setData('tip_sharing', e.target.checked)}
+                                            className="rounded text-[#BE123C]"
+                                        />
+                                        <span>Tip Sharing</span>
+                                    </label>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-200">
+                                <p className="text-[11px] text-gray-600">
+                                    Tier 2 (15–19) preserves older adolescent privacy. Provide guardian consent and send a join invite code.
+                                </p>
+                                <input
+                                    type="text"
+                                    value={data.contact_channel}
+                                    onChange={(e) => setData('contact_channel', e.target.value)}
+                                    placeholder="Teen Phone or Email (for invite)"
+                                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs bg-white focus:outline-none focus:border-[#BE123C]"
+                                />
+                            </div>
+                        )}
+
+                        {(errors.username || errors.pin_code || errors.child_name) && (
+                            <p className="text-[11px] text-[#BE123C] font-medium">
+                                {errors.username || errors.pin_code || errors.child_name}
+                            </p>
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="w-full py-2.5 bg-[#BE123C] hover:bg-rose-800 text-white rounded-xl text-xs font-bold transition disabled:opacity-50"
+                        >
+                            {data.tier === 'tier_1_10_14' ? 'Provision Tier 1 Sub-Account' : 'Authorize & Send Tier 2 Join Invite'}
+                        </button>
+                    </form>
                 </div>
             </div>
         </MobileAppLayout>

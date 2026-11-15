@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
 import MarkdownRenderer from '@/Components/MarkdownRenderer';
 import { useTranslation } from '@/i18n/LanguageContext';
@@ -143,8 +143,8 @@ export default function LearnShow({
                             <button
                                 onClick={toggleSpeech}
                                 className={`p-2 rounded-xl border transition flex items-center space-x-1 text-xs font-semibold ${isPlayingSpeech
-                                        ? 'bg-rose-600 text-white border-rose-600'
-                                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                                    ? 'bg-rose-600 text-white border-rose-600'
+                                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                                     }`}
                                 title="Listen to AI Speech Narration"
                             >
@@ -153,17 +153,19 @@ export default function LearnShow({
                             </button>
                         )}
 
-                        <button
-                            onClick={() => {
-                                if (navigator.share) {
-                                    navigator.share({ title, text: resource.summary, url: window.location.href });
-                                }
-                            }}
-                            className="p-2 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition"
-                            title="Share"
-                        >
-                            <Share2 className="w-4 h-4" />
-                        </button>
+                        {!usePage().props?.auth?.tierPolicy?.is_tier_1 && (
+                            <button
+                                onClick={() => {
+                                    if (navigator.share) {
+                                        navigator.share({ title, text: resource.summary, url: window.location.href });
+                                    }
+                                }}
+                                className="p-2 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition"
+                                title="Share"
+                            >
+                                <Share2 className="w-4 h-4" />
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -262,8 +264,8 @@ export default function LearnShow({
                                     key={idx}
                                     onClick={() => toggleStep(idx)}
                                     className={`w-full p-2.5 rounded-xl text-left text-xs transition flex items-start space-x-2 ${checkedSteps[idx]
-                                            ? 'bg-white font-semibold text-emerald-800 shadow-sm border border-emerald-300'
-                                            : 'bg-white/70 text-gray-700 hover:bg-white'
+                                        ? 'bg-white font-semibold text-emerald-800 shadow-sm border border-emerald-300'
+                                        : 'bg-white/70 text-gray-700 hover:bg-white'
                                         }`}
                                 >
                                     {checkedSteps[idx] ? (
@@ -294,8 +296,8 @@ export default function LearnShow({
                         onClick={markCompleted}
                         disabled={isCompleted}
                         className={`py-2 px-4 rounded-[16px] text-xs font-bold transition flex items-center space-x-1.5 shadow-sm ${isCompleted
-                                ? 'bg-emerald-100 text-emerald-800 cursor-default'
-                                : 'bg-mwezi-accent hover:bg-mwezi-accent/95 text-white active:scale-95'
+                            ? 'bg-emerald-100 text-emerald-800 cursor-default'
+                            : 'bg-mwezi-accent hover:bg-mwezi-accent/95 text-white active:scale-95'
                             }`}
                     >
                         <CheckCircle2 className="w-4 h-4" />

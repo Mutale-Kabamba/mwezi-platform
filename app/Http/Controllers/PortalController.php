@@ -226,6 +226,10 @@ class PortalController extends Controller
 
         $productRequest->save();
 
+        if (in_array($newStatus, ['ready_for_pickup', 'dispatched'], true)) {
+            app(\App\Services\SmsAlertService::class)->sendSupplyPickupAlert($productRequest);
+        }
+
         return back()->with('success', "Request {$productRequest->request_code} updated to {$validated['status']}.");
     }
 
@@ -903,5 +907,20 @@ class PortalController extends Controller
 
             fclose($handle);
         }, 200, $headers);
+    }
+
+    /**
+     * Admin: Manually approve or reject a clinician's HPCZ registration status.
+     */
+    public function verifyHpczReviewer(Request $request, User $user, \App\Services\HpczVerificationService $hpczService)
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:verified,rejected,pending_review',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $hpczService->adminSetStatus($user, $validated['status'], $validated['notes'] ?? null);
+
+        return back()->with('success', "HPCZ status for {$user->name} updated to {$validated['status']}.");
     }
 }

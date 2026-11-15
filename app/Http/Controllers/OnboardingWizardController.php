@@ -242,7 +242,13 @@ class OnboardingWizardController extends Controller
                 $user->onboarding_completed_at = now();
                 $user->save();
 
-                return redirect()->route('portal.reviewer')->with('success', 'Clinician verification submitted! Welcome to the Medical Review portal.');
+                $hpczResult = app(\App\Services\HpczVerificationService::class)->verify($user, $validated['hpcz_registration_number']);
+
+                $flashMsg = ($hpczResult['status'] ?? 'pending_review') === 'verified'
+                    ? 'Clinician HPCZ credentials verified! Welcome to the Medical Review portal.'
+                    : 'Clinician verification submitted for review! Welcome to the Medical Review portal.';
+
+                return redirect()->route('portal.reviewer')->with('success', $flashMsg);
 
             case 'donor_sponsor':
                 $validated = $request->validate([

@@ -270,7 +270,14 @@ class LunaAiController extends Controller
             'audio_duration' => $audioDuration,
         ];
 
+        $policy = $user->tierPolicy();
+        $mediaContext['luna_ai_level'] = $policy['luna_ai_level'];
+
         $aiPrompt = !empty($validated['message']) ? $validated['message'] : ($hasAudio ? "I sent a voice note." : "I uploaded " . count($attachments) . " file(s).");
+        if ($policy['is_tier_1'] && $policy['luna_ai_level'] !== 'full') {
+            $aiPrompt = "[SAFEGUARDING MODE: {$policy['luna_ai_level']} - Limit guidance strictly to puberty basics, menstrual pad hygiene, and biology; do not discuss complex SRHR or contraception.] " . $aiPrompt;
+        }
+
         $aiResult = $this->lunaService->respond($aiPrompt, $user->id, $historyMessages, $locale, $mediaContext);
 
         // 5. Save Luna response (Field-level encrypted)

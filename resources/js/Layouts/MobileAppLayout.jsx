@@ -41,6 +41,11 @@ export default function MobileAppLayout({
 }) {
     const { auth } = usePage().props;
     const user = auth?.user;
+    const isTier1 = Boolean(auth?.tierPolicy?.is_tier_1);
+    const canViewSponsor = auth?.tierPolicy?.can_view_sponsor_portal ?? true;
+    const canUsePersonalTracker = auth?.tierPolicy?.can_use_personal_tracker ?? true;
+    const canViewSharedTracker = Boolean(auth?.tierPolicy?.can_view_shared_tracker);
+    const sharedTrackerLabel = auth?.tierPolicy?.shared_tracker_label || "Child's / Partner's Tracker";
     const currentUrl = typeof window !== 'undefined' ? window.location.pathname : '';
     const { locale, setLocale, t, languages } = useTranslation();
 
@@ -155,7 +160,11 @@ export default function MobileAppLayout({
 
     const navItems = [
         { name: t('nav_home', 'Home'), href: '/dashboard', icon: Home, match: '/dashboard' },
-        { name: t('nav_track', 'Track'), href: '/cycle', icon: Calendar, match: '/cycle' },
+        ...(canUsePersonalTracker
+            ? [{ name: t('nav_track', 'Track'), href: '/cycle', icon: Calendar, match: '/cycle' }]
+            : canViewSharedTracker
+                ? [{ name: sharedTrackerLabel, href: '/trusted-circle/companion', icon: Calendar, match: '/trusted-circle/companion' }]
+                : []),
         { name: t('nav_learn', 'Learn'), href: '/learn', icon: BookOpen, match: '/learn' },
         { name: t('nav_luna', 'Luna AI'), href: '/luna', icon: Sparkles, match: '/luna' },
         { name: t('nav_support', 'Support'), href: '/support', icon: MapPin, match: '/support' },
@@ -163,14 +172,18 @@ export default function MobileAppLayout({
 
     const drawerNavItems = [
         { name: t('drawer_home', 'Home Dashboard'), href: '/dashboard', icon: Home },
-        { name: t('drawer_cycle', 'Cycle Tracker & Logs'), href: '/cycle', icon: Calendar },
+        ...(canUsePersonalTracker
+            ? [{ name: t('drawer_cycle', 'Cycle Tracker & Logs'), href: '/cycle', icon: Calendar }]
+            : canViewSharedTracker
+                ? [{ name: sharedTrackerLabel, href: '/trusted-circle/companion', icon: Calendar }]
+                : []),
         { name: t('drawer_learn', 'Learn Hub & Guides'), href: '/learn', icon: BookOpen },
         { name: t('drawer_myths', 'Busting Myths vs Facts'), href: '/learn/myths-facts', icon: CheckCircle2 },
         { name: t('drawer_luna', 'Ask Luna AI Assistant'), href: '/luna', icon: Sparkles },
-        { name: t('drawer_community', 'Community Discussions'), href: '/community', icon: Users },
+        ...(!isTier1 ? [{ name: t('drawer_community', 'Community Discussions'), href: '/community', icon: Users }] : []),
         { name: t('drawer_emergency', 'Emergency Supplies'), href: '/support/request', icon: Heart },
         { name: t('drawer_map', 'Find Pad Hubs & Clinics'), href: '/support/map', icon: MapPin },
-        { name: t('drawer_sponsor', 'Sponsor a Girl'), href: '/support/sponsor', icon: Heart },
+        ...(canViewSponsor ? [{ name: t('drawer_sponsor', 'Sponsor a Girl'), href: '/support/sponsor', icon: Heart }] : []),
         { name: t('drawer_circle', 'Trusted Family Circle'), href: '/trusted-circle', icon: Users },
         { name: t('drawer_profile', 'Profile & Privacy Settings'), href: '/profile', icon: Settings },
     ];

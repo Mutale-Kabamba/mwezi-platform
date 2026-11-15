@@ -1,5 +1,5 @@
 import React from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import PortalDashboardLayout from '@/Layouts/PortalDashboardLayout';
 import { 
     Stethoscope, 
@@ -13,6 +13,10 @@ import {
 } from 'lucide-react';
 
 export default function MedicalReview({ pendingArticles = [], approvedArticles = [] }) {
+    const { auth } = usePage().props;
+    const hpczStatus = auth?.user?.hpcz_verification_status || 'unverified';
+    const hpczNumber = auth?.user?.hpcz_registration_number;
+
     const handleApprove = (articleId) => {
         router.post(route('portal.reviewer.approve', articleId));
     };
@@ -37,6 +41,20 @@ export default function MedicalReview({ pendingArticles = [], approvedArticles =
                             <p className="text-xs text-gray-500">
                                 Ensure every article, reusable pad guide, and Luna AI response chunk adheres to adolescent health standards.
                             </p>
+                            <div className="mt-2 inline-flex items-center space-x-2">
+                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                    hpczStatus === 'verified'
+                                        ? 'bg-emerald-100 text-emerald-800'
+                                        : hpczStatus === 'rejected'
+                                            ? 'bg-rose-100 text-rose-800'
+                                            : 'bg-amber-100 text-amber-800'
+                                }`}>
+                                    HPCZ: {hpczStatus.replace('_', ' ')}
+                                </span>
+                                {hpczNumber && (
+                                    <span className="text-[11px] font-mono text-gray-500">#{hpczNumber}</span>
+                                )}
+                            </div>
                         </div>
                     </div>
 

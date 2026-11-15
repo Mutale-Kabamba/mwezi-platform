@@ -495,4 +495,108 @@ class TrustedCircleController extends Controller
 
         return back()->with('info', 'You have left this trusted support circle.');
     }
+
+    /**
+     * Parent / Guardian Multi-Tier Dependent Provisioning (Tier 1: 10-14 sub-account, Tier 2: 15-19 consent invite).
+     */
+    public function storeDependent(Request $request)
+    {
+        $guardian = $request->user();
+        if (!in_array($guardian->role, ['trusted_contact', 'admin'], true)) {
+            abort(403, 'Dependent provisioning is reserved for Parent / Guardian accounts.');
+        }
+
+        $validated = $request->validate([
+            'tier' => 'required|in:tier_1_10_14,tier_2_15_19',
+            'child_name' => 'required|string|max:120',
+            'child_age' => 'nullable|integer|min:10|max:19',
+            'username' => 'nullable|string|max:50|unique:users,username',
+            'pin_code' => 'nullable|digits:4',
+            'contact_channel' => 'nullable|string|max:100',
+            'luna_ai_level' => 'nullable|in:guided,restricted,full',
+            'emergency_alerts' => 'nullable|boolean',
+            'tip_sharing' => 'nullable|boolean',
+        ]);
+
+        if ($validated['tier'] === 'tier_1_10_14') {
+            $request->validate([
+                'username' => 'required|string|max:50|unique:users,username',
+                'pin_code' => 'required|digits:4',
+            ]);
+
+            $child = \App\Models\User::create([
+                'name' => $validated['child_name'],
+                'username' => $validated['username'],
+                'password' => \Illuminate\Support\Facades\Hash::make($validated['pin_code'] . '0000'),
+                'pin_code_hash' => \Illuminate\Support\Facades\Hash::make($validated['pin_code']),
+                'role' => 'primary_user',
+                'preferred_language' => $guardian->preferred_language ?? 'en',
+                'province' => $guardian->province,
+                'district' => $guardian->district,
+                'onboarding_completed_at' => now(),
+            ]);
+
+            \App\Models\UserPrivacySetting::create([
+                'user_id' => $child->id,
+                'allow_anonymous_forum_default' => true,
+                'share_cycle_with_trusted' => true,
+                'share_symptoms_with_trusted' => false,
+                'receive_discreet_notifications' => true,
+                'data_retention_consent_at' => now(),
+            ]);
+
+            \App\Models\CycleProfile::create([
+                'user_id' => $child->id,
+                'age_band' => '10_13_early_teen',
+                'has_started_period' => false,
+                'average_cycle_length' => 32,
+                'average_period_length' => 5,
+            ]);
+
+            TrustedConnection::create([
+                'primary_user_id' => $child->id,
+                'trusted_user_id' => $guardian->id,
+                'invite_code' => 'MWZ-T1-' . strtoupper(\Illuminate\Support\Str::random(5)),
+                'contact_name' => $guardian->name,
+                'contact_channel' => $guardian->phone ?: ($guardian->email ?: $guardian->username),
+                'relationship' => 'guardian',
+                'status' => 'active',
+                'permissions' => [
+                    'tier' => 'tier_1_10_14',
+                    'child_age' => $validated['child_age'] ?? 12,
+                    'luna_ai_level' => $validated['luna_ai_level'] ?? 'guided',
+                    'emergency_alerts' => (bool) ($validated['emergency_alerts'] ?? true),
+                    'tip_sharing' => (bool) ($validated['tip_sharing'] ?? true),
+                    'cycle_phase' => true,
+                    'tips' => true,
+                    'care_reminders' => true,
+                ],
+            ]);
+
+            return back()->with('success', "Tier 1 sub-account created for {$child->name} (Username: {$child->username}).");
+        }
+
+        // Tier 2 (Ages 15-19): Guardian consent + privacy-preserving join invite
+        $inviteCode = 'MWZ-T2-' . strtoupper(\Illuminate\Support\Str::random(5));
+
+        TrustedConnection::create([
+            'primary_user_id' => $guardian->id,
+            'trusted_user_id' => $guardian->id,
+            'invite_code' => $inviteCode,
+            'contact_name' => $validated['child_name'],
+            'contact_channel' => $validated['contact_channel'] ?? 'Invite Link',
+            'relationship' => 'guardian',
+            'status' => 'invited',
+            'permissions' => [
+                'tier' => 'tier_2_15_19',
+                'child_age' => $validated['child_age'] ?? 16,
+                'guardian_consent' => true,
+                'cycle_phase' => false,
+                'tips' => true,
+                'care_reminders' => true,
+            ],
+        ]);
+
+        return back()->with('success', "Tier 2 consent invite generated for {$validated['child_name']} (Code: {$inviteCode}).");
+    }
 }

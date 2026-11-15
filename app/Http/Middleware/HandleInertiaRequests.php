@@ -36,6 +36,7 @@ class HandleInertiaRequests extends Middleware
                     $request->user()->load('privacySettings')->toArray(),
                     ['has_pin' => !is_null($request->user()->pin_code_hash)]
                 ) : null,
+                'tierPolicy' => $request->user() ? $request->user()->tierPolicy() : null,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

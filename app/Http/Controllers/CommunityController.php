@@ -12,9 +12,14 @@ use App\Models\CommunityReaction;
 
 class CommunityController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
         $user = $request->user();
+        if ($user && !$user->tierPolicy()['can_access_community']) {
+            return redirect()->route('dashboard')
+                ->with('info', 'Community forums are disabled for Early Adolescent (10–13) accounts for child safeguarding.');
+        }
+
         $isRestrictedRole = $user && in_array($user->role, ['trusted_contact', 'donor_sponsor'], true);
 
         $selectedTopicSlug = $request->query('topic');
@@ -65,6 +70,10 @@ class CommunityController extends Controller
         ]);
 
         $user = $request->user();
+        if ($user && !$user->tierPolicy()['can_post_community']) {
+            abort(403, 'Community forum posting is restricted for this account tier.');
+        }
+
         $topic = CommunityTopic::findOrFail($validated['topic_id']);
 
         if ($user && in_array($user->role, ['trusted_contact', 'donor_sponsor'], true)) {
@@ -94,6 +103,9 @@ class CommunityController extends Controller
         ]);
 
         $user = $request->user();
+        if ($user && !$user->tierPolicy()['can_post_community']) {
+            abort(403, 'Community forum commenting is restricted for this account tier.');
+        }
 
         if ($user && in_array($user->role, ['trusted_contact', 'donor_sponsor'], true)) {
             if ($post->audience_scope === 'girls_only' || $post->topic?->audience_scope === 'girls_only') {

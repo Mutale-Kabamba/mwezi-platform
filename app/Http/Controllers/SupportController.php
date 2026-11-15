@@ -68,8 +68,10 @@ class SupportController extends Controller
             return 0;
         })->values();
 
-        $products = MenstrualProductCatalog::where('availability_status', 'available')
-            ->get();
+        $isTier1 = $user && ($user->tierPolicy()['is_tier_1'] ?? false);
+        $products = $isTier1
+            ? collect([])
+            : MenstrualProductCatalog::where('availability_status', 'available')->get();
 
         return Inertia::render('Support/RequestSupplies', [
             'hubs' => $sortedHubs,
@@ -159,9 +161,14 @@ class SupportController extends Controller
         ]);
     }
 
-    public function sponsorView(Request $request): Response
+    public function sponsorView(Request $request)
     {
         $user = $request->user();
+        if ($user && !($user->tierPolicy()['can_view_sponsor_portal'] ?? true)) {
+            return redirect()->route('dashboard')
+                ->with('info', 'Sponsor a Girl financial tools are restricted to adult accounts (18+).');
+        }
+
         $campaign = SponsorshipCampaign::where('active', true)->first();
         $recentDonations = Donation::where('payment_status', 'completed')
             ->latest()
@@ -197,6 +204,10 @@ class SupportController extends Controller
         ]);
 
         $user = $request->user();
+        if ($user && !$user->tierPolicy()['can_donate']) {
+            abort(403, 'Direct sponsorships are restricted to adult accounts (18+).');
+        }
+
         $campaign = SponsorshipCampaign::where('active', true)->first();
 
         // Calculate girls supported estimate based on amount

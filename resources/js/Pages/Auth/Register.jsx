@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useTranslation } from '@/i18n/LanguageContext';
+import { ZAMBIA_PROVINCES, PROVINCE_NAMES } from '@/constants/zambiaLocations';
 import { 
     ChevronLeft, 
     Eye, 
     EyeOff, 
-    Wifi, 
-    BatteryMedium, 
     Globe,
     Heart,
     HeartHandshake,
@@ -32,7 +31,6 @@ export default function Register({ initialInviteCode = '' }) {
     const [rawIdentifier, setRawIdentifier] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [currentTime, setCurrentTime] = useState('09:41');
 
     // Companion Code Verification State
     const [codeVerified, setCodeVerified] = useState(false);
@@ -51,20 +49,38 @@ export default function Register({ initialInviteCode = '' }) {
         role: initialInviteCode ? 'trusted_contact' : 'primary_user',
         preferred_language: locale || 'en',
         invite_code: initialInviteCode,
+        gender: 'female',
+        has_personal_cycle: true,
+        age_band: '18_24_young_adult',
+        has_started_period: true,
+        last_period_start: '',
+        average_cycle_length: 28,
+        average_period_length: 5,
+        cycle_regularity: 'regular',
+        typical_symptoms: [],
+        preferred_product_type: 'disposable_pads',
+        province: 'Lusaka',
+        district: 'Lusaka',
+        pin_code: '',
+        organization_name: '',
+        hub_type: 'ngo',
+        address: '',
+        clinical_specialty: '',
+        hpcz_registration_number: '',
+        review_locales: ['en'],
+        donor_default_anonymous: false,
+        child_tier_group: 'tier_1',
+        child_name: '',
+        child_age: 12,
+        child_username: '',
+        child_pin_code: '',
+        luna_ai_level: 'guided',
+        emergency_alerts: true,
+        tip_sharing: true,
+        teen_name: '',
+        teen_contact_channel: '',
         remember: true,
     });
-
-    useEffect(() => {
-        const updateClock = () => {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            setCurrentTime(`${hours}:${minutes}`);
-        };
-        updateClock();
-        const timer = setInterval(updateClock, 30000);
-        return () => clearInterval(timer);
-    }, []);
 
     // Verify companion invite code
     const verifyInviteCode = async (codeToVerify) => {
@@ -116,6 +132,17 @@ export default function Register({ initialInviteCode = '' }) {
         }
     }, [initialInviteCode]);
 
+    const availableTowns = ZAMBIA_PROVINCES[data.province] || ZAMBIA_PROVINCES.Lusaka;
+
+    const handleProvinceChange = (nextProvince) => {
+        const towns = ZAMBIA_PROVINCES[nextProvince] || [];
+        setData((prev) => ({
+            ...prev,
+            province: nextProvince,
+            district: towns[0] || '',
+        }));
+    };
+
     // Synchronize identifier input into email, phone, or username
     const handleIdentifierChange = (value) => {
         setRawIdentifier(value);
@@ -135,6 +162,12 @@ export default function Register({ initialInviteCode = '' }) {
             label: 'Girl / Teen / Woman', 
             desc: 'Track cycle safely, ask Luna AI, and request dignity supplies',
             icon: Heart 
+        },
+        { 
+            id: 'parent_guardian', 
+            label: 'Parent / Guardian', 
+            desc: 'Register & manage ages 10–13 or link ages 14–19 with consent',
+            icon: ShieldCheck 
         },
         { 
             id: 'trusted_contact', 
@@ -167,6 +200,15 @@ export default function Register({ initialInviteCode = '' }) {
     // Role-specific field titles and descriptions
     const getRoleFormDetails = () => {
         switch (data.role) {
+            case 'parent_guardian':
+                return {
+                    title: 'Parent / Guardian Registration',
+                    subtitle: 'Manage ages 10–13 sub-accounts or authorize ages 14–19',
+                    nameLabel: 'Parent / Guardian Full Name',
+                    namePlaceholder: 'e.g. Grace Banda',
+                    identifierPlaceholder: 'Mobile number or Email address',
+                    hasInviteCode: false,
+                };
             case 'trusted_contact':
                 return {
                     title: 'Companion Registration',
@@ -226,38 +268,28 @@ export default function Register({ initialInviteCode = '' }) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-tr from-[#FBECEF] via-[#F4F1F4] to-[#EBF3F5] flex items-center justify-center p-0 sm:py-6 sm:px-4 font-sans selection:bg-rose-100 selection:text-rose-900">
+        <div className="relative min-h-screen w-full overflow-hidden bg-[#F8EAE6] flex items-center justify-center p-4 sm:p-6 font-sans selection:bg-purple-200/60 selection:text-[#2D2638]">
             <Head title="Sign Up - Mwezi" />
 
-            {/* NATIVE PHONE FRAME */}
-            <div className="w-full max-w-[420px] h-screen sm:h-[840px] sm:max-h-[92vh] bg-white sm:rounded-[44px] shadow-[0_25px_70px_-15px_rgba(112,38,56,0.22)] sm:border-[8px] sm:border-slate-900/90 sm:ring-1 sm:ring-black/10 relative flex flex-col justify-between overflow-hidden">
+            {/* Ambient Soft Pastel Mesh Background */}
+            <div className="pointer-events-none fixed inset-0 overflow-hidden">
+                <div className="absolute -top-28 -left-24 h-[420px] w-[420px] rounded-full bg-[#FADCD3] opacity-90 blur-3xl" />
+                <div className="absolute top-1/4 -right-28 h-[460px] w-[460px] rounded-full bg-[#D8C2FA] opacity-75 blur-3xl" />
+                <div className="absolute -bottom-32 left-1/4 h-[440px] w-[440px] rounded-full bg-[#F3D2E5] opacity-85 blur-3xl" />
+                <div className="absolute bottom-10 right-10 h-[300px] w-[300px] rounded-full bg-[#E5D4FC] opacity-70 blur-3xl" />
+            </div>
+
+            {/* Minimal Frosted Glass Card */}
+            <div className="relative z-10 w-full max-w-[430px] max-h-[92vh] rounded-[36px] bg-white/45 backdrop-blur-2xl border border-white/80 shadow-[0_24px_60px_-15px_rgba(92,71,112,0.16)] px-7 py-6 flex flex-col justify-between overflow-hidden">
                 
-                {/* 1. TOP SOLID RED ROUNDED HEADER SECTION (Matches Onboarding & Login) */}
-                <div className="bg-[#BE123C] text-white shrink-0 relative pt-3 pb-7 px-5 select-none flex flex-col justify-between rounded-b-[32px] z-20">
-                    
-                    {/* Integrated Phone Notification Bar */}
-                    <div className="w-full px-1 pb-2 flex items-center justify-between text-xs font-semibold">
-                        <span className="font-bold tracking-tight text-[11px] text-white">{currentTime}</span>
-                        
-                        {/* Native Pill Dynamic Island */}
-                        <div className="w-20 h-4 bg-slate-950/75 rounded-full flex items-center justify-center shadow-inner">
-                            <div className="w-2 h-2 rounded-full bg-slate-900 mr-2" />
-                            <div className="w-2.5 h-1 rounded-full bg-slate-800" />
-                        </div>
-
-                        <div className="flex items-center space-x-1.5 text-white/95">
-                            <Wifi className="w-3.5 h-3.5" />
-                            <BatteryMedium className="w-4 h-4 text-emerald-300" />
-                        </div>
-                    </div>
-
-                    {/* Top Action Navigation Bar */}
-                    <div className="flex items-center justify-between pt-1">
+                {/* 1. TOP MINIMAL UTILITY & BRAND HEADER */}
+                <div className="shrink-0 select-none pb-3">
+                    <div className="flex items-center justify-between text-xs">
                         {step === 2 ? (
                             <button 
                                 type="button"
                                 onClick={() => setStep(1)}
-                                className="p-1.5 -ml-1 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition active:scale-95"
+                                className="p-2 -ml-2 rounded-full text-[#5E546B] hover:text-[#2D2638] hover:bg-white/60 transition active:scale-95"
                                 aria-label="Back to role selection"
                             >
                                 <ChevronLeft className="w-5 h-5" />
@@ -265,30 +297,30 @@ export default function Register({ initialInviteCode = '' }) {
                         ) : (
                             <Link 
                                 href="/" 
-                                className="p-1.5 -ml-1 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition active:scale-95"
+                                className="p-2 -ml-2 rounded-full text-[#5E546B] hover:text-[#2D2638] hover:bg-white/60 transition active:scale-95"
                                 aria-label="Back"
                             >
                                 <ChevronLeft className="w-5 h-5" />
                             </Link>
                         )}
 
-                        <div className="flex items-center space-x-2 text-xs">
-                            {/* Header Language Selector */}
+                        <div className="flex items-center space-x-2">
+                            {/* Language Switcher */}
                             <div className="relative">
                                 <button
                                     type="button"
                                     onClick={() => setShowLangMenu(!showLangMenu)}
-                                    className="p-1 px-2 rounded-full bg-white/15 hover:bg-white/25 text-white text-[10px] font-bold border border-white/20 backdrop-blur-sm shadow-xs transition flex items-center space-x-1"
+                                    className="inline-flex items-center space-x-1.5 rounded-full bg-white/55 hover:bg-white/80 border border-white/80 px-2.5 py-1 text-[11px] font-semibold text-[#3C334B] transition"
                                     title="Choose Language"
                                 >
-                                    <Globe className="w-3 h-3 text-rose-200" />
+                                    <Globe className="w-3 h-3 text-[#6E637C]" />
                                     <span className="uppercase">{locale}</span>
                                 </button>
 
                                 {showLangMenu && (
                                     <>
                                         <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setShowLangMenu(false)} />
-                                        <div className="absolute right-0 top-full mt-1.5 w-36 bg-white rounded-2xl shadow-xl border border-rose-100 py-1 z-50 text-slate-800">
+                                        <div className="absolute right-0 top-full mt-2 w-44 rounded-2xl bg-white/95 backdrop-blur-xl shadow-xl border border-white py-1.5 z-50 text-[#2D2638]">
                                             {languages.map((lang) => (
                                                 <button
                                                     key={lang.code}
@@ -297,12 +329,17 @@ export default function Register({ initialInviteCode = '' }) {
                                                         setLocale(lang.code);
                                                         setShowLangMenu(false);
                                                     }}
-                                                    className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between transition ${
-                                                        locale === lang.code ? 'bg-rose-50 text-rose-700 font-bold' : 'hover:bg-slate-50'
+                                                    className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition ${
+                                                        locale === lang.code ? 'bg-purple-50 text-[#2D2638] font-bold' : 'text-[#5E546B] hover:bg-slate-50/80'
                                                     }`}
                                                 >
-                                                    <span>{lang.name}</span>
-                                                    <span className="text-[10px] text-slate-400">{lang.localName}</span>
+                                                    <div className="flex items-center space-x-2">
+                                                        <span>{lang.flag}</span>
+                                                        <span>{lang.localName}</span>
+                                                    </div>
+                                                    {locale === lang.code && (
+                                                        <CheckCircle2 className="w-3.5 h-3.5 text-purple-600" />
+                                                    )}
                                                 </button>
                                             ))}
                                         </div>
@@ -312,44 +349,44 @@ export default function Register({ initialInviteCode = '' }) {
 
                             <Link 
                                 href="/login" 
-                                className="px-3 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold border border-white/20 backdrop-blur-sm shadow-xs transition active:scale-95"
+                                className="rounded-full bg-white/60 hover:bg-white/85 border border-white/85 px-3 py-1 text-[11px] font-semibold text-[#2D2638] transition active:scale-95"
                             >
                                 {t('auth_log_in', 'Log in')}
                             </Link>
                         </div>
                     </div>
 
-                    {/* Centered Brand Title */}
-                    <div className="text-center pt-3 pb-1">
-                        <div className="inline-flex items-center space-x-2.5">
-                            <Moon className="w-6 h-6 text-rose-200 fill-rose-200/30" />
-                            <span className="font-black text-3xl tracking-tight text-white font-sans drop-shadow-xs">
-                                Mwezi
-                            </span>
+                    {/* Centered Minimal Brand Header */}
+                    <div className="text-center pt-1">
+                        <div className="inline-flex items-center space-x-2 text-[#2D2638]">
+                            <div className="w-7 h-7 rounded-full bg-white/75 border border-white flex items-center justify-center shadow-xs">
+                                <Moon className="w-4 h-4 text-[#3D334D]" strokeWidth={2.2} />
+                            </div>
+                            <span className="text-lg font-bold tracking-tight">Mwezi</span>
                         </div>
-                        <p className="text-[11px] text-rose-100 font-medium tracking-wide mt-0.5">
+                        <p className="text-[11px] font-medium text-[#6E637C] mt-0.5">
                             {t('app_subtitle', 'Menstrual Health & Dignity')}
                         </p>
                     </div>
                 </div>
 
                 {/* 2. MAIN CONTENT AREA */}
-                <div className="bg-white px-7 pt-4 pb-6 flex-1 flex flex-col justify-between overflow-y-auto hide-scrollbar z-10">
+                <div className="flex-1 min-h-0 flex flex-col justify-between overflow-y-auto hide-scrollbar pr-0.5 z-10">
                     
                     {/* STEP 1: ROLE SELECTION (Appears BEFORE the registration form) */}
                     {step === 1 && (
                         <div className="space-y-4 animate-fadeIn">
                             <div className="text-center pt-1">
-                                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                                <h1 className="text-2xl font-bold text-[#2D2638] tracking-tight">
                                     I am joining as:
                                 </h1>
-                                <p className="text-xs text-slate-500 font-normal mt-1">
+                                <p className="text-xs text-[#5E546B] font-normal mt-1">
                                     Select your role to customize your Mwezi experience
                                 </p>
                             </div>
 
                             {/* Role Selection Cards */}
-                            <div className="space-y-2.5 pt-1">
+                            <div className="space-y-2 pt-1">
                                 {roles.map((r) => {
                                     const IconComponent = r.icon;
                                     const isSelected = data.role === r.id;
@@ -360,21 +397,21 @@ export default function Register({ initialInviteCode = '' }) {
                                             onClick={() => setData('role', r.id)}
                                             className={`w-full p-3 rounded-2xl text-left transition border flex items-center justify-between group ${
                                                 isSelected
-                                                    ? 'bg-rose-50/80 border-[#C81E3D] shadow-xs'
-                                                    : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/60'
+                                                    ? 'bg-white/85 border-[#9B7BB8] shadow-xs'
+                                                    : 'bg-white/55 border-white/85 hover:bg-white/75'
                                             }`}
                                         >
                                             <div className="flex items-center space-x-3 min-w-0 pr-2">
-                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition ${
-                                                    isSelected ? 'bg-[#C81E3D] text-white shadow-xs' : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200/80'
+                                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
+                                                    isSelected ? 'bg-[#3D334D] text-white shadow-xs' : 'bg-white/80 text-[#5E546B] group-hover:bg-white'
                                                 }`}>
-                                                    <IconComponent className="w-5 h-5" />
+                                                    <IconComponent className="w-4 h-4" />
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className={`text-xs font-bold leading-tight ${isSelected ? 'text-[#C81E3D]' : 'text-slate-800'}`}>
+                                                    <p className={`text-xs font-bold leading-tight ${isSelected ? 'text-[#2D2638]' : 'text-[#3C334B]'}`}>
                                                         {r.label}
                                                     </p>
-                                                    <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
+                                                    <p className="text-[10px] text-[#6E637C] mt-0.5 line-clamp-1">
                                                         {r.desc}
                                                     </p>
                                                 </div>
@@ -383,8 +420,8 @@ export default function Register({ initialInviteCode = '' }) {
                                             {/* Selection Radio Indicator */}
                                             <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition ${
                                                 isSelected 
-                                                    ? 'border-[#C81E3D] bg-[#C81E3D]' 
-                                                    : 'border-slate-300 bg-white'
+                                                    ? 'border-[#3D334D] bg-[#3D334D]' 
+                                                    : 'border-[#B9AEC7] bg-white/70'
                                             }`}>
                                                 {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                                             </div>
@@ -398,19 +435,19 @@ export default function Register({ initialInviteCode = '' }) {
                                 <button
                                     type="button"
                                     onClick={() => setStep(2)}
-                                    className="w-full py-3.5 rounded-xl bg-[#C81E3D] hover:bg-[#B01733] active:scale-[0.99] text-white font-semibold text-sm transition shadow-sm flex items-center justify-center space-x-2"
+                                    className="w-full rounded-full bg-white/80 hover:bg-white border border-white/95 shadow-[0_10px_28px_-8px_rgba(92,71,112,0.18)] px-6 py-3.5 flex items-center justify-between text-[#2D2638] font-semibold text-sm transition active:scale-[0.99]"
                                 >
                                     <span>Continue to Registration</span>
-                                    <ArrowRight className="w-4 h-4" />
+                                    <ArrowRight className="w-4 h-4 text-[#2D2638]" />
                                 </button>
                             </div>
 
                             {/* Sublink */}
-                            <div className="text-center pt-0.5 text-xs text-slate-500">
+                            <div className="text-center pt-0.5 text-xs text-[#5E546B]">
                                 <span>{t('auth_already_have_account', 'Have an account?')} </span>
                                 <Link 
                                     href="/login" 
-                                    className="text-[#C81E3D] font-semibold hover:underline"
+                                    className="text-[#2D2638] font-bold hover:underline"
                                 >
                                     {t('auth_log_in', 'Log in')}
                                 </Link>
@@ -422,10 +459,10 @@ export default function Register({ initialInviteCode = '' }) {
                     {step === 2 && (
                         <div className="space-y-3.5 animate-fadeIn">
                             {/* Role Badge & Back / Change Role Shortcut */}
-                            <div className="flex items-center justify-between bg-slate-50 p-2 px-3 rounded-xl border border-slate-200">
+                            <div className="flex items-center justify-between bg-white/65 p-2.5 px-3.5 rounded-2xl border border-white/90">
                                 <div className="flex items-center space-x-2">
-                                    <currentRoleConfig.icon className="w-4 h-4 text-[#C81E3D]" />
-                                    <span className="text-xs font-bold text-slate-800">{currentRoleConfig.label}</span>
+                                    <currentRoleConfig.icon className="w-4 h-4 text-[#3D334D]" />
+                                    <span className="text-xs font-bold text-[#2D2638]">{currentRoleConfig.label}</span>
                                 </div>
                                 <button
                                     type="button"
@@ -434,7 +471,7 @@ export default function Register({ initialInviteCode = '' }) {
                                         setCodeVerified(false);
                                         setVerifiedDetails(null);
                                     }}
-                                    className="text-[11px] font-semibold text-[#C81E3D] hover:underline"
+                                    className="text-[11px] font-semibold text-[#5E546B] hover:text-[#2D2638] hover:underline"
                                 >
                                     Change
                                 </button>
@@ -582,6 +619,505 @@ export default function Register({ initialInviteCode = '' }) {
                                             )}
                                         </div>
 
+                                        {/* ROLE-SPECIFIC DYNAMIC FIELDS (Step 2) */}
+                                        {data.role === 'primary_user' && (
+                                            <div className="space-y-2.5 pt-0.5">
+                                                <div>
+                                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Age Cohort</label>
+                                                    <select
+                                                        value={data.age_band}
+                                                        onChange={(e) => setData('age_band', e.target.value)}
+                                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#C81E3D] focus:ring-1 focus:ring-[#C81E3D] bg-white"
+                                                    >
+                                                        <option value="14_17_secondary">Secondary School (14–17 yrs)</option>
+                                                        <option value="18_24_young_adult">Young Adult (18–24 yrs)</option>
+                                                        <option value="25_plus">Adult (25+ yrs)</option>
+                                                    </select>
+                                                    <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500 px-0.5">
+                                                        <span>Ages 10–13 must be managed by a parent.</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setData('role', 'parent_guardian')}
+                                                            className="font-bold text-[#C81E3D] hover:underline"
+                                                        >
+                                                            Parent Registration →
+                                                        </button>
+                                                    </div>
+                                                    {errors.age_band && (
+                                                        <p className="text-[11px] text-[#C81E3D] mt-1 pl-1 font-medium">{errors.age_band}</p>
+                                                    )}
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Province</label>
+                                                        <select
+                                                            value={data.province}
+                                                            onChange={(e) => handleProvinceChange(e.target.value)}
+                                                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#C81E3D] bg-white"
+                                                        >
+                                                            {PROVINCE_NAMES.map((prov) => (
+                                                                <option key={prov} value={prov}>{prov}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Town / District</label>
+                                                        <select
+                                                            value={data.district}
+                                                            onChange={(e) => setData('district', e.target.value)}
+                                                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#C81E3D] bg-white"
+                                                        >
+                                                            {availableTowns.map((town) => (
+                                                                <option key={town} value={town}>{town}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <input
+                                                    type="password"
+                                                    inputMode="numeric"
+                                                    maxLength={4}
+                                                    value={data.pin_code}
+                                                    onChange={(e) => setData('pin_code', e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                                    placeholder="Optional 4-digit Quick-Lock PIN"
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#C81E3D]"
+                                                />
+
+                                                {/* Vital Menstrual Health Data Collection */}
+                                                <div className="bg-rose-50/50 border border-rose-100 rounded-xl p-3 space-y-2.5">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[11px] font-bold text-slate-800">Have you started your menstrual cycle?</span>
+                                                        <div className="flex space-x-1.5">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setData('has_started_period', true)}
+                                                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
+                                                                    data.has_started_period
+                                                                        ? 'bg-[#C81E3D] text-white'
+                                                                        : 'bg-white text-slate-600 border border-slate-200'
+                                                                }`}
+                                                            >
+                                                                Yes
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setData('has_started_period', false)}
+                                                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
+                                                                    !data.has_started_period
+                                                                        ? 'bg-[#C81E3D] text-white'
+                                                                        : 'bg-white text-slate-600 border border-slate-200'
+                                                                }`}
+                                                            >
+                                                                Not yet
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {data.has_started_period && (
+                                                        <div className="space-y-2 pt-1">
+                                                            <div>
+                                                                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                                                                    Last Menstrual Period (LMP) Date
+                                                                </label>
+                                                                <input
+                                                                    type="date"
+                                                                    value={data.last_period_start}
+                                                                    max={new Date().toISOString().split('T')[0]}
+                                                                    onChange={(e) => setData('last_period_start', e.target.value)}
+                                                                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-900 bg-white focus:outline-none focus:border-[#C81E3D]"
+                                                                />
+                                                            </div>
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                <div>
+                                                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Cycle Length (days)</label>
+                                                                    <input
+                                                                        type="number"
+                                                                        min={18}
+                                                                        max={60}
+                                                                        value={data.average_cycle_length}
+                                                                        onChange={(e) => setData('average_cycle_length', Number(e.target.value))}
+                                                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-900 bg-white focus:outline-none focus:border-[#C81E3D]"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Period Duration (days)</label>
+                                                                    <input
+                                                                        type="number"
+                                                                        min={1}
+                                                                        max={14}
+                                                                        value={data.average_period_length}
+                                                                        onChange={(e) => setData('average_period_length', Number(e.target.value))}
+                                                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-900 bg-white focus:outline-none focus:border-[#C81E3D]"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                <div>
+                                                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Cycle Regularity</label>
+                                                                    <select
+                                                                        value={data.cycle_regularity}
+                                                                        onChange={(e) => setData('cycle_regularity', e.target.value)}
+                                                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-900 bg-white focus:outline-none focus:border-[#C81E3D]"
+                                                                    >
+                                                                        <option value="regular">Regular</option>
+                                                                        <option value="irregular">Irregular</option>
+                                                                        <option value="unsure">Unsure</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Preferred Product</label>
+                                                                    <select
+                                                                        value={data.preferred_product_type}
+                                                                        onChange={(e) => setData('preferred_product_type', e.target.value)}
+                                                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-900 bg-white focus:outline-none focus:border-[#C81E3D]"
+                                                                    >
+                                                                        <option value="disposable_pads">Disposable pads</option>
+                                                                        <option value="reusable_pads">Reusable pads</option>
+                                                                        <option value="cloth">Cloth</option>
+                                                                        <option value="both">Both</option>
+                                                                        <option value="need_supplies">Need supplies</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div>
+                                                                <span className="block text-[11px] font-semibold text-slate-700 mb-1">Typical Cycle Symptoms</span>
+                                                                <div className="flex flex-wrap gap-1.5">
+                                                                    {['Cramps', 'Fatigue', 'Mood changes', 'Headaches', 'Bloating', 'Backache'].map((sym) => {
+                                                                        const active = data.typical_symptoms.includes(sym);
+                                                                        return (
+                                                                            <button
+                                                                                key={sym}
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    const next = active
+                                                                                        ? data.typical_symptoms.filter((s) => s !== sym)
+                                                                                        : [...data.typical_symptoms, sym];
+                                                                                    setData('typical_symptoms', next);
+                                                                                }}
+                                                                                className={`px-2 py-1 rounded-lg text-[10px] font-semibold border transition ${
+                                                                                    active
+                                                                                        ? 'bg-[#C81E3D] text-white border-[#C81E3D]'
+                                                                                        : 'bg-white text-slate-600 border-slate-200'
+                                                                                }`}
+                                                                            >
+                                                                                {sym}
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {data.role === 'parent_guardian' && (
+                                            <div className="space-y-2.5 pt-0.5">
+                                                <div>
+                                                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Parent / Guardian Profile</label>
+                                                    <select
+                                                        value={data.gender === 'male' ? 'male' : (data.has_personal_cycle ? 'female_active' : 'female_past')}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            if (val === 'male') {
+                                                                setData((prev) => ({ ...prev, gender: 'male', has_personal_cycle: false }));
+                                                            } else if (val === 'female_past') {
+                                                                setData((prev) => ({ ...prev, gender: 'female', has_personal_cycle: false }));
+                                                            } else {
+                                                                setData((prev) => ({ ...prev, gender: 'female', has_personal_cycle: true }));
+                                                            }
+                                                        }}
+                                                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#C81E3D] bg-white"
+                                                    >
+                                                        <option value="female_active">Mother / Female Guardian (currently having cycles)</option>
+                                                        <option value="female_past">Mother / Female Guardian (past cycle age)</option>
+                                                        <option value="male">Father / Male Guardian (no personal tracker)</option>
+                                                    </select>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Province</label>
+                                                        <select
+                                                            value={data.province}
+                                                            onChange={(e) => handleProvinceChange(e.target.value)}
+                                                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#C81E3D] bg-white"
+                                                        >
+                                                            {PROVINCE_NAMES.map((prov) => (
+                                                                <option key={prov} value={prov}>{prov}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Town / District</label>
+                                                        <select
+                                                            value={data.district}
+                                                            onChange={(e) => setData('district', e.target.value)}
+                                                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#C81E3D] bg-white"
+                                                        >
+                                                            {availableTowns.map((town) => (
+                                                                <option key={town} value={town}>{town}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div className="bg-rose-50/50 border border-rose-100 rounded-xl p-3 space-y-2.5">
+                                                    <span className="block text-[11px] font-bold text-slate-800">
+                                                        Select Child Age Group(s) You Manage
+                                                    </span>
+                                                    <div className="grid grid-cols-3 gap-1.5">
+                                                        {[
+                                                            { id: 'tier_1', label: 'Ages 10–13' },
+                                                            { id: 'tier_2', label: 'Ages 14–19' },
+                                                            { id: 'both', label: 'Both' },
+                                                        ].map((opt) => (
+                                                            <button
+                                                                key={opt.id}
+                                                                type="button"
+                                                                onClick={() => setData('child_tier_group', opt.id)}
+                                                                className={`py-1.5 px-2 rounded-lg text-[11px] font-bold border transition ${
+                                                                    data.child_tier_group === opt.id
+                                                                        ? 'bg-[#C81E3D] text-white border-[#C81E3D]'
+                                                                        : 'bg-white text-slate-600 border-slate-200'
+                                                                }`}
+                                                            >
+                                                                {opt.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+
+                                                    {(data.child_tier_group === 'tier_1' || data.child_tier_group === 'both') && (
+                                                        <div className="space-y-2 pt-1 border-t border-rose-100">
+                                                            <span className="block text-[10px] font-bold uppercase tracking-wider text-[#C81E3D]">
+                                                                Ages 10–13 Sub-Account (Parent-Managed)
+                                                            </span>
+                                                            <div className="grid grid-cols-3 gap-2">
+                                                                <input
+                                                                    type="text"
+                                                                    value={data.child_name}
+                                                                    onChange={(e) => setData('child_name', e.target.value)}
+                                                                    placeholder="Child First Name"
+                                                                    required
+                                                                    className="col-span-2 px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#C81E3D]"
+                                                                />
+                                                                <input
+                                                                    type="number"
+                                                                    min={10}
+                                                                    max={13}
+                                                                    value={data.child_age}
+                                                                    onChange={(e) => setData('child_age', Number(e.target.value))}
+                                                                    placeholder="Age"
+                                                                    className="px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#C81E3D]"
+                                                                />
+                                                            </div>
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                <input
+                                                                    type="text"
+                                                                    value={data.child_username}
+                                                                    onChange={(e) => setData('child_username', e.target.value)}
+                                                                    placeholder="Child Username"
+                                                                    required
+                                                                    className="px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#C81E3D]"
+                                                                />
+                                                                <input
+                                                                    type="password"
+                                                                    inputMode="numeric"
+                                                                    maxLength={4}
+                                                                    value={data.child_pin_code}
+                                                                    onChange={(e) => setData('child_pin_code', e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                                                    placeholder="4-Digit Child PIN"
+                                                                    required
+                                                                    className="px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#C81E3D]"
+                                                                />
+                                                            </div>
+                                                            {(errors.child_name || errors.child_username || errors.child_pin_code) && (
+                                                                <p className="text-[11px] text-[#C81E3D] font-medium">
+                                                                    {errors.child_name || errors.child_username || errors.child_pin_code}
+                                                                </p>
+                                                            )}
+                                                            <select
+                                                                value={data.luna_ai_level}
+                                                                onChange={(e) => setData('luna_ai_level', e.target.value)}
+                                                                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#C81E3D]"
+                                                            >
+                                                                <option value="guided">Luna AI: Guided (Age-Appropriate)</option>
+                                                                <option value="restricted">Luna AI: Restricted (Basic FAQ)</option>
+                                                                <option value="full">Luna AI: Full Access</option>
+                                                            </select>
+                                                            <div className="flex items-center justify-between text-[11px] text-slate-700">
+                                                                <label className="flex items-center space-x-1.5 cursor-pointer">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={data.emergency_alerts}
+                                                                        onChange={(e) => setData('emergency_alerts', e.target.checked)}
+                                                                        className="rounded text-[#C81E3D]"
+                                                                    />
+                                                                    <span>Emergency Alerts</span>
+                                                                </label>
+                                                                <label className="flex items-center space-x-1.5 cursor-pointer">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={data.tip_sharing}
+                                                                        onChange={(e) => setData('tip_sharing', e.target.checked)}
+                                                                        className="rounded text-[#C81E3D]"
+                                                                    />
+                                                                    <span>Tip Sharing</span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {(data.child_tier_group === 'tier_2' || data.child_tier_group === 'both') && (
+                                                        <div className="space-y-2 pt-1 border-t border-rose-100">
+                                                            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-700">
+                                                                Ages 14–19 Consent & Join Invite
+                                                            </span>
+                                                            <input
+                                                                type="text"
+                                                                value={data.teen_name}
+                                                                onChange={(e) => setData('teen_name', e.target.value)}
+                                                                placeholder="Teen First Name (optional now)"
+                                                                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#C81E3D]"
+                                                            />
+                                                            <input
+                                                                type="text"
+                                                                value={data.teen_contact_channel}
+                                                                onChange={(e) => setData('teen_contact_channel', e.target.value)}
+                                                                placeholder="Teen Phone or Email (for invite)"
+                                                                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#C81E3D]"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {data.role === 'community_partner' && (
+                                            <div className="space-y-2.5 pt-0.5">
+                                                <input
+                                                    type="text"
+                                                    value={data.organization_name}
+                                                    onChange={(e) => setData('organization_name', e.target.value)}
+                                                    placeholder="Organization / Hub Name"
+                                                    required
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#C81E3D]"
+                                                />
+                                                <select
+                                                    value={data.hub_type}
+                                                    onChange={(e) => setData('hub_type', e.target.value)}
+                                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#C81E3D] bg-white"
+                                                >
+                                                    <option value="school">School</option>
+                                                    <option value="ngo">NGO / Community Org</option>
+                                                    <option value="clinic">Health Clinic</option>
+                                                    <option value="pharmacy">Pharmacy</option>
+                                                    <option value="youth_center">Youth Center</option>
+                                                    <option value="safe_space">Safe Space</option>
+                                                </select>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Province</label>
+                                                        <select
+                                                            value={data.province}
+                                                            onChange={(e) => handleProvinceChange(e.target.value)}
+                                                            required
+                                                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#C81E3D] bg-white"
+                                                        >
+                                                            {PROVINCE_NAMES.map((prov) => (
+                                                                <option key={prov} value={prov}>{prov}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Town / District</label>
+                                                        <select
+                                                            value={data.district}
+                                                            onChange={(e) => setData('district', e.target.value)}
+                                                            required
+                                                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#C81E3D] bg-white"
+                                                        >
+                                                            {availableTowns.map((town) => (
+                                                                <option key={town} value={town}>{town}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={data.address}
+                                                    onChange={(e) => setData('address', e.target.value)}
+                                                    placeholder="Physical Address / Plot No."
+                                                    required
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#C81E3D]"
+                                                />
+                                            </div>
+                                        )}
+
+                                        {data.role === 'health_reviewer' && (
+                                            <div className="space-y-2.5 pt-0.5">
+                                                <input
+                                                    type="text"
+                                                    value={data.clinical_specialty}
+                                                    onChange={(e) => setData('clinical_specialty', e.target.value)}
+                                                    placeholder="Clinical Specialty (e.g. Midwifery, OB-GYN)"
+                                                    required
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#C81E3D]"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={data.hpcz_registration_number}
+                                                    onChange={(e) => setData('hpcz_registration_number', e.target.value)}
+                                                    placeholder="HPCZ Registration Number"
+                                                    required
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#C81E3D]"
+                                                />
+                                                <div>
+                                                    <span className="block text-[11px] font-semibold text-slate-700 mb-1">Review Locales</span>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {['en', 'bem', 'nya', 'toi', 'loz'].map((loc) => {
+                                                            const active = data.review_locales.includes(loc);
+                                                            return (
+                                                                <button
+                                                                    key={loc}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const next = active
+                                                                            ? data.review_locales.filter((l) => l !== loc)
+                                                                            : [...data.review_locales, loc];
+                                                                        setData('review_locales', next.length ? next : ['en']);
+                                                                    }}
+                                                                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase border transition ${
+                                                                        active
+                                                                            ? 'bg-[#C81E3D] text-white border-[#C81E3D]'
+                                                                            : 'bg-white text-slate-600 border-slate-200'
+                                                                    }`}
+                                                                >
+                                                                    {loc}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {data.role === 'donor_sponsor' && (
+                                            <div className="pt-0.5">
+                                                <label className="flex items-center space-x-2 text-xs text-slate-600 cursor-pointer select-none bg-rose-50/60 border border-rose-100 rounded-xl px-3 py-2.5">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={data.donor_default_anonymous}
+                                                        onChange={(e) => setData('donor_default_anonymous', e.target.checked)}
+                                                        className="w-3.5 h-3.5 rounded border-slate-300 text-[#C81E3D] focus:ring-[#C81E3D]"
+                                                    />
+                                                    <span className="text-[11px] font-medium text-slate-700">
+                                                        Keep my sponsorships anonymous by default
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        )}
+
                                         {/* Password with Eye Toggle */}
                                         <div>
                                             {data.role === 'trusted_contact' && (
@@ -664,12 +1200,15 @@ export default function Register({ initialInviteCode = '' }) {
                                             <button
                                                 type="submit"
                                                 disabled={processing}
-                                                className="w-full py-3.5 rounded-xl bg-[#C81E3D] hover:bg-[#B01733] active:scale-[0.99] text-white font-semibold text-sm transition shadow-sm disabled:opacity-60"
+                                                className="w-full rounded-full bg-white/80 hover:bg-white border border-white/95 shadow-[0_10px_28px_-8px_rgba(92,71,112,0.18)] px-6 py-3.5 flex items-center justify-between text-[#2D2638] font-semibold text-sm transition active:scale-[0.99] disabled:opacity-60"
                                             >
-                                                {processing 
-                                                    ? t('loading', 'Creating account...') 
-                                                    : (data.role === 'trusted_contact' ? 'Create Password & Done' : t('auth_create_account', 'Create account'))
-                                                }
+                                                <span>
+                                                    {processing 
+                                                        ? t('loading', 'Creating account...') 
+                                                        : (data.role === 'trusted_contact' ? 'Create Password & Done' : t('auth_create_account', 'Create account'))
+                                                    }
+                                                </span>
+                                                <ArrowRight className="w-4 h-4 text-[#2D2638]" />
                                             </button>
                                         </div>
 
@@ -682,7 +1221,7 @@ export default function Register({ initialInviteCode = '' }) {
                                                         setCodeVerified(false);
                                                         setVerifiedDetails(null);
                                                     }}
-                                                    className="text-[11px] text-slate-500 hover:text-slate-700 underline"
+                                                    className="text-[11px] text-[#5E546B] hover:text-[#2D2638] underline"
                                                 >
                                                     Use a different invite code
                                                 </button>
@@ -690,11 +1229,11 @@ export default function Register({ initialInviteCode = '' }) {
                                         )}
 
                                         {/* Direct Sublink */}
-                                        <div className="text-center pt-0.5 text-xs text-slate-500">
+                                        <div className="text-center pt-0.5 text-xs text-[#5E546B]">
                                             <span>{t('auth_already_have_account', 'Have an account?')} </span>
                                             <Link 
                                                 href="/login" 
-                                                className="text-[#C81E3D] font-semibold hover:underline"
+                                                className="text-[#2D2638] font-bold hover:underline"
                                             >
                                                 {t('auth_log_in', 'Log in')}
                                             </Link>
@@ -705,14 +1244,15 @@ export default function Register({ initialInviteCode = '' }) {
                         </div>
                     )}
 
-                    {/* 3. BOTTOM SECTION: Divider & Social/Quick Sign-In Icons (No Apple) */}
+                    {/* 3. BOTTOM SECTION: Divider & Social/Quick Sign-In Icons */}
                     <div className="pt-4 space-y-3">
                         {/* Divider */}
                         <div className="relative flex items-center justify-center">
-                            <div className="w-full border-t border-slate-200"></div>
-                            <span className="absolute bg-white px-3 text-xs text-slate-400 font-medium">
-                                Or
+                            <div className="w-full border-t border-white/70" />
+                            <span className="px-3 text-[11px] text-[#7A6F8A] font-medium shrink-0">
+                                Or continue with
                             </span>
+                            <div className="w-full border-t border-white/70" />
                         </div>
 
                         {/* Social / Quick Sign In Icon Buttons: Google & Demo Roles */}
@@ -721,7 +1261,7 @@ export default function Register({ initialInviteCode = '' }) {
                             <div className="flex flex-col items-center space-y-1">
                                 <Link
                                     href="/login"
-                                    className="w-12 h-12 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center transition active:scale-95 shadow-2xs"
+                                    className="w-11 h-11 rounded-full bg-white/65 hover:bg-white border border-white/90 flex items-center justify-center transition active:scale-95 shadow-xs"
                                     title="Sign up with Google"
                                 >
                                     <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -731,25 +1271,20 @@ export default function Register({ initialInviteCode = '' }) {
                                         <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.63 1.27 6.58l4.01 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
                                     </svg>
                                 </Link>
-                                <span className="text-[11px] text-slate-500 font-medium">Google</span>
+                                <span className="text-[11px] text-[#5E546B] font-medium">Google</span>
                             </div>
 
                             {/* Demo Roles Shortcut Button */}
                             <div className="flex flex-col items-center space-y-1">
                                 <Link
                                     href="/login"
-                                    className="w-12 h-12 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center text-[#C81E3D] transition active:scale-95 shadow-2xs"
+                                    className="w-11 h-11 rounded-full bg-white/65 hover:bg-white border border-white/90 flex items-center justify-center text-[#3D334D] transition active:scale-95 shadow-xs"
                                     title="Explore Demo Accounts"
                                 >
                                     <UserCheck className="w-5 h-5" />
                                 </Link>
-                                <span className="text-[11px] text-slate-500 font-medium">Demo Roles</span>
+                                <span className="text-[11px] text-[#5E546B] font-medium">Demo Roles</span>
                             </div>
-                        </div>
-
-                        {/* Bottom Phone Indicator */}
-                        <div className="pt-2 text-center">
-                            <div className="w-32 h-1 bg-slate-300 rounded-full opacity-60 mx-auto" />
                         </div>
                     </div>
                 </div>

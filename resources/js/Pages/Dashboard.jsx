@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
 import { 
     Calendar, 
@@ -380,7 +380,8 @@ export default function Dashboard({
                     </div>
                 )}
 
-                {/* 1-TAP QUICK LOG STRIP (Flow & Symptoms) */}
+                {/* 1-TAP QUICK LOG STRIP (Only when user has a personal tracker) */}
+                {(usePage().props?.auth?.tierPolicy?.can_use_personal_tracker ?? true) ? (
                 <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-150/80 space-y-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
@@ -473,6 +474,47 @@ export default function Dashboard({
                         </div>
                     </div>
                 </div>
+                ) : usePage().props?.auth?.tierPolicy?.is_tier_1 ? (
+                    <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-150/80 space-y-2.5">
+                        <div className="flex items-center space-x-2">
+                            <div className="w-7 h-7 rounded-xl bg-rose-50 text-[#BE123C] flex items-center justify-center">
+                                <BookOpen className="w-4 h-4" />
+                            </div>
+                            <div>
+                                <h2 className="text-xs font-bold text-slate-900">Preparing for Your First Period</h2>
+                                <p className="text-[10px] text-slate-500">Learn about body changes, hygiene & reusable pad care</p>
+                            </div>
+                        </div>
+                        <div className="flex space-x-2 pt-1">
+                            <Link href="/learn" className="flex-1 py-2 text-center bg-[#BE123C] text-white rounded-xl text-xs font-bold">
+                                Explore Puberty Guides
+                            </Link>
+                            <Link href="/learn/myths-facts" className="flex-1 py-2 text-center bg-rose-50 text-[#BE123C] rounded-xl text-xs font-bold border border-rose-200">
+                                Myths vs Facts Game
+                            </Link>
+                        </div>
+                    </div>
+                ) : usePage().props?.auth?.tierPolicy?.can_view_shared_tracker ? (
+                    <Link
+                        href="/trusted-circle/companion"
+                        className="block bg-white rounded-3xl p-4 shadow-xs border border-rose-150/80 hover:border-[#BE123C] transition"
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2.5">
+                                <div className="w-8 h-8 rounded-xl bg-rose-50 text-[#BE123C] flex items-center justify-center">
+                                    <Calendar className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xs font-bold text-slate-900">
+                                        {usePage().props?.auth?.tierPolicy?.shared_tracker_label || "Your Child's / Partner's Tracker"}
+                                    </h2>
+                                    <p className="text-[10px] text-slate-500">Shared with your consent-verified support circle</p>
+                                </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-[#BE123C]" />
+                        </div>
+                    </Link>
+                ) : null}
 
                 {/* 3. ESSENTIAL SUPPORT & TOOLS (2x2 Native Grid) */}
                 <div>
@@ -569,7 +611,8 @@ export default function Dashboard({
                         </Link>
                     </div>
 
-                    {/* 5. Sponsor a Girl Banner (Full width Card) */}
+                    {/* 5. Sponsor a Girl Banner (Full width Card - hidden for Tier 1 & Tier 2 minors) */}
+                    {(usePage().props?.auth?.tierPolicy?.can_view_sponsor_portal ?? true) && (
                     <Link
                         href="/support/sponsor"
                         className="mt-2.5 p-3.5 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 rounded-3xl shadow-sm hover:shadow-md transition flex items-center justify-between text-white group"
@@ -587,6 +630,7 @@ export default function Dashboard({
                         </div>
                         <ArrowUpRight className="w-4 h-4 text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition" />
                     </Link>
+                    )}
                 </div>
 
                 {/* 4. FEATURED HEALTH ARTICLE */}

@@ -12,6 +12,7 @@ use App\Http\Controllers\TrustedCircleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\OnboardingWizardController;
+use App\Http\Controllers\UssdController;
 
 // Public Onboarding & Splash
 Route::get('/', function () {
@@ -30,6 +31,7 @@ Route::get('/sponsor', [SupportController::class, 'sponsorView'])->name('public.
 Route::post('/sponsor', [SupportController::class, 'storeDonation'])->name('public.sponsor.store');
 Route::get('/sponsor/verify/{reference}', [SupportController::class, 'verifyDonationStatus'])->name('public.sponsor.verify');
 Route::post('/webhooks/broadpay', [SupportController::class, 'handleBroadPayWebhook'])->name('webhook.broadpay');
+Route::post('/ussd', [UssdController::class, 'handle'])->name('ussd.handle');
 
 // Companion Password Setup (Invited by Primary User)
 Route::get('/companion/setup', [TrustedCircleController::class, 'companionSetup'])->name('companion.setup');
@@ -122,6 +124,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/{connection}/permissions', [TrustedCircleController::class, 'updatePermissions'])->name('permissions');
         Route::delete('/{connection}', [TrustedCircleController::class, 'revoke'])->name('revoke');
         Route::get('/companion', [TrustedCircleController::class, 'companion'])->name('companion');
+        Route::post('/dependents', [TrustedCircleController::class, 'storeDependent'])->name('dependents.store');
         Route::patch('/companion/{connection}', [TrustedCircleController::class, 'updateCompanion'])->name('companion.update');
         Route::delete('/companion/{connection}', [TrustedCircleController::class, 'destroyCompanion'])->name('companion.destroy');
     });
@@ -186,6 +189,7 @@ Route::middleware(['auth'])->group(function () {
 
             Route::post('/admin/users', [PortalController::class, 'storeUser'])->name('admin.users.store');
             Route::patch('/admin/users/{user}', [PortalController::class, 'updateUser'])->name('admin.users.update');
+            Route::post('/admin/users/{user}/verify-hpcz', [PortalController::class, 'verifyHpczReviewer'])->name('admin.users.verify-hpcz');
             Route::delete('/admin/users/{user}', [PortalController::class, 'destroyUser'])->name('admin.users.destroy');
 
             Route::post('/admin/hubs', [PortalController::class, 'storeAdminHub'])->name('admin.hubs.store');

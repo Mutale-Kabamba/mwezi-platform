@@ -1,5 +1,5 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import PortalDashboardLayout from '@/Layouts/PortalDashboardLayout';
 import { 
     BarChart3, 
@@ -14,7 +14,12 @@ import {
     ShieldCheck
 } from 'lucide-react';
 
-export default function AdminDashboard({ kpis = {}, campaign, telemetry = [] }) {
+export default function AdminDashboard({ kpis = {}, campaign, telemetry = [], users = [] }) {
+    const reviewers = users.filter((u) => u.role === 'health_reviewer');
+
+    const handleHpczVerify = (userId, status) => {
+        router.post(route('portal.admin.users.verify-hpcz', userId), { status }, { preserveScroll: true });
+    };
     const statCards = [
         {
             title: 'Girls & Women Registered',
@@ -163,6 +168,73 @@ export default function AdminDashboard({ kpis = {}, campaign, telemetry = [] }) 
                             ))}
                         </div>
                     </div>
+                </div>
+
+                {/* 4. CLINICIAN HPCZ VERIFICATION QUEUE */}
+                <div className="bg-white rounded-[20px] p-6 shadow-sm border border-gray-100 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                            <ShieldCheck className="w-5 h-5 text-[#BE123C]" />
+                            <div>
+                                <h3 className="font-heading font-bold text-base text-gray-900">Clinician HPCZ Verification</h3>
+                                <p className="text-xs text-gray-500">Review Health Professions Council of Zambia credentials for medical reviewers.</p>
+                            </div>
+                        </div>
+                        <span className="px-3 py-1 bg-rose-50 text-[#BE123C] rounded-full text-xs font-bold">
+                            {reviewers.length} Reviewers
+                        </span>
+                    </div>
+
+                    {reviewers.length === 0 ? (
+                        <p className="text-xs text-gray-500 py-4 text-center bg-gray-50 rounded-xl">No clinician reviewers registered yet.</p>
+                    ) : (
+                        <div className="divide-y divide-gray-100">
+                            {reviewers.map((rev) => {
+                                const status = rev.hpcz_verification_status || 'unverified';
+                                const badgeClass = status === 'verified'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : status === 'rejected'
+                                        ? 'bg-rose-100 text-rose-800'
+                                        : 'bg-amber-100 text-amber-800';
+                                return (
+                                    <div key={rev.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <div>
+                                            <div className="flex items-center space-x-2">
+                                                <span className="font-bold text-sm text-gray-900">{rev.name}</span>
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${badgeClass}`}>
+                                                    {status.replace('_', ' ')}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                HPCZ: <span className="font-mono font-semibold text-gray-700">{rev.hpcz_registration_number || 'N/A'}</span>
+                                                {rev.clinical_specialty ? ` • ${rev.clinical_specialty}` : ''}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            {status !== 'verified' && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleHpczVerify(rev.id, 'verified')}
+                                                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition"
+                                                >
+                                                    Approve
+                                                </button>
+                                            )}
+                                            {status !== 'rejected' && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleHpczVerify(rev.id, 'rejected')}
+                                                    className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-[#BE123C] rounded-xl text-xs font-bold transition"
+                                                >
+                                                    Reject
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </div>
         </PortalDashboardLayout>

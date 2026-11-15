@@ -12,9 +12,23 @@ use Carbon\Carbon;
 
 class CycleController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
         $user = $request->user();
+        $policy = $user->tierPolicy();
+
+        if (!$policy['can_use_personal_tracker']) {
+            if ($policy['can_view_shared_tracker']) {
+                return redirect()->route('trusted-circle.companion')
+                    ->with('info', "Showing {$policy['shared_tracker_label']}.");
+            }
+
+            $msg = $policy['is_tier_1']
+                ? 'Your Cycle Tracker will unlock when your period starts. Explore Puberty & Hygiene Guides meanwhile!'
+                : 'Personal cycle tracking is not enabled for your profile.';
+
+            return redirect()->route('dashboard')->with('info', $msg);
+        }
 
         $profile = CycleProfile::firstOrCreate(
             ['user_id' => $user->id],
@@ -121,6 +135,13 @@ class CycleController extends Controller
                     );
                 }
             }
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'log' => $log,
+            ], 200);
         }
 
         return back()->with('success', 'Cycle log saved securely.');

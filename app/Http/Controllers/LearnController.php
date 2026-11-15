@@ -20,14 +20,28 @@ class LearnController extends Controller
         $search = $request->query('search');
         $locale = $request->query('locale', $user->preferred_language ?? 'en');
 
-        $categories = EducationalCategory::withCount('resources')
-            ->orderBy('sort_order')
-            ->get();
+        $isTier1 = $user->tierPolicy()['is_tier_1'] ?? false;
+
+        $categoriesQuery = EducationalCategory::withCount('resources')->orderBy('sort_order');
+        if ($isTier1) {
+            $categoriesQuery->whereNotIn('slug', ['srhr', 'contraception', 'stis', 'family-planning', 'reproductive-rights']);
+        }
+        $categories = $categoriesQuery->get();
 
         $query = EducationalResource::where('review_status', 'approved')
             ->with(['category', 'reviewer', 'translations' => function ($q) use ($locale) {
                 $q->where('locale', $locale);
             }]);
+
+        if ($isTier1) {
+            $query->whereHas('category', function ($q) {
+                $q->whereNotIn('slug', ['srhr', 'contraception', 'stis', 'family-planning', 'reproductive-rights']);
+            })->where(function ($q) {
+                $q->where('title', 'not like', '%contracept%')
+                  ->where('title', 'not like', '%family planning%')
+                  ->where('title', 'not like', '%STI%');
+            });
+        }
 
         if ($selectedCategory) {
             $query->whereHas('category', function ($q) use ($selectedCategory) {
