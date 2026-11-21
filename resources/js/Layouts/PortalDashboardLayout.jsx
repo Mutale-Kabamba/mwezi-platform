@@ -63,16 +63,23 @@ export default function PortalDashboardLayout({
     }
 
     return (
-        <div className="min-h-screen bg-[#F4F9FB] flex flex-col md:flex-row text-mwezi-dark font-sans">
+        <div className="relative min-h-screen bg-[#F8EAE6] flex flex-col md:flex-row text-[#2D2638] font-sans selection:bg-purple-200/60 selection:text-[#2D2638]">
+            {/* Ambient Soft Pastel Mesh Background */}
+            <div className="pointer-events-none fixed inset-0 overflow-hidden">
+                <div className="absolute -top-28 -left-24 h-[420px] w-[420px] rounded-full bg-[#FADCD3] opacity-85 blur-3xl" />
+                <div className="absolute top-1/4 -right-28 h-[460px] w-[460px] rounded-full bg-[#D8C2FA] opacity-70 blur-3xl" />
+                <div className="absolute -bottom-32 left-1/3 h-[440px] w-[440px] rounded-full bg-[#F3D2E5] opacity-80 blur-3xl" />
+            </div>
+
             {/* Mobile Header */}
-            <div className="md:hidden bg-mwezi-accent h-16 px-4 flex items-center justify-between shadow-md">
+            <div className="relative z-20 md:hidden bg-white/65 backdrop-blur-xl border-b border-white/80 h-16 px-4 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                    <span className="font-heading text-2xl font-bold text-mwezi-brandText">Mwezi</span>
-                    <span className="text-white text-xs px-2 py-0.5 rounded bg-white/20">{portalRole}</span>
+                    <span className="font-heading text-2xl font-bold text-[#2D2638]">Mwezi</span>
+                    <span className="text-[#5E546B] text-xs px-2.5 py-0.5 rounded-full bg-white/75 border border-white">{portalRole}</span>
                 </div>
                 <button 
                     onClick={() => setSidebarOpen(!sidebarOpen)}
-                    className="p-2 rounded-lg bg-white/20 text-white"
+                    className="p-2 rounded-xl bg-white/75 border border-white text-[#2D2638]"
                 >
                     {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
@@ -80,18 +87,18 @@ export default function PortalDashboardLayout({
 
             {/* Sidebar Desktop & Mobile drawer */}
             <aside className={`
-                fixed md:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-mwezi-primary/40 flex flex-col justify-between transition-transform duration-200
+                fixed md:static inset-y-0 left-0 z-40 w-64 bg-white/55 backdrop-blur-2xl border-r border-white/80 flex flex-col justify-between transition-transform duration-200
                 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
                 <div className="p-6">
                     {/* Brand Banner */}
                     <div className="flex items-center space-x-3 mb-8">
-                        <div className="w-10 h-10 rounded-[14px] bg-mwezi-accent flex items-center justify-center shadow-md">
-                            <span className="font-heading font-extrabold text-xl text-mwezi-brandText">M</span>
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-300 via-pink-200 to-purple-300 border border-white flex items-center justify-center shadow-xs">
+                            <span className="font-heading font-extrabold text-xl text-[#2D2638]">M</span>
                         </div>
                         <div>
-                            <h2 className="font-heading font-bold text-lg text-mwezi-tertiary leading-tight">Mwezi Portal</h2>
-                            <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">{portalRole} Workspace</p>
+                            <h2 className="font-heading font-bold text-lg text-[#2D2638] leading-tight">Mwezi Portal</h2>
+                            <p className="text-[11px] font-medium text-[#6E637C] uppercase tracking-wider">{portalRole} Workspace</p>
                         </div>
                     </div>
 
@@ -99,7 +106,7 @@ export default function PortalDashboardLayout({
                     <div className="space-y-6">
                         {navSections.map((sec, idx) => (
                             <div key={idx}>
-                                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
+                                <div className="text-[10px] font-bold text-[#8A7F99] uppercase tracking-wider mb-2 px-3">
                                     {sec.label}
                                 </div>
                                 <div className="space-y-1">
@@ -110,13 +117,13 @@ export default function PortalDashboardLayout({
                                             <Link
                                                 key={link.name}
                                                 href={link.href}
-                                                className={`flex items-center space-x-3 px-3 py-2.5 rounded-[14px] text-xs font-semibold transition ${
+                                                className={`flex items-center space-x-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition ${
                                                     active 
-                                                        ? 'bg-mwezi-secondary text-mwezi-tertiary shadow-sm' 
-                                                        : 'text-gray-600 hover:bg-mwezi-primary/20 hover:text-mwezi-tertiary'
+                                                        ? 'bg-white/90 text-[#2D2638] border border-white shadow-xs' 
+                                                        : 'text-[#5E546B] hover:bg-white/60 hover:text-[#2D2638]'
                                                 }`}
                                             >
-                                                <Icon className="w-4 h-4" />
+                                                <Icon className={`w-4 h-4 ${active ? 'text-rose-500' : 'text-[#7C718B]'}`} />
                                                 <span>{link.name}</span>
                                             </Link>
                                         );
@@ -126,14 +133,14 @@ export default function PortalDashboardLayout({
                         ))}
 
                         <div>
-                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
+                            <div className="text-[10px] font-bold text-[#8A7F99] uppercase tracking-wider mb-2 px-3">
                                 Mobile App Preview
                             </div>
                             <Link
                                 href="/dashboard"
-                                className="flex items-center space-x-3 px-3 py-2.5 rounded-[14px] text-xs font-semibold text-gray-600 hover:bg-mwezi-primary/20 hover:text-mwezi-tertiary transition"
+                                className="flex items-center space-x-3 px-3 py-2.5 rounded-2xl text-xs font-semibold text-[#5E546B] hover:bg-white/60 hover:text-[#2D2638] transition"
                             >
-                                <LayoutDashboard className="w-4 h-4 text-mwezi-accent" />
+                                <LayoutDashboard className="w-4 h-4 text-purple-500" />
                                 <span>Switch to User View</span>
                             </Link>
                         </div>
@@ -141,15 +148,15 @@ export default function PortalDashboardLayout({
                 </div>
 
                 {/* User info & Logout */}
-                <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+                <div className="p-4 border-t border-white/75 bg-white/35">
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 rounded-full bg-mwezi-primary/60 flex items-center justify-center font-bold text-xs text-mwezi-tertiary">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-rose-200 to-purple-200 border border-white flex items-center justify-center font-bold text-xs text-[#2D2638]">
                                 {user?.name?.charAt(0) || 'U'}
                             </div>
                             <div className="overflow-hidden">
-                                <p className="text-xs font-bold text-gray-800 truncate">{user?.name || 'Partner Staff'}</p>
-                                <p className="text-[10px] text-gray-500 capitalize">{user?.role?.replace('_', ' ')}</p>
+                                <p className="text-xs font-bold text-[#2D2638] truncate">{user?.name || 'Partner Staff'}</p>
+                                <p className="text-[10px] text-[#6E637C] capitalize">{user?.role?.replace('_', ' ')}</p>
                             </div>
                         </div>
                     </div>
@@ -157,29 +164,29 @@ export default function PortalDashboardLayout({
                         href="/logout"
                         method="post"
                         as="button"
-                        className="w-full py-2 px-3 rounded-xl bg-white border border-red-200 text-mwezi-tertiary text-xs font-semibold flex items-center justify-center space-x-2 hover:bg-red-50 transition"
+                        className="w-full py-2 px-3 rounded-full bg-white/80 hover:bg-white border border-white text-[#2D2638] text-xs font-semibold flex items-center justify-center space-x-2 transition shadow-xs"
                     >
-                        <LogOut className="w-3.5 h-3.5" />
+                        <LogOut className="w-3.5 h-3.5 text-rose-500" />
                         <span>Log Out</span>
                     </Link>
                 </div>
             </aside>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
+            <div className="relative z-10 flex-1 flex flex-col min-h-screen overflow-y-auto">
                 {/* Desktop Topbar */}
-                <header className="hidden md:flex h-16 bg-white border-b border-mwezi-primary/30 px-8 items-center justify-between sticky top-0 z-30">
+                <header className="hidden md:flex h-16 bg-white/45 backdrop-blur-xl border-b border-white/80 px-8 items-center justify-between sticky top-0 z-30">
                     <div>
-                        <h1 className="font-heading font-bold text-xl text-mwezi-tertiary">{portalTitle}</h1>
-                        <p className="text-xs text-gray-500">Mwezi Operations, Supply Chain & Verified Health Services</p>
+                        <h1 className="font-heading font-bold text-xl text-[#2D2638]">{portalTitle}</h1>
+                        <p className="text-xs text-[#6E637C]">Mwezi Operations, Supply Chain & Verified Health Services</p>
                     </div>
-                    <div className="flex items-center space-x-4">
-                        <span className="px-3 py-1 bg-mwezi-secondary text-mwezi-tertiary text-xs font-bold rounded-full">
+                    <div className="flex items-center space-x-3">
+                        <span className="px-3 py-1 bg-white/75 border border-white text-[#5E546B] text-xs font-semibold rounded-full">
                             Role: {user?.role?.replace('_', ' ')}
                         </span>
                         <Link 
                             href="/dashboard"
-                            className="px-3 py-1.5 bg-mwezi-accent text-white hover:bg-mwezi-accent/90 text-xs font-bold rounded-xl transition shadow-sm"
+                            className="px-4 py-1.5 rounded-full bg-white/85 hover:bg-white border border-white text-[#2D2638] text-xs font-bold transition shadow-xs"
                         >
                             Open PWA App
                         </Link>

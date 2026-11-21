@@ -189,26 +189,18 @@ export default function MobileAppLayout({
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-tr from-[#FBECEF] via-[#F4F1F4] to-[#EBF3F5] flex items-center justify-center p-0 sm:py-6 sm:px-4 font-sans selection:bg-rose-100 selection:text-rose-900">
+        <div className="relative min-h-screen w-full overflow-hidden bg-[#F8EAE6] flex items-center justify-center p-0 sm:py-6 sm:px-4 font-sans selection:bg-purple-200/60 selection:text-[#2D2638]">
 
-            {/* NATIVE APP SHELL (Mobile Frame on Desktop, Edge-to-Edge on Handheld) */}
-            <div className="w-full max-w-[440px] h-screen sm:h-[860px] sm:max-h-[92vh] bg-[#FAF6F7] sm:rounded-[48px] shadow-[0_20px_60px_-15px_rgba(112,38,56,0.18)] sm:border-[8px] sm:border-slate-900/90 sm:ring-1 sm:ring-black/10 relative flex flex-col overflow-hidden [transform:translateZ(0)]">
+            {/* Ambient Soft Pastel Mesh Background */}
+            <div className="pointer-events-none fixed inset-0 overflow-hidden">
+                <div className="absolute -top-28 -left-24 h-[420px] w-[420px] rounded-full bg-[#FADCD3] opacity-90 blur-3xl" />
+                <div className="absolute top-1/4 -right-28 h-[460px] w-[460px] rounded-full bg-[#D8C2FA] opacity-75 blur-3xl" />
+                <div className="absolute -bottom-32 left-1/4 h-[440px] w-[440px] rounded-full bg-[#F3D2E5] opacity-85 blur-3xl" />
+                <div className="absolute bottom-10 right-10 h-[300px] w-[300px] rounded-full bg-[#E5D4FC] opacity-70 blur-3xl" />
+            </div>
 
-                {/* 1. NATIVE SYSTEM STATUS BAR (Clock, Dynamic Notch, Battery) */}
-                <div className="w-full bg-white/90 backdrop-blur-md px-6 pt-3 pb-1 flex items-center justify-between text-slate-800 text-xs font-semibold z-50 select-none border-b border-rose-100/40 shrink-0">
-                    <span className="font-bold tracking-tight text-[11px]">{currentTime}</span>
-
-                    {/* Native Pill Dynamic Island / Speaker */}
-                    <div className="w-20 h-4 bg-slate-900 rounded-full flex items-center justify-center shadow-inner">
-                        <div className="w-2 h-2 rounded-full bg-slate-800 mr-2" />
-                        <div className="w-2.5 h-1 rounded-full bg-slate-700" />
-                    </div>
-
-                    <div className="flex items-center space-x-1.5 text-slate-700">
-                        <Wifi className="w-3.5 h-3.5" />
-                        <BatteryMedium className="w-4 h-4 text-emerald-600" />
-                    </div>
-                </div>
+            {/* FROSTED GLASS APP SHELL */}
+            <div className="relative z-10 w-full max-w-[440px] h-screen sm:h-[860px] sm:max-h-[92vh] bg-white/50 backdrop-blur-2xl sm:rounded-[36px] shadow-[0_24px_60px_-15px_rgba(92,71,112,0.16)] sm:border sm:border-white/80 flex flex-col overflow-hidden [transform:translateZ(0)]">
 
                 {discreetMode ? (
                     /* DISCREET STUDY MODE SCREEN (Fully fits inside phone mockup, authentic school revision) */
@@ -341,29 +333,29 @@ export default function MobileAppLayout({
                     </div>
                 ) : (
                     <>
-                        {/* 2. NATIVE APP TOP BAR */}
-                        <header className="bg-white/95 backdrop-blur-xl px-3.5 py-2 border-b border-rose-100/70 flex items-center justify-between sticky top-0 z-40 shadow-[0_2px_12px_rgba(112,38,56,0.03)] shrink-0 gap-2">
+                        {/* 2. MINIMAL FROSTED TOP BAR */}
+                        <header className="bg-white/60 backdrop-blur-xl px-4 py-3 border-b border-white/75 flex items-center justify-between sticky top-0 z-40 shrink-0 gap-2">
                             {/* Left: Back Button OR Brand Icon + Title */}
-                            <div className="flex items-center space-x-2 min-w-0 flex-1">
+                            <div className="flex items-center space-x-2.5 min-w-0 flex-1">
                                 {backUrl ? (
                                     <Link
                                         href={backUrl}
-                                        className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 flex items-center justify-center shrink-0 transition active:scale-90"
+                                        className="w-8 h-8 rounded-full bg-white/75 hover:bg-white border border-white text-[#5E546B] hover:text-[#2D2638] flex items-center justify-center shrink-0 transition active:scale-90"
                                         aria-label="Back"
                                     >
                                         <ChevronLeft className="w-5 h-5" />
                                     </Link>
                                 ) : (
-                                    <Link href="/dashboard" className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-white shrink-0 shadow-xs active:scale-95 transition">
+                                    <Link href="/dashboard" className="w-8 h-8 rounded-full bg-gradient-to-tr from-rose-400 via-pink-400 to-purple-400 flex items-center justify-center text-white shrink-0 shadow-xs active:scale-95 transition">
                                         <Moon className="w-4 h-4 text-white fill-white/20" />
                                     </Link>
                                 )}
                                 <div className="min-w-0 flex-1">
-                                    <span className="font-extrabold text-sm text-slate-900 tracking-tight leading-tight block truncate">
+                                    <span className="font-bold text-sm text-[#2D2638] tracking-tight leading-tight block truncate">
                                         {title}
                                     </span>
                                     {subtitle ? (
-                                        <span className="text-[10px] text-slate-400 font-medium block truncate leading-tight">
+                                        <span className="text-[10px] text-[#6E637C] font-medium block truncate leading-tight">
                                             {subtitle}
                                         </span>
                                     ) : null}
@@ -378,17 +370,17 @@ export default function MobileAppLayout({
                                 <button
                                     onClick={() => setDiscreetMode(true)}
                                     title="Discreet Mode / Quick Disguise (ESC)"
-                                    className="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/50 flex items-center justify-center shadow-xs transition active:scale-90"
+                                    className="w-8 h-8 rounded-full bg-white/75 hover:bg-white text-rose-500 border border-white flex items-center justify-center shadow-2xs transition active:scale-90"
                                     aria-label="Quick Exit"
                                 >
-                                    <Shield className="w-4 h-4 text-rose-600" />
+                                    <Shield className="w-4 h-4" />
                                 </button>
 
                                 {/* Native Drawer Menu Trigger */}
                                 <button
                                     onClick={() => setDrawerOpen(true)}
                                     aria-label="Open App Menu"
-                                    className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition active:scale-90"
+                                    className="w-8 h-8 rounded-full bg-white/75 hover:bg-white border border-white flex items-center justify-center text-[#3C334B] shadow-2xs transition active:scale-90"
                                 >
                                     <Menu className="w-4 h-4" />
                                 </button>
@@ -404,10 +396,10 @@ export default function MobileAppLayout({
                             {children}
                         </main>
 
-                        {/* 4. NATIVE FLOATING SEMI-GLASS TAB BAR */}
+                        {/* 4. MINIMAL FLOATING FROSTED TAB BAR */}
                         {showNav && (
-                            <div className="absolute bottom-2.5 inset-x-3 z-40 pointer-events-none">
-                                <nav className="pointer-events-auto bg-white/75 backdrop-blur-2xl border border-white/80 ring-1 ring-rose-200/50 shadow-[0_12px_36px_-6px_rgba(112,38,56,0.18),0_4px_16px_rgba(0,0,0,0.04)] rounded-full px-1.5 py-1.5 flex items-center justify-around">
+                            <div className="absolute bottom-3 inset-x-3 z-40 pointer-events-none">
+                                <nav className="pointer-events-auto bg-white/75 backdrop-blur-2xl border border-white/90 shadow-[0_12px_32px_-8px_rgba(92,71,112,0.18)] rounded-full px-1.5 py-1.5 flex items-center justify-around">
                                     {navItems.map((item) => {
                                         const Icon = item.icon;
                                         const isActive = currentUrl === item.match || currentUrl.startsWith(item.match + '/');
@@ -417,13 +409,13 @@ export default function MobileAppLayout({
                                                 key={item.name}
                                                 href={item.href}
                                                 className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-full transition-all duration-200 active:scale-90 ${isActive
-                                                    ? 'text-rose-600 font-bold'
-                                                    : 'text-slate-400 hover:text-slate-600 font-medium'
+                                                    ? 'text-[#2D2638] font-bold'
+                                                    : 'text-[#7C718B] hover:text-[#2D2638] font-medium'
                                                     }`}
                                             >
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isActive ? 'bg-rose-50/90 text-rose-600 shadow-2xs scale-105' : ''
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isActive ? 'bg-gradient-to-tr from-rose-100 to-purple-100 text-rose-600 shadow-2xs scale-105' : ''
                                                     }`}>
-                                                    <Icon className={`w-4 h-4 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
+                                                    <Icon className={`w-4 h-4 ${isActive ? 'stroke-[2.4]' : 'stroke-[1.8]'}`} />
                                                 </div>
                                                 <span className="text-[10px] tracking-tight mt-0.5 leading-none">
                                                     {item.name}
@@ -437,19 +429,14 @@ export default function MobileAppLayout({
                     </>
                 )}
 
-            {/* 5. NATIVE HOME INDICATOR BAR (iPhone Home Indicator) */}
-            <div className="absolute bottom-0.5 inset-x-0 h-1 flex justify-center pointer-events-none z-50">
-                <div className="w-32 h-1 bg-slate-300 rounded-full opacity-60" />
-            </div>
-
-            {/* NATIVE SLIDE-IN APP DRAWER (Contained within mobile mockup) */}
+            {/* SLIDE-IN FROSTED APP DRAWER */}
             {drawerOpen && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center p-0 bg-slate-900/60 backdrop-blur-xs animate-fadeIn rounded-b-[40px] overflow-hidden">
+                <div className="absolute inset-0 z-50 flex items-center justify-center p-0 bg-[#2D2638]/35 backdrop-blur-sm animate-fadeIn overflow-hidden">
                     <div
                         className="absolute inset-0 bg-transparent"
                         onClick={() => setDrawerOpen(false)}
                     />
-                    <div className="relative w-full h-full bg-white p-5 flex flex-col justify-between z-10 overflow-y-auto border-r border-rose-100 hide-scrollbar">
+                    <div className="relative w-full h-full bg-white/90 backdrop-blur-2xl p-5 flex flex-col justify-between z-10 overflow-y-auto hide-scrollbar">
                     <div>
                         {/* Drawer User Header */}
                         <div className="flex items-center justify-between pb-4 border-b border-rose-100 mb-4">

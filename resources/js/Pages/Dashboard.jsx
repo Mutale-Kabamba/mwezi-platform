@@ -299,7 +299,7 @@ export default function Dashboard({
                 )}
 
                 {/* 2. CYCLE COUNTDOWN HERO CONTAINER */}
-                <div className="bg-gradient-to-br from-rose-500 via-rose-500 to-pink-500 rounded-3xl p-5 shadow-lg shadow-rose-200/60 text-white relative overflow-hidden flex flex-col justify-between">
+                <div className="bg-gradient-to-br from-rose-400 via-pink-400 to-purple-400 rounded-3xl p-5 shadow-[0_16px_38px_-12px_rgba(167,139,250,0.45)] border border-white/40 text-white relative overflow-hidden flex flex-col justify-between">
                     {/* Subtle ambient blur ornaments */}
                     <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
                     <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-rose-400/30 rounded-full blur-2xl pointer-events-none" />
@@ -382,7 +382,7 @@ export default function Dashboard({
 
                 {/* 1-TAP QUICK LOG STRIP (Only when user has a personal tracker) */}
                 {(usePage().props?.auth?.tierPolicy?.can_use_personal_tracker ?? true) ? (
-                <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-150/80 space-y-3">
+                <div className="bg-white/70 backdrop-blur-xl rounded-3xl p-4 shadow-xs border border-white/90 space-y-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                             <div className="w-6 h-6 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
