@@ -22,6 +22,7 @@ class EducationalResource extends Model
         'summary',
         'body_content',
         'video_url',
+        'quiz_questions',
         'thumbnail_url',
         'read_time_minutes',
         'is_featured',
@@ -34,6 +35,7 @@ class EducationalResource extends Model
             'is_featured' => 'boolean',
             'offline_cacheable' => 'boolean',
             'read_time_minutes' => 'integer',
+            'quiz_questions' => 'array',
         ];
     }
 
@@ -55,6 +57,11 @@ class EducationalResource extends Model
     public function translations(): HasMany
     {
         return $this->hasMany(EducationalResourceTranslation::class, 'resource_id');
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(EducationalResourceAttachment::class, 'resource_id');
     }
 
     public function learningProgress(): HasMany

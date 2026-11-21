@@ -202,8 +202,14 @@ export default function SponsorPortal({ campaign, recentDonations = [], hubs = [
         ? Math.min(100, Math.round((campaign.raised_amount_zmw / campaign.target_amount_zmw) * 100))
         : 60;
 
+    const isPublicSponsor = !user || (typeof window !== 'undefined' && window.location.pathname === '/sponsor');
+
     return (
-        <MobileAppLayout title="Sponsor a Girl" backUrl="/support">
+        <MobileAppLayout
+            title="Sponsor a Girl"
+            backUrl={user ? '/support' : '/'}
+            showNav={!isPublicSponsor}
+        >
             <Head title="Sponsor a Girl - Mwezi Platform" />
 
             <div className="space-y-4 pb-8">

@@ -122,15 +122,15 @@ export default function CycleIndex({
         {
             id: 'menstrual',
             name: 'Period / Menstruation',
-            shortName: 'Period',
+            shortName: 'Menstruation',
             range: `Days 1–${periodLength}`,
             startDay: 1,
             endDay: periodLength,
-            color: '#BE123C', // Rose 700
-            bgColor: 'bg-rose-50',
-            borderColor: 'border-rose-200',
-            textColor: 'text-rose-700',
-            badgeBg: 'bg-rose-100 text-rose-800',
+            color: '#A855F7', // Purple
+            bgColor: 'bg-purple-50/80',
+            borderColor: 'border-purple-200/80',
+            textColor: 'text-purple-700',
+            badgeBg: 'bg-purple-100 text-purple-800',
             conceptionRisk: 'Low pregnancy chance',
             icon: Droplet,
             hormones: 'Estrogen & progesterone at lowest baseline.',
@@ -140,15 +140,15 @@ export default function CycleIndex({
         {
             id: 'follicular',
             name: 'Follicular Phase',
-            shortName: 'Follicular',
+            shortName: 'Follicular phase',
             range: `Days ${periodLength + 1}–${ovStartDay - 1}`,
             startDay: periodLength + 1,
             endDay: ovStartDay - 1,
-            color: '#FB7185', // Coral / Rose 400
-            bgColor: 'bg-pink-50',
-            borderColor: 'border-pink-200',
-            textColor: 'text-pink-700',
-            badgeBg: 'bg-pink-100 text-pink-800',
+            color: '#38BDF8', // Sky / Cyan
+            bgColor: 'bg-sky-50/80',
+            borderColor: 'border-sky-200/80',
+            textColor: 'text-sky-700',
+            badgeBg: 'bg-sky-100 text-sky-800',
             conceptionRisk: 'Moderate pregnancy chance',
             icon: Sparkles,
             hormones: 'FSH stimulating follicles, estrogen steadily rising.',
@@ -162,11 +162,11 @@ export default function CycleIndex({
             range: `Days ${ovStartDay}–${ovEndDay} (Peak Day ${ovPeakDay})`,
             startDay: ovStartDay,
             endDay: ovEndDay,
-            color: '#9333EA', // Royal Purple
-            bgColor: 'bg-purple-50',
-            borderColor: 'border-purple-200',
-            textColor: 'text-purple-700',
-            badgeBg: 'bg-purple-100 text-purple-800',
+            color: '#818CF8', // Periwinkle Indigo
+            bgColor: 'bg-indigo-50/80',
+            borderColor: 'border-indigo-200/80',
+            textColor: 'text-indigo-700',
+            badgeBg: 'bg-indigo-100 text-indigo-800',
             conceptionRisk: 'Peak pregnancy chance',
             icon: HeartPulse,
             hormones: 'Luteinizing hormone (LH) surge releases mature egg.',
@@ -176,15 +176,15 @@ export default function CycleIndex({
         {
             id: 'luteal',
             name: 'Luteal Phase',
-            shortName: 'Luteal',
+            shortName: 'Luteal phase',
             range: `Days ${ovEndDay + 1}–${cycleLength}`,
             startDay: ovEndDay + 1,
             endDay: cycleLength,
-            color: '#A855F7', // Soft Lavender
-            bgColor: 'bg-violet-50',
-            borderColor: 'border-violet-200',
-            textColor: 'text-violet-700',
-            badgeBg: 'bg-violet-100 text-violet-800',
+            color: '#FB7185', // Coral Rose
+            bgColor: 'bg-rose-50/80',
+            borderColor: 'border-rose-200/80',
+            textColor: 'text-rose-700',
+            badgeBg: 'bg-rose-100 text-rose-800',
             conceptionRisk: 'Low pregnancy chance',
             icon: Moon,
             hormones: 'Progesterone peaks to nurture uterine lining.',
@@ -517,47 +517,47 @@ export default function CycleIndex({
                     </div>
                 )}
 
-                {/* 1. THREE TOP METRIC TILES */}
-                <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-white rounded-2xl p-2.5 shadow-2xs border border-rose-150/70 text-center flex flex-col justify-between">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                {/* 1. UNIFIED CYCLE SUMMARY BAR */}
+                <div className="bg-white/75 backdrop-blur-xl rounded-3xl p-3.5 shadow-xs border border-white/90 grid grid-cols-3 divide-x divide-purple-100/80">
+                    <div className="px-2 text-center flex flex-col items-center justify-between">
+                        <span className="text-[10px] font-semibold text-[#7A6F8A] tracking-wide">
                             Avg Cycle
                         </span>
-                        <div className="flex items-baseline justify-center space-x-1 my-0.5">
-                            <span className="font-extrabold text-lg text-slate-900">
-                                {cycleLength}
-                            </span>
-                            <span className="text-[10px] text-slate-500 font-medium">d</span>
-                        </div>
-                        <span className={`text-[8.5px] font-bold block truncate ${profile?.is_first_year_menarche ? 'text-amber-600' : 'text-emerald-600'}`}>
-                            {profile?.is_first_year_menarche ? 'Teen Calibrated' : 'Regular'}
+                        <span className="font-extrabold text-base text-[#2D2638] my-1 tracking-tight">
+                            {cycleLength} days
+                        </span>
+                        <span className={`inline-block text-[9.5px] font-semibold px-2 py-0.5 rounded-full truncate max-w-full ${
+                            profile?.is_first_year_menarche
+                                ? 'bg-amber-50 text-amber-700'
+                                : 'bg-emerald-50 text-emerald-700'
+                        }`}>
+                            {profile?.is_first_year_menarche ? 'Calibrating' : 'Regular'}
                         </span>
                     </div>
 
-                    <div className="bg-white rounded-2xl p-2.5 shadow-2xs border border-rose-150/70 text-center flex flex-col justify-between">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                    <div className="px-2 text-center flex flex-col items-center justify-between">
+                        <span className="text-[10px] font-semibold text-[#7A6F8A] tracking-wide">
                             Period
                         </span>
-                        <div className="flex items-baseline justify-center space-x-1 my-0.5">
-                            <span className="font-extrabold text-lg text-rose-600">
-                                {periodLength}
-                            </span>
-                            <span className="text-[10px] text-slate-500 font-medium">d</span>
-                        </div>
-                        <span className="text-[8.5px] text-rose-500 font-bold block truncate">Expected</span>
+                        <span className="font-extrabold text-base text-rose-500 my-1 tracking-tight">
+                            {periodLength} days
+                        </span>
+                        <span className="inline-block text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 truncate max-w-full">
+                            Expected
+                        </span>
                     </div>
 
-                    <div className="bg-white rounded-2xl p-2.5 shadow-2xs border border-rose-150/70 text-center flex flex-col justify-between">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                            Cycle Day
+                    <div className="px-2 text-center flex flex-col items-center justify-between">
+                        <span className="text-[10px] font-semibold text-[#7A6F8A] tracking-wide">
+                            Today
                         </span>
-                        <div className="flex items-baseline justify-center space-x-0.5 my-0.5">
-                            <span className="font-extrabold text-lg text-purple-700">
-                                {currentCycleDay}
+                        <div className="my-1 flex items-baseline justify-center">
+                            <span className="font-extrabold text-base text-purple-600 tracking-tight">
+                                Day {currentCycleDay}
                             </span>
-                            <span className="text-[10px] text-slate-400 font-medium">/{cycleLength}</span>
+                            <span className="text-[10px] text-[#8A7F99] font-medium ml-0.5">/{cycleLength}</span>
                         </div>
-                        <span className="text-[8.5px] text-purple-600 font-bold block truncate capitalize">
+                        <span className="inline-block text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 truncate max-w-full capitalize">
                             {currentPhase.shortName}
                         </span>
                     </div>
@@ -565,7 +565,7 @@ export default function CycleIndex({
 
                 {/* Teen Menarche Calibration Notice (if active) */}
                 {profile?.is_first_year_menarche && (
-                    <div className="bg-amber-50/90 border border-amber-200/80 rounded-2xl p-3 flex items-start space-x-2 text-xs text-amber-900 shadow-2xs">
+                    <div className="bg-amber-50/85 border border-amber-200/80 rounded-2xl p-3 flex items-start space-x-2 text-xs text-amber-900 shadow-2xs">
                         <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
                         <div>
                             <span className="font-bold block text-amber-950 text-[11px]">Teen Calibration Active (21–45 Days)</span>
@@ -576,59 +576,79 @@ export default function CycleIndex({
                     </div>
                 )}
 
-                {/* 2. MODERN SEGMENTED VIEW SWITCHER */}
-                <div className="bg-slate-100/90 p-1 rounded-2xl flex items-center border border-slate-200/60 shadow-2xs">
+                {/* 2. MINIMAL LAVENDER SEGMENTED VIEW SWITCHER (Stats | Timeline | Calendar) */}
+                <div className="bg-white/65 backdrop-blur-xl p-1 rounded-2xl flex items-center border border-white/90 shadow-2xs">
                     <button
                         type="button"
                         onClick={() => setViewMode('doughnut')}
                         className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition active:scale-95 ${viewMode === 'doughnut'
-                            ? 'bg-white text-rose-700 shadow-xs border border-rose-100'
-                            : 'text-slate-500 hover:text-slate-800'
+                            ? 'bg-[#9B5DE5] text-white shadow-xs'
+                            : 'text-[#5E546B] hover:text-[#2D2638]'
                             }`}
                     >
-                        <CircleDot className="w-3.5 h-3.5 text-rose-600" />
-                        <span>Cycle Wheel</span>
+                        <CircleDot className="w-3.5 h-3.5" />
+                        <span>Stats</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setViewMode('timeline')}
+                        className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition active:scale-95 ${viewMode === 'timeline'
+                            ? 'bg-[#9B5DE5] text-white shadow-xs'
+                            : 'text-[#5E546B] hover:text-[#2D2638]'
+                            }`}
+                    >
+                        <Activity className="w-3.5 h-3.5" />
+                        <span>Timeline</span>
                     </button>
                     <button
                         type="button"
                         onClick={() => setViewMode('calendar')}
                         className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition active:scale-95 ${viewMode === 'calendar'
-                            ? 'bg-white text-rose-700 shadow-xs border border-rose-100'
-                            : 'text-slate-500 hover:text-slate-800'
+                            ? 'bg-[#9B5DE5] text-white shadow-xs'
+                            : 'text-[#5E546B] hover:text-[#2D2638]'
                             }`}
                     >
-                        <CalendarIcon className="w-3.5 h-3.5 text-rose-600" />
-                        <span>Full Calendar</span>
+                        <CalendarIcon className="w-3.5 h-3.5" />
+                        <span>Calendar</span>
                     </button>
                 </div>
 
-                {/* 3. VIEW 1: DOUGHNUT CHART (CYCLE WHEEL) VIEW */}
+                {/* 3. VIEW 1: STATS / CYCLE ANALYSIS VIEW */}
                 {viewMode === 'doughnut' && (
                     <div className="space-y-3.5 animate-fadeIn">
+                        {/* Purple Cycle Analysis Banner */}
+                        <div className="bg-gradient-to-r from-[#A855F7] via-[#9333EA] to-[#7C3AED] rounded-2xl p-4 text-white shadow-md shadow-purple-300/35 relative overflow-hidden">
+                            <div className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none" />
+                            <div className="space-y-1 text-xs relative z-10">
+                                <p className="font-semibold">
+                                    Next cycle in : <span className="font-extrabold">{daysUntilNextPeriod} Days</span>
+                                </p>
+                                <p className="text-purple-100 text-[11px]">
+                                    Cycle rhythm : {cycleLength} days • Period : {periodLength} days
+                                </p>
+                                <p className="text-purple-50 text-[11px] font-medium">
+                                    You&apos;re currently in : <span className="font-bold">{currentPhase.name}</span>
+                                </p>
+                            </div>
+                        </div>
+
                         {/* Interactive Circular Wheel Container */}
-                        <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-150/80 flex flex-col items-center">
+                        <div className="bg-white/75 backdrop-blur-xl rounded-3xl p-4 shadow-xs border border-white/90 flex flex-col items-center">
 
                             {/* Doughnut SVG Container */}
-                            <div className="relative w-[260px] h-[260px] flex items-center justify-center my-1">
+                            <div className="relative w-[248px] h-[248px] flex items-center justify-center my-1">
                                 <svg
                                     viewBox="0 0 260 260"
                                     className="w-full h-full transform -rotate-0"
                                 >
-                                    <defs>
-                                        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                                            <feGaussianBlur stdDeviation="3" result="blur" />
-                                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                                        </filter>
-                                    </defs>
-
                                     {/* Background Track Ring */}
                                     <circle
                                         cx="130"
                                         cy="130"
                                         r="94"
                                         fill="none"
-                                        stroke="#F1F5F9"
-                                        strokeWidth="16"
+                                        stroke="#F3EEF8"
+                                        strokeWidth="12"
                                     />
 
                                     {/* Phase Arc Segments */}
@@ -638,7 +658,7 @@ export default function CycleIndex({
                                             d={segment.path}
                                             fill="none"
                                             stroke={segment.color}
-                                            strokeWidth={segment.isCurrent ? 18 : 15}
+                                            strokeWidth={segment.isCurrent ? 14 : 11}
                                             strokeLinecap="round"
                                             className="transition-all duration-300 hover:opacity-85 cursor-pointer"
                                             onClick={() => setSelectedPhaseTab(segment.id)}
@@ -651,63 +671,38 @@ export default function CycleIndex({
                                         cy={peakPointer.y}
                                         r="3.5"
                                         fill="#FFFFFF"
-                                        stroke="#9333EA"
+                                        stroke="#818CF8"
                                         strokeWidth="2"
                                     />
 
-                                    {/* Today's Glowing Pin on the Wheel */}
+                                    {/* Today's Clean Pin on the Wheel */}
                                     <circle
                                         cx={todayPointer.x}
                                         cy={todayPointer.y}
-                                        r="9"
-                                        fill="#BE123C"
-                                        opacity="0.3"
-                                        className="animate-ping"
-                                    />
-                                    <circle
-                                        cx={todayPointer.x}
-                                        cy={todayPointer.y}
-                                        r="7.5"
+                                        r="8"
                                         fill="#FFFFFF"
-                                        stroke="#BE123C"
+                                        stroke="#9B5DE5"
                                         strokeWidth="3.5"
                                         className="shadow-md"
                                     />
-                                    <circle
-                                        cx={todayPointer.x}
-                                        cy={todayPointer.y}
-                                        r="2.5"
-                                        fill="#BE123C"
-                                    />
                                 </svg>
 
-                                {/* Center Hub Information */}
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-6">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                        Cycle Day
-                                    </span>
-                                    <div className="flex items-baseline space-x-1 my-0.5">
-                                        <span className="text-4xl font-black text-slate-900 tracking-tight leading-none">
+                                {/* Center Purple Hub Information */}
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#A855F7] to-[#7C3AED] shadow-lg shadow-purple-400/35 flex flex-col items-center justify-center text-center text-white px-3">
+                                        <span className="text-[11px] font-medium text-purple-100">Day</span>
+                                        <span className="text-4xl font-black tracking-tight leading-none my-0.5">
                                             {currentCycleDay}
                                         </span>
-                                        <span className="text-xs font-bold text-slate-400">/{cycleLength}</span>
+                                        <span className="text-[10px] text-purple-100 font-semibold">
+                                            of {cycleLength}
+                                        </span>
                                     </div>
-                                    <div className={`mt-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold ${currentPhase.badgeBg}`}>
-                                        {currentPhase.shortName}
-                                    </div>
-                                    <span className="text-[10px] text-slate-500 font-semibold mt-1">
-                                        {daysUntilNextPeriod === 0
-                                            ? 'Period expected today'
-                                            : `Next period in ~${daysUntilNextPeriod} days`}
-                                    </span>
-                                    <span className="text-[9px] text-slate-400 font-medium mt-0.5">
-                                        {currentPhase.conceptionRisk}
-                                    </span>
                                 </div>
                             </div>
 
-                            {/* Wheel Legend Strip */}
-                            <div className="grid grid-cols-4 gap-1.5 w-full mt-2 pt-3 border-t border-slate-100 text-center">
+                            {/* Clean 2x2 Phase Legend */}
+                            <div className="grid grid-cols-2 gap-2 w-full mt-2 pt-3 border-t border-purple-100/70">
                                 {phases.map((p) => {
                                     const isSelected = (selectedPhaseTab || currentPhase.id) === p.id;
                                     return (
@@ -715,16 +710,16 @@ export default function CycleIndex({
                                             key={p.id}
                                             type="button"
                                             onClick={() => setSelectedPhaseTab(p.id)}
-                                            className={`p-1.5 rounded-xl transition text-[9.5px] flex flex-col items-center ${isSelected
-                                                ? `${p.bgColor} ${p.textColor} font-bold ring-1 ring-${p.color}/40`
-                                                : 'hover:bg-slate-50 text-slate-500 font-medium'
+                                            className={`px-2.5 py-2 rounded-xl transition text-[11px] flex items-center space-x-2 text-left ${isSelected
+                                                ? `${p.bgColor} ${p.textColor} font-bold ring-1 ring-purple-200`
+                                                : 'hover:bg-white/70 text-[#5E546B] font-medium'
                                                 }`}
                                         >
                                             <span
-                                                className="w-2 h-2 rounded-full mb-1 shrink-0"
+                                                className="w-3 h-3 rounded-sm shrink-0"
                                                 style={{ backgroundColor: p.color }}
                                             />
-                                            <span className="truncate w-full">{p.shortName}</span>
+                                            <span className="truncate">{p.shortName}</span>
                                         </button>
                                     );
                                 })}
@@ -735,7 +730,7 @@ export default function CycleIndex({
                         <button
                             type="button"
                             onClick={() => openLoggerForDate(todayYmd)}
-                            className="w-full py-3.5 bg-[#BE123C] hover:bg-[#9F1239] active:scale-95 text-white font-bold rounded-2xl text-xs shadow-md shadow-rose-200/60 transition flex items-center justify-center space-x-2"
+                            className="w-full py-3.5 bg-[#9B5DE5] hover:bg-[#8B4CD6] active:scale-98 text-white font-bold rounded-full text-xs shadow-md shadow-purple-300/40 transition flex items-center justify-center space-x-2"
                         >
                             <Plus className="w-4 h-4" />
                             <span>
@@ -798,11 +793,121 @@ export default function CycleIndex({
                     </div>
                 )}
 
-                {/* 4. VIEW 2: FULL CALENDAR VIEW */}
+                {/* 4. VIEW 2: TIMELINE VIEW */}
+                {viewMode === 'timeline' && (
+                    <div className="space-y-3 animate-fadeIn">
+                        <div className="flex items-center justify-between px-1">
+                            <div>
+                                <h2 className="text-sm font-bold text-[#2D2638]">Cycle Timeline</h2>
+                                <p className="text-[11px] text-[#6E637C]">
+                                    {logs.length} {logs.length === 1 ? 'entry' : 'entries'} recorded
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => openLoggerForDate(todayYmd)}
+                                className="px-3.5 py-1.5 rounded-full bg-[#9B5DE5] hover:bg-[#8B4CD6] text-white text-xs font-bold flex items-center space-x-1 shadow-xs transition active:scale-95"
+                            >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>Add Log</span>
+                            </button>
+                        </div>
+
+                        {logs.length === 0 ? (
+                            <div className="bg-white/75 backdrop-blur-xl rounded-3xl p-6 border border-white/90 text-center space-y-2.5">
+                                <div className="w-12 h-12 rounded-full bg-purple-100/80 text-purple-600 flex items-center justify-center mx-auto">
+                                    <Droplet className="w-5 h-5" />
+                                </div>
+                                <h3 className="text-sm font-bold text-[#2D2638]">No logs recorded yet</h3>
+                                <p className="text-xs text-[#6E637C] max-w-[240px] mx-auto">
+                                    Start logging your daily flow, mood, and symptoms to build your personal timeline.
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => openLoggerForDate(todayYmd)}
+                                    className="px-4 py-2 rounded-full bg-[#9B5DE5] hover:bg-[#8B4CD6] text-white text-xs font-bold transition"
+                                >
+                                    + Add Today&apos;s Log
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="space-y-2.5">
+                                {logs.map((entry) => {
+                                    const ymd = extractYmd(entry.logged_date);
+                                    const dObj = ymd ? new Date(`${ymd}T00:00:00`) : new Date();
+                                    const dayNum = String(dObj.getDate()).padStart(2, '0');
+                                    const weekday = dObj.toLocaleDateString('en-GB', { weekday: 'short' });
+                                    const monthShort = dObj.toLocaleDateString('en-GB', { month: 'short' });
+                                    const symptomsList = Array.isArray(entry.symptoms) ? entry.symptoms : [];
+                                    const moodsList = Array.isArray(entry.moods) ? entry.moods : [];
+
+                                    return (
+                                        <div
+                                            key={entry.id || ymd}
+                                            className="bg-white/75 backdrop-blur-xl rounded-3xl p-4 border border-white/90 shadow-2xs flex items-start space-x-3.5"
+                                        >
+                                            {/* Left Date Column */}
+                                            <div className="flex flex-col items-center shrink-0 space-y-2">
+                                                <div className="w-11 h-11 rounded-full bg-purple-100/90 border border-white flex flex-col items-center justify-center text-[#2D2638]">
+                                                    <span className="text-xs font-extrabold leading-none">{dayNum}</span>
+                                                    <span className="text-[9px] font-semibold text-purple-700 leading-none mt-0.5">{weekday}</span>
+                                                </div>
+                                                <span className="text-[9px] font-semibold text-[#7A6F8A]">{monthShort}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openLoggerForDate(ymd)}
+                                                    className="px-2.5 py-1 rounded-full bg-[#9B5DE5] hover:bg-[#8B4CD6] text-white text-[10px] font-bold transition"
+                                                >
+                                                    Edit
+                                                </button>
+                                            </div>
+
+                                            {/* Right Details Rows */}
+                                            <div className="flex-1 min-w-0 divide-y divide-purple-100/60 text-xs">
+                                                <div className="pb-2 flex items-center justify-between">
+                                                    <span className="text-[#6E637C] font-medium">Flow</span>
+                                                    <span className="inline-flex items-center space-x-1.5 font-bold text-[#2D2638] capitalize">
+                                                        <span className="w-5 h-5 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center">
+                                                            <Droplet className="w-3 h-3" />
+                                                        </span>
+                                                        <span>{entry.flow_intensity || 'None'}</span>
+                                                    </span>
+                                                </div>
+
+                                                <div className="py-2 flex items-center justify-between">
+                                                    <span className="text-[#6E637C] font-medium">Mood</span>
+                                                    <span className="text-right font-semibold text-[#2D2638] truncate max-w-[160px]">
+                                                        {moodsList.length > 0 ? moodsList.join(', ') : '—'}
+                                                    </span>
+                                                </div>
+
+                                                <div className="py-2 flex items-center justify-between">
+                                                    <span className="text-[#6E637C] font-medium">Pain / Cramps</span>
+                                                    <span className="font-semibold text-[#2D2638]">
+                                                        {entry.pain_level !== null && entry.pain_level !== undefined ? `${entry.pain_level}/10` : '0/10'}
+                                                    </span>
+                                                </div>
+
+                                                <div className="pt-2 flex items-center justify-between gap-2">
+                                                    <span className="text-[#6E637C] font-medium shrink-0">Symptoms</span>
+                                                    <span className="text-right font-medium text-[#5E546B] truncate">
+                                                        {symptomsList.length > 0 ? symptomsList.join(', ') : 'None logged'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* 5. VIEW 3: FULL CALENDAR VIEW */}
                 {viewMode === 'calendar' && (
                     <div className="space-y-3.5 animate-fadeIn">
                         {/* Month Calendar Card */}
-                        <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-150/80">
+                        <div className="bg-white/75 backdrop-blur-xl rounded-3xl p-4 shadow-xs border border-white/90">
 
                             {/* Month Header with Navigation Controls */}
                             <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-slate-100">
@@ -1186,7 +1291,7 @@ export default function CycleIndex({
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="w-full py-3 bg-[#BE123C] hover:bg-[#9F1239] active:scale-95 text-white font-bold rounded-2xl text-xs shadow-md shadow-rose-200/60 transition disabled:opacity-50"
+                                className="w-full py-3 bg-[#9B5DE5] hover:bg-[#8B4CD6] active:scale-95 text-white font-bold rounded-full text-xs shadow-md shadow-purple-300/40 transition disabled:opacity-50"
                             >
                                 {processing ? t('loading', 'Saving...') : t('cycle_save_record', 'Save Record')}
                             </button>
@@ -1230,7 +1335,7 @@ export default function CycleIndex({
                         <div className="flex items-center space-x-2 pt-1">
                             <button
                                 onClick={() => { window.print(); setShowExportModal(false); }}
-                                className="flex-1 py-2.5 bg-[#BE123C] hover:bg-[#9F1239] text-white rounded-2xl text-xs font-bold shadow-md shadow-rose-200/60 transition"
+                                className="flex-1 py-2.5 bg-[#9B5DE5] hover:bg-[#8B4CD6] text-white rounded-full text-xs font-bold shadow-md shadow-purple-300/40 transition"
                             >
                                 {t('cycle_export_print', 'Print / PDF')}
                             </button>

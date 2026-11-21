@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { Moon } from 'lucide-react';
+import { LunaFloralBackdrop } from '@/Components/LunaSideDrawer';
 
 export default function GuestLayout({ children }) {
     return (
@@ -21,8 +22,9 @@ export default function GuestLayout({ children }) {
                 </Link>
             </div>
 
-            <div className="relative z-10 w-full sm:max-w-md rounded-[32px] bg-white/55 backdrop-blur-2xl border border-white/85 shadow-[0_24px_60px_-15px_rgba(92,71,112,0.16)] px-7 py-6 text-[#2D2638]">
-                {children}
+            <div className="relative z-10 w-full sm:max-w-md rounded-[32px] bg-white/55 backdrop-blur-2xl border border-white/85 shadow-[0_24px_60px_-15px_rgba(92,71,112,0.16)] px-7 py-6 text-[#2D2638] overflow-hidden">
+                <LunaFloralBackdrop />
+                <div className="relative z-10">{children}</div>
             </div>
         </div>
     );

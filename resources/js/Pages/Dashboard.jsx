@@ -1,158 +1,191 @@
 import React, { useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
-import { 
-    Calendar, 
-    Sparkles, 
-    MapPin, 
-    Heart, 
-    Package, 
-    ChevronRight, 
-    Bell, 
-    Droplet, 
-    Smile, 
-    CheckCircle, 
-    AlertCircle, 
-    Share2, 
+import {
+    Calendar,
+    Sparkles,
+    MapPin,
+    Heart,
+    Package,
+    ChevronRight,
+    Droplet,
+    CheckCircle,
     ArrowUpRight,
     Plus,
     ShieldCheck,
     Clock,
     BookOpen,
-    Zap,
-    Activity,
-    Moon,
     Sun,
     Leaf,
     HeartHandshake,
     Building,
-    Stethoscope
+    Stethoscope,
+    FileText,
+    Settings,
 } from 'lucide-react';
 import { useTranslation } from '@/i18n/LanguageContext';
 
-export default function Dashboard({ 
-    cycleInfo, 
+export default function Dashboard({
+    cycleInfo = {},
     cycleProfile,
     todayLog,
-    featuredArticle, 
-    recentRequests = [], 
-    nearbyHubsCount = 0, 
+    featuredArticle,
+    recentRequests = [],
+    nearbyHubsCount = 0,
     dailyTip = '',
     pendingCompanionRequests = [],
     companionCareSummaries = [],
     partnerManagement = null,
-    reviewerManagement = null
+    reviewerManagement = null,
 }) {
     const { t } = useTranslation();
+    const { auth } = usePage().props;
+    const user = auth?.user;
+    const firstName = (user?.name || 'Friend').split(' ')[0];
+    const role = user?.role || 'primary_user';
+    const isPartner = role === 'community_partner';
+    const isReviewer = role === 'health_reviewer';
+    const isSponsor = role === 'donor_sponsor';
+    const isAdmin = role === 'admin';
+    const canUsePersonalTracker = auth?.tierPolicy?.can_use_personal_tracker ?? true;
+    const canViewSharedTracker = Boolean(auth?.tierPolicy?.can_view_shared_tracker);
+    const isTier1 = Boolean(auth?.tierPolicy?.is_tier_1);
+    const canViewSponsor = auth?.tierPolicy?.can_view_sponsor_portal ?? true;
+    const sharedTrackerLabel = auth?.tierPolicy?.shared_tracker_label || "Your Child's / Partner's Tracker";
     const todayStr = new Date().toISOString().split('T')[0];
 
-    const [activeFlow, setActiveFlow] = useState(todayLog?.flow_intensity || (cycleInfo?.today_flow || 'none'));
+    const [activeFlow, setActiveFlow] = useState(todayLog?.flow_intensity || cycleInfo?.today_flow || 'none');
     const [activeSymptoms, setActiveSymptoms] = useState(todayLog?.symptoms || []);
     const [quickLogStatus, setQuickLogStatus] = useState('');
     const [isSubmittingQuickLog, setIsSubmittingQuickLog] = useState(false);
 
     const handleQuickLog = (newFlow, newSymptoms) => {
         setIsSubmittingQuickLog(true);
-        router.post(route('cycle.log.store'), {
-            logged_date: todayStr,
-            flow_intensity: newFlow,
-            symptoms: newSymptoms,
-            moods: todayLog?.moods || [],
-            pad_changes_count: todayLog?.pad_changes_count || 0,
-        }, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setActiveFlow(newFlow);
-                setActiveSymptoms(newSymptoms);
-                setQuickLogStatus(t('logged_successfully', 'Saved!'));
-                setTimeout(() => setQuickLogStatus(''), 2500);
+        router.post(
+            route('cycle.log.store'),
+            {
+                logged_date: todayStr,
+                flow_intensity: newFlow,
+                symptoms: newSymptoms,
+                moods: todayLog?.moods || [],
+                pad_changes_count: todayLog?.pad_changes_count || 0,
             },
-            onFinish: () => {
-                setIsSubmittingQuickLog(false);
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setActiveFlow(newFlow);
+                    setActiveSymptoms(newSymptoms);
+                    setQuickLogStatus(t('logged_successfully', 'Saved'));
+                    setTimeout(() => setQuickLogStatus(''), 2200);
+                },
+                onFinish: () => setIsSubmittingQuickLog(false),
             }
-        });
+        );
     };
 
-    const handleFlowSelect = (flow) => {
-        handleQuickLog(flow, activeSymptoms);
-    };
-
-    const handleToggleSymptom = (sym) => {
-        const nextSymptoms = activeSymptoms.includes(sym)
-            ? activeSymptoms.filter(s => s !== sym)
-            : [...activeSymptoms, sym];
-        handleQuickLog(activeFlow, nextSymptoms);
-    };
-    // Dynamic phase badge styles
     const getPhaseBadge = (phase) => {
         const p = (phase || '').toLowerCase();
-        if (p.includes('menstrual')) {
-            return { label: 'Menstrual Phase', bg: 'bg-rose-100 text-rose-700 border-rose-200', icon: Droplet };
-        } else if (p.includes('follicular')) {
-            return { label: 'Follicular Phase', bg: 'bg-pink-100 text-pink-700 border-pink-200', icon: Sparkles };
-        } else if (p.includes('ovulat')) {
-            return { label: 'Ovulatory Phase', bg: 'bg-purple-100 text-purple-700 border-purple-200', icon: Sun };
-        } else {
-            return { label: phase || 'Luteal Phase', bg: 'bg-amber-100 text-amber-800 border-amber-200', icon: Leaf };
-        }
+        if (p.includes('menstrual')) return { label: 'Menstrual', icon: Droplet };
+        if (p.includes('follicular')) return { label: 'Follicular', icon: Sparkles };
+        if (p.includes('ovulat')) return { label: 'Ovulation', icon: Sun };
+        return { label: phase ? phase.replace(/ phase/i, '') : 'Luteal', icon: Leaf };
     };
 
     const phaseBadge = getPhaseBadge(cycleInfo?.phase);
+    const avgCycle = cycleInfo?.average_cycle_length || 28;
+    const daysLeft = Number(cycleInfo?.days_until_next ?? 14);
+    const progressRatio = Math.max(0.08, Math.min(1, (avgCycle - daysLeft) / avgCycle));
+    const ringRadius = 34;
+    const ringCircumference = 2 * Math.PI * ringRadius;
+    const ringOffset = ringCircumference * (1 - progressRatio);
+
+    const formattedToday = new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric',
+    });
+
+    const quickActions = isPartner
+        ? [
+            { label: 'Hub Ops', href: '/portal/partner', icon: Building, tint: 'bg-amber-50 text-amber-600' },
+            { label: 'Hub Map', href: '/support/map', icon: MapPin, tint: 'bg-teal-50 text-teal-600' },
+            { label: 'Support', href: '/support', icon: Heart, tint: 'bg-rose-50 text-rose-500' },
+            { label: 'Profile', href: '/profile', icon: Settings, tint: 'bg-purple-50 text-[#7C3AED]' },
+        ]
+        : isReviewer
+        ? [
+            { label: 'Review', href: '/portal/reviewer', icon: Stethoscope, tint: 'bg-teal-50 text-teal-600' },
+            { label: 'Learn', href: '/learn', icon: BookOpen, tint: 'bg-purple-50 text-[#7C3AED]' },
+            { label: 'Myths', href: '/learn/myths-facts', icon: CheckCircle, tint: 'bg-rose-50 text-rose-500' },
+            { label: 'Hubs', href: '/support/map', icon: MapPin, tint: 'bg-amber-50 text-amber-600' },
+        ]
+        : isSponsor
+        ? [
+            { label: 'Sponsor', href: '/support/sponsor', icon: Heart, tint: 'bg-rose-50 text-rose-500' },
+            { label: 'Hubs', href: '/support/map', icon: MapPin, tint: 'bg-teal-50 text-teal-600' },
+            { label: 'Support', href: '/support', icon: HeartHandshake, tint: 'bg-purple-50 text-[#7C3AED]' },
+            { label: 'Profile', href: '/profile', icon: Settings, tint: 'bg-slate-100 text-[#5E546B]' },
+        ]
+        : [
+            { label: 'Supplies', href: '/support/request', icon: Heart, tint: 'bg-rose-50 text-rose-500' },
+            { label: 'Hubs', href: '/support/map', icon: MapPin, tint: 'bg-teal-50 text-teal-600' },
+            { label: 'Luna AI', href: '/luna', icon: Sparkles, tint: 'bg-purple-50 text-[#7C3AED]' },
+            { label: 'Pad Care', href: '/learn/article/washing-drying-reusable-pads-in-dignity', icon: Package, tint: 'bg-amber-50 text-amber-600' },
+        ];
 
     return (
         <MobileAppLayout title={t('app_title', 'Mwezi')}>
-            <Head title="Home Dashboard - Mwezi" />
+            <Head title="Home - Mwezi" />
 
-            <div className="space-y-4">
-                
-                {/* 1. DAILY DIGNITY AFFIRMATION */}
-                <div className="bg-gradient-to-r from-rose-50/90 via-white to-pink-50/70 rounded-3xl p-4 shadow-xs border border-rose-150/80 flex items-center space-x-3 transition">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center shrink-0 shadow-sm shadow-rose-200/50">
-                        <Sparkles className="w-4 h-4 text-white" />
+            <div className="space-y-5 pb-4">
+                {/* 1. OPEN-AIR GREETING HEADER */}
+                <div className="flex items-end justify-between px-1 pt-1">
+                    <div>
+                        <p className="text-[11px] font-medium text-[#8A7F99]">{formattedToday}</p>
+                        <h1 className="text-[22px] font-semibold tracking-tight text-[#2D2638] leading-tight mt-0.5">
+                            Hi, {firstName}
+                        </h1>
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-1.5">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600">
-                                {t('daily_affirmation_title', 'Daily Affirmation')}
-                            </span>
-                            <span className="w-1 h-1 rounded-full bg-rose-400" />
-                            <span className="text-[10px] text-slate-400 font-medium">{t('self_care', 'Self-Care')}</span>
-                        </div>
-                        <p className="text-xs text-slate-700 font-medium italic mt-0.5 leading-snug">
-                            "{dailyTip || t('daily_tip_default', 'Your cycle is your body’s natural power and wisdom. Treat yourself with gentleness today.')}"
-                        </p>
-                    </div>
+                    {canUsePersonalTracker && (
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-white/80 border border-white text-[10.5px] font-medium text-[#6E637C] shadow-2xs">
+                            {React.createElement(phaseBadge.icon, { className: 'w-3 h-3 text-[#7C3AED]' })}
+                            <span>{phaseBadge.label}</span>
+                        </span>
+                    )}
                 </div>
 
-                {/* 1.1 INCOMING COMPANION INVITATIONS (When another user adds this registered account) */}
+                {/* 1.1 INCOMING COMPANION INVITATIONS */}
                 {pendingCompanionRequests && pendingCompanionRequests.length > 0 && (
                     <div className="space-y-2">
                         {pendingCompanionRequests.map((req) => (
-                            <div key={req.id} className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-3xl p-4 shadow-xs space-y-2.5 animate-fadeIn">
+                            <div
+                                key={req.id}
+                                className="bg-white/90 backdrop-blur-xl border border-amber-200/80 rounded-[24px] p-4 shadow-2xs space-y-2.5"
+                            >
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                        <HeartHandshake className="w-4 h-4 text-amber-600" />
-                                        <span className="text-xs font-bold text-amber-900 uppercase tracking-wider">Companion Request</span>
-                                    </div>
-                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 capitalize">
+                                    <span className="text-[11px] font-semibold text-amber-800 flex items-center space-x-1.5">
+                                        <HeartHandshake className="w-3.5 h-3.5 text-amber-600" />
+                                        <span>Companion Request</span>
+                                    </span>
+                                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 capitalize">
                                         {req.relationship}
                                     </span>
                                 </div>
-                                <p className="text-xs text-slate-700 leading-relaxed">
-                                    <strong>{req.primary_user?.name || 'A family member'}</strong> has invited you to be their Trusted Companion. You will receive gentle readiness reminders to support them.
+                                <p className="text-xs text-[#5E546B] leading-relaxed">
+                                    <strong className="text-[#2D2638]">{req.primary_user?.name || 'A family member'}</strong> invited you to their Trusted Circle.
                                 </p>
-                                <div className="flex items-center space-x-2 pt-1">
+                                <div className="flex items-center space-x-2">
                                     <button
                                         type="button"
                                         onClick={() => router.post(route('trusted-circle.request.accept', req.id))}
-                                        className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition active:scale-95"
+                                        className="flex-1 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-semibold text-xs rounded-full transition active:scale-95"
                                     >
-                                        Accept Request
+                                        Accept
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => router.post(route('trusted-circle.request.decline', req.id))}
-                                        className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs rounded-xl transition active:scale-95"
+                                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-[#5E546B] font-semibold text-xs rounded-full transition active:scale-95"
                                     >
                                         Decline
                                     </button>
@@ -162,567 +195,414 @@ export default function Dashboard({
                     </div>
                 )}
 
-                {/* 1.2 HUB PARTNER / NGO MANAGEMENT COMPONENT */}
+                {/* 2. FOCAL CENTERPIECE (Role-Adaptive) */}
                 {partnerManagement && (
-                    <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 rounded-3xl p-4 text-white shadow-md space-y-3 animate-fadeIn">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                                <div className="w-8 h-8 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
-                                    <Building className="w-4 h-4" />
-                                </div>
-                                <div>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-100">Hub Distribution Management</span>
-                                    <h3 className="font-extrabold text-sm leading-tight text-white">{partnerManagement.hub_name}</h3>
-                                </div>
-                            </div>
-                            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md">
-                                {partnerManagement.location}
-                            </span>
-                        </div>
-
-                        {/* Live Metrics Grid */}
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-2 border border-white/20">
-                                <span className="text-[9px] font-bold text-amber-100 uppercase block">Pending Requests</span>
-                                <span className="text-xl font-extrabold text-white mt-0.5 block">{partnerManagement.pending_requests_count}</span>
-                            </div>
-                            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-2 border border-white/20">
-                                <span className="text-[9px] font-bold text-amber-100 uppercase block">Free Pads Stock</span>
-                                <span className="text-xl font-extrabold text-white mt-0.5 block">{partnerManagement.free_pads_qty}</span>
-                            </div>
-                            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-2 border border-white/20">
-                                <span className="text-[9px] font-bold text-amber-100 uppercase block">Reusable Kits</span>
-                                <span className="text-xl font-extrabold text-white mt-0.5 block">{partnerManagement.reusable_pads_stock}</span>
-                            </div>
-                        </div>
-
-                        {/* Action Link */}
-                        <Link
-                            href="/portal/partner"
-                            className="w-full py-2.5 bg-white hover:bg-amber-50 text-amber-900 font-bold text-xs rounded-2xl text-center shadow-xs transition active:scale-95 flex items-center justify-center space-x-1.5"
-                        >
-                            <Package className="w-4 h-4 text-amber-700" />
-                            <span>Manage Hub Inventory & Fulfill Requests</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
-                        </Link>
-                    </div>
-                )}
-
-                {/* 1.3 HEALTH REVIEWER MANAGEMENT COMPONENT */}
-                {reviewerManagement && (
-                    <div className="bg-gradient-to-r from-teal-600 via-teal-700 to-emerald-600 rounded-3xl p-4 text-white shadow-md space-y-3 animate-fadeIn">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                                <div className="w-8 h-8 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
-                                    <Stethoscope className="w-4 h-4" />
-                                </div>
-                                <div>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-teal-100">Clinical Review Panel</span>
-                                    <h3 className="font-extrabold text-sm leading-tight text-white">Medical Clearance Hub</h3>
-                                </div>
-                            </div>
-                            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md">
-                                Verified Clinician
-                            </span>
-                        </div>
-
-                        {/* Live Metrics Grid */}
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-2 border border-white/20">
-                                <span className="text-[9px] font-bold text-teal-100 uppercase block">Awaiting Review</span>
-                                <span className="text-xl font-extrabold text-white mt-0.5 block">{reviewerManagement.pending_articles_count}</span>
-                            </div>
-                            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-2 border border-white/20">
-                                <span className="text-[9px] font-bold text-teal-100 uppercase block">Approved Guides</span>
-                                <span className="text-xl font-extrabold text-white mt-0.5 block">{reviewerManagement.approved_articles_count}</span>
-                            </div>
-                            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-2 border border-white/20">
-                                <span className="text-[9px] font-bold text-teal-100 uppercase block">Verified Facts</span>
-                                <span className="text-xl font-extrabold text-white mt-0.5 block">{reviewerManagement.myths_count}</span>
-                            </div>
-                        </div>
-
-                        {/* Action Link */}
-                        <Link
-                            href="/portal/reviewer"
-                            className="w-full py-2.5 bg-white hover:bg-teal-50 text-teal-900 font-bold text-xs rounded-2xl text-center shadow-xs transition active:scale-95 flex items-center justify-center space-x-1.5"
-                        >
-                            <ShieldCheck className="w-4 h-4 text-teal-700" />
-                            <span>Review Educational Content & Clinical Guides</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
-                        </Link>
-                    </div>
-                )}
-
-                {/* 1.4 COMPANION CARE HUB COMPONENT (For users who also act as a companion) */}
-                {companionCareSummaries && companionCareSummaries.length > 0 && (
-                    <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-100 space-y-3">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                                <div className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center text-[#C81E3D]">
-                                    <HeartHandshake className="w-4 h-4" />
-                                </div>
-                                <div>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600">Companion Care</span>
-                                    <h3 className="font-bold text-xs text-slate-900 leading-tight">Supporting Loved Ones</h3>
-                                </div>
+                    <div className="bg-white/85 backdrop-blur-xl rounded-[26px] p-5 shadow-[0_8px_28px_-12px_rgba(45,38,56,0.10)] border border-white space-y-4">
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                                <span className="text-[10.5px] font-medium text-[#8A7F99] block">
+                                    {partnerManagement.location}
+                                </span>
+                                <h2 className="font-semibold text-[15px] text-[#2D2638] truncate">
+                                    {partnerManagement.hub_name}
+                                </h2>
                             </div>
                             <Link
-                                href={route('trusted-circle.companion')}
-                                className="text-[11px] font-bold text-[#C81E3D] hover:underline flex items-center space-x-0.5"
+                                href="/portal/partner"
+                                className="px-3.5 py-1.5 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[11px] font-semibold shrink-0 transition active:scale-95"
                             >
-                                <span>Full Hub</span>
-                                <ChevronRight className="w-3.5 h-3.5" />
+                                Manage
                             </Link>
                         </div>
 
+                        <div className="grid grid-cols-3 divide-x divide-slate-100 text-center pt-1">
+                            <div>
+                                <span className="text-xl font-bold text-[#7C3AED] block leading-none">
+                                    {partnerManagement.pending_requests_count}
+                                </span>
+                                <span className="text-[10px] text-[#8A7F99] font-medium mt-1 block">Pending</span>
+                            </div>
+                            <div>
+                                <span className="text-xl font-bold text-[#2D2638] block leading-none">
+                                    {partnerManagement.free_pads_qty}
+                                </span>
+                                <span className="text-[10px] text-[#8A7F99] font-medium mt-1 block">Free Pads</span>
+                            </div>
+                            <div>
+                                <span className="text-xl font-bold text-[#2D2638] block leading-none">
+                                    {partnerManagement.reusable_pads_stock}
+                                </span>
+                                <span className="text-[10px] text-[#8A7F99] font-medium mt-1 block">Reusable</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {reviewerManagement && (
+                    <div className="bg-white/85 backdrop-blur-xl rounded-[26px] p-5 shadow-[0_8px_28px_-12px_rgba(45,38,56,0.10)] border border-white space-y-4">
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                                <span className="text-[10.5px] font-medium text-[#8A7F99] block">
+                                    Clinical Governance
+                                </span>
+                                <h2 className="font-semibold text-[15px] text-[#2D2638] truncate">
+                                    Medical Clearance Desk
+                                </h2>
+                            </div>
+                            <Link
+                                href="/portal/reviewer"
+                                className="px-3.5 py-1.5 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[11px] font-semibold shrink-0 transition active:scale-95"
+                            >
+                                Review
+                            </Link>
+                        </div>
+
+                        <div className="grid grid-cols-3 divide-x divide-slate-100 text-center pt-1">
+                            <div>
+                                <span className="text-xl font-bold text-amber-600 block leading-none">
+                                    {reviewerManagement.pending_articles_count}
+                                </span>
+                                <span className="text-[10px] text-[#8A7F99] font-medium mt-1 block">Pending</span>
+                            </div>
+                            <div>
+                                <span className="text-xl font-bold text-[#2D2638] block leading-none">
+                                    {reviewerManagement.approved_articles_count}
+                                </span>
+                                <span className="text-[10px] text-[#8A7F99] font-medium mt-1 block">Published</span>
+                            </div>
+                            <div>
+                                <span className="text-xl font-bold text-[#2D2638] block leading-none">
+                                    {reviewerManagement.myths_count}
+                                </span>
+                                <span className="text-[10px] text-[#8A7F99] font-medium mt-1 block">Facts</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* PERSONAL CYCLE RING & INLINE 1-TAP FLOW CHECK-IN */}
+                {canUsePersonalTracker && (
+                    <div className="bg-white/85 backdrop-blur-xl rounded-[26px] p-5 shadow-[0_8px_28px_-12px_rgba(45,38,56,0.10)] border border-white space-y-4">
+                        <div className="flex items-center space-x-4">
+                            {/* Minimal Cycle Ring */}
+                            <Link href="/cycle" className="relative w-20 h-20 flex items-center justify-center shrink-0">
+                                <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+                                    <circle
+                                        cx="40"
+                                        cy="40"
+                                        r={ringRadius}
+                                        fill="none"
+                                        stroke="#F3E8FF"
+                                        strokeWidth="6"
+                                    />
+                                    <circle
+                                        cx="40"
+                                        cy="40"
+                                        r={ringRadius}
+                                        fill="none"
+                                        stroke="#7C3AED"
+                                        strokeWidth="6"
+                                        strokeLinecap="round"
+                                        strokeDasharray={ringCircumference}
+                                        strokeDashoffset={ringOffset}
+                                    />
+                                </svg>
+                                <div className="absolute text-center">
+                                    <span className="text-xl font-bold text-[#2D2638] leading-none block">
+                                        {daysLeft}
+                                    </span>
+                                    <span className="text-[9.5px] font-medium text-[#8A7F99] block mt-0.5">
+                                        {daysLeft === 1 ? 'day' : 'days'}
+                                    </span>
+                                </div>
+                            </Link>
+
+                            {/* Right Info & Pill CTA */}
+                            <div className="flex-1 min-w-0 space-y-1.5">
+                                <p className="text-[11px] font-medium text-[#8A7F99]">
+                                    Next period · {cycleInfo.next_period_date || 'Upcoming'}
+                                </p>
+                                <p className="text-xs text-[#3C334B] leading-snug line-clamp-2">
+                                    {cycleInfo.phase_description}
+                                </p>
+                                <div className="pt-0.5">
+                                    <Link
+                                        href="/cycle"
+                                        className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[11px] font-semibold shadow-2xs active:scale-95 transition"
+                                    >
+                                        <Plus className="w-3 h-3" />
+                                        <span>{cycleInfo.has_logged_today ? 'Update Log' : 'Log Today'}</span>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Inline 1-Tap Flow Strip */}
+                        <div className="pt-3 border-t border-slate-100/90 space-y-2">
+                            <div className="flex items-center justify-between text-[10.5px]">
+                                <span className="font-medium text-[#8A7F99]">Quick flow check-in</span>
+                                {quickLogStatus ? (
+                                    <span className="font-semibold text-emerald-600">✓ {quickLogStatus}</span>
+                                ) : (
+                                    <span className="text-[#B0A6BE]">1-tap save</span>
+                                )}
+                            </div>
+                            <div className="grid grid-cols-5 gap-1.5">
+                                {[
+                                    { id: 'none', label: 'None' },
+                                    { id: 'spotting', label: 'Spot' },
+                                    { id: 'light', label: 'Light' },
+                                    { id: 'medium', label: 'Med' },
+                                    { id: 'heavy', label: 'Heavy' },
+                                ].map((flow) => {
+                                    const selected = activeFlow === flow.id;
+                                    return (
+                                        <button
+                                            key={flow.id}
+                                            type="button"
+                                            disabled={isSubmittingQuickLog}
+                                            onClick={() => handleQuickLog(flow.id, activeSymptoms)}
+                                            className={`py-1.5 rounded-full text-[10.5px] font-medium transition active:scale-95 ${
+                                                selected
+                                                    ? 'bg-[#2D2638] text-white font-semibold'
+                                                    : 'bg-slate-100/80 hover:bg-slate-200/70 text-[#6E637C]'
+                                            }`}
+                                        >
+                                            {flow.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* TIER 1 PRE-MENARCHE STARTER CARD */}
+                {!canUsePersonalTracker && isTier1 && !isPartner && !isSponsor && !isAdmin && (
+                    <div className="bg-white/85 backdrop-blur-xl rounded-[26px] p-5 shadow-[0_8px_28px_-12px_rgba(45,38,56,0.10)] border border-white space-y-3">
+                        <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 rounded-2xl bg-purple-50 text-[#7C3AED] flex items-center justify-center shrink-0">
+                                <BookOpen className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h2 className="text-sm font-semibold text-[#2D2638]">Preparing for Your First Period</h2>
+                                <p className="text-[11px] text-[#7A6F8A]">Body changes, hygiene &amp; pad care</p>
+                            </div>
+                        </div>
+                        <div className="flex space-x-2">
+                            <Link
+                                href="/learn"
+                                className="flex-1 py-2 text-center bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-full text-xs font-semibold transition"
+                            >
+                                Puberty Guides
+                            </Link>
+                            <Link
+                                href="/learn/myths-facts"
+                                className="flex-1 py-2 text-center bg-slate-100 hover:bg-slate-200/70 text-[#2D2638] rounded-full text-xs font-semibold transition"
+                            >
+                                Myths Quiz
+                            </Link>
+                        </div>
+                    </div>
+                )}
+
+                {/* SHARED TRACKER SHORTCUT */}
+                {!canUsePersonalTracker && canViewSharedTracker && (
+                    <Link
+                        href="/trusted-circle/companion"
+                        className="flex items-center justify-between bg-white/85 backdrop-blur-xl rounded-[24px] p-4 shadow-[0_6px_24px_-12px_rgba(45,38,56,0.08)] border border-white hover:bg-white transition"
+                    >
+                        <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 rounded-2xl bg-purple-50 text-[#7C3AED] flex items-center justify-center">
+                                <Calendar className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h2 className="text-xs font-semibold text-[#2D2638]">{sharedTrackerLabel}</h2>
+                                <p className="text-[11px] text-[#8A7F99]">Consent-verified companion view</p>
+                            </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-[#B8AFC4]" />
+                    </Link>
+                )}
+
+                {/* 3. HORIZONTAL MINIMAL QUICK ACTIONS (4 Clean Circular Icons) */}
+                <div className="grid grid-cols-4 gap-2 px-1">
+                    {quickActions.map((act) => {
+                        const Icon = act.icon;
+                        return (
+                            <Link
+                                key={act.label}
+                                href={act.href}
+                                className="flex flex-col items-center space-y-1.5 group active:scale-95 transition"
+                            >
+                                <div
+                                    className={`w-12 h-12 rounded-full ${act.tint} bg-white/90 border border-white shadow-[0_6px_20px_-8px_rgba(45,38,56,0.12)] flex items-center justify-center group-hover:scale-105 transition`}
+                                >
+                                    <Icon className="w-5 h-5" />
+                                </div>
+                                <span className="text-[10.5px] font-medium text-[#5E546B] truncate max-w-full">
+                                    {act.label}
+                                </span>
+                            </Link>
+                        );
+                    })}
+                </div>
+
+                {/* 4. COMPANION CARE SUMMARIES (If active) */}
+                {companionCareSummaries && companionCareSummaries.length > 0 && (
+                    <div className="bg-white/85 backdrop-blur-xl rounded-[24px] p-4 shadow-[0_6px_24px_-12px_rgba(45,38,56,0.08)] border border-white space-y-2.5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-[#2D2638]">Companion Care</span>
+                            <Link href={route('trusted-circle.companion')} className="text-[11px] font-medium text-[#7C3AED]">
+                                Open Hub
+                            </Link>
+                        </div>
                         <div className="space-y-2">
                             {companionCareSummaries.map((summary) => (
-                                <div key={summary.connection_id} className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                                <div
+                                    key={summary.connection_id}
+                                    className="px-3 py-2.5 rounded-2xl bg-slate-50/90 flex items-center justify-between"
+                                >
                                     <div>
-                                        <div className="flex items-center space-x-1.5">
-                                            <span className="font-bold text-xs text-slate-800">{summary.primary_name}</span>
-                                            <span className="text-[10px] text-slate-500 capitalize">({summary.relationship})</span>
-                                        </div>
-                                        <p className="text-[10px] text-slate-500 mt-0.5">
-                                            Next cycle window: <strong className="text-slate-700">{summary.predicted_start_date}</strong>
-                                        </p>
+                                        <span className="font-semibold text-xs text-[#2D2638]">{summary.primary_name}</span>
+                                        <span className="text-[10.5px] text-[#8A7F99] block">
+                                            Expected {summary.predicted_start_date}
+                                        </span>
                                     </div>
-                                    <div className="text-right">
-                                        <span className="font-extrabold text-sm text-[#C81E3D]">~{summary.days_until_next}</span>
-                                        <span className="text-[9px] block text-slate-400">days left</span>
-                                    </div>
+                                    <span className="text-xs font-bold text-[#7C3AED]">~{summary.days_until_next}d</span>
                                 </div>
                             ))}
                         </div>
                     </div>
                 )}
 
-                {/* 2. CYCLE COUNTDOWN HERO CONTAINER */}
-                <div className="bg-gradient-to-br from-rose-400 via-pink-400 to-purple-400 rounded-3xl p-5 shadow-[0_16px_38px_-12px_rgba(167,139,250,0.45)] border border-white/40 text-white relative overflow-hidden flex flex-col justify-between">
-                    {/* Subtle ambient blur ornaments */}
-                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-                    <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-rose-400/30 rounded-full blur-2xl pointer-events-none" />
-
-                    <div className="relative z-10">
-                        {/* Phase & Next Period Header */}
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="inline-flex items-center space-x-1.5 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[11px] font-bold text-white tracking-wide border border-white/20">
-                                {React.createElement(phaseBadge.icon, { className: 'w-3.5 h-3.5 shrink-0' })}
-                                <span>{phaseBadge.label}</span>
-                            </span>
-
-                            <span className="text-[11px] font-semibold text-rose-100 flex items-center space-x-1 bg-black/10 px-2.5 py-0.5 rounded-full backdrop-blur-xs">
-                                <Calendar className="w-3 h-3 text-white" />
-                                <span>{cycleInfo.next_period_date || t('upcoming', 'Upcoming')}</span>
-                            </span>
-                        </div>
-
-                        {/* Large Days Countdown */}
-                        <div className="my-2 flex items-baseline space-x-2.5">
-                            <span className="font-extrabold text-5xl tracking-tight leading-none text-white drop-shadow-sm">
-                                {cycleInfo.days_until_next}
-                            </span>
-                            <div>
-                                <span className="text-xs font-bold text-white block">
-                                    {cycleInfo.days_until_next === 1 ? t('day_until_period', 'day until next period') : t('dash_days_left', 'days until next period')}
-                                </span>
-                                <span className="text-[10px] text-rose-100 font-medium">
-                                    {t('rhythm_prediction', 'Rhythm prediction: High confidence')}
-                                </span>
+                {/* 5. ORG LIVE STOCK & PENDING QUEUE */}
+                {isPartner && partnerManagement && (
+                    <div className="space-y-3">
+                        <div className="bg-white/85 backdrop-blur-xl rounded-[24px] p-4 shadow-[0_6px_24px_-12px_rgba(45,38,56,0.08)] border border-white space-y-2.5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-[#2D2638]">Pending Pickups</span>
+                                <Link href="/portal/partner" className="text-[11px] font-medium text-[#7C3AED]">
+                                    View all
+                                </Link>
                             </div>
-                        </div>
 
-                        <p className="text-xs text-rose-50/95 font-medium leading-relaxed mb-4">
-                            {cycleInfo.phase_description}
-                        </p>
-                    </div>
-
-                    {/* Action Buttons inside Hero Container */}
-                    <div className="relative z-10 flex items-center space-x-2 pt-2 border-t border-white/20">
-                        <Link
-                            href="/cycle"
-                            className="flex-1 py-2.5 px-4 bg-white hover:bg-rose-50 text-rose-600 font-bold text-xs rounded-2xl text-center shadow-md shadow-black/10 active:scale-95 transition flex items-center justify-center space-x-1.5"
-                        >
-                            <Plus className="w-3.5 h-3.5 text-rose-600" />
-                            <span>{cycleInfo.has_logged_today ? t('update_today_symptoms', 'Update Today’s Symptoms') : t('dash_log_symptoms', 'Log Today’s Symptoms')}</span>
-                        </Link>
-
-                        <Link
-                            href="/cycle"
-                            className="py-2.5 px-3 bg-white/20 hover:bg-white/30 text-white font-bold text-xs rounded-2xl transition flex items-center justify-center space-x-1 border border-white/20"
-                            title="Open Calendar"
-                        >
-                            <Calendar className="w-3.5 h-3.5" />
-                        </Link>
-                    </div>
-                </div>
-
-                {/* TEEN MENARCHE CALIBRATION BANNER */}
-                {cycleInfo?.is_first_year_menarche && (
-                    <div className="bg-amber-50/90 border border-amber-200/90 rounded-3xl p-3.5 flex items-start space-x-3 shadow-2xs">
-                        <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
-                            <Sparkles className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-2">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800">
-                                    Teen Calibration Active
-                                </span>
-                                <span className="text-[9px] bg-amber-200/70 text-amber-900 font-semibold px-2 py-0.2 rounded-full">
-                                    21–45 Days Normal
-                                </span>
-                            </div>
-                            <p className="text-[11px] text-amber-900 font-medium leading-relaxed mt-0.5">
-                                Your cycle rhythm is naturally calibrating. Irregular intervals during your first two years post-menarche are completely healthy and protected from false alarms.
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                {/* 1-TAP QUICK LOG STRIP (Only when user has a personal tracker) */}
-                {(usePage().props?.auth?.tierPolicy?.can_use_personal_tracker ?? true) ? (
-                <div className="bg-white/70 backdrop-blur-xl rounded-3xl p-4 shadow-xs border border-white/90 space-y-3">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                            <div className="w-6 h-6 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
-                                <Droplet className="w-3.5 h-3.5" />
-                            </div>
-                            <h2 className="text-xs font-bold text-slate-900">
-                                1-Tap Today's Check-in
-                            </h2>
-                        </div>
-                        <div className="flex items-center space-x-1.5">
-                            {quickLogStatus && (
-                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full animate-fadeIn">
-                                    ✓ {quickLogStatus}
-                                </span>
+                            {!partnerManagement.recent_pending_requests ||
+                            partnerManagement.recent_pending_requests.length === 0 ? (
+                                <p className="text-xs text-[#8A7F99] text-center py-3">
+                                    All caught up — no pending pickup requests.
+                                </p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {partnerManagement.recent_pending_requests.map((req) => (
+                                        <div
+                                            key={req.id}
+                                            className="p-3 rounded-2xl bg-slate-50/90 flex items-center justify-between gap-2"
+                                        >
+                                            <div className="min-w-0">
+                                                <p className="text-xs font-semibold text-[#2D2638] capitalize truncate">
+                                                    {req.request_type?.replace(/_/g, ' ')}
+                                                </p>
+                                                <p className="text-[10.5px] text-[#8A7F99] truncate">
+                                                    {req.request_code} · {req.user?.name || 'Recipient'}
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    router.post(
+                                                        route('portal.partner.fulfill', req.id),
+                                                        { status: 'ready_for_pickup' },
+                                                        { preserveScroll: true }
+                                                    )
+                                                }
+                                                className="shrink-0 px-3 py-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[10.5px] font-semibold rounded-full transition active:scale-95"
+                                            >
+                                                Mark Ready
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             )}
-                            <span className="text-[10px] text-slate-400 font-medium">
-                                {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Flow Intensity Pills */}
-                    <div>
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5">
-                            Flow Intensity
-                        </span>
-                        <div className="grid grid-cols-5 gap-1.5">
-                            {[
-                                { id: 'none', label: 'None', dot: 'bg-slate-300' },
-                                { id: 'spotting', label: 'Spot', dot: 'bg-rose-300' },
-                                { id: 'light', label: 'Light', dot: 'bg-rose-400' },
-                                { id: 'medium', label: 'Medium', dot: 'bg-rose-500' },
-                                { id: 'heavy', label: 'Heavy', dot: 'bg-rose-700' },
-                            ].map((flow) => {
-                                const isSelected = activeFlow === flow.id;
-                                return (
-                                    <button
-                                        key={flow.id}
-                                        type="button"
-                                        disabled={isSubmittingQuickLog}
-                                        onClick={() => handleFlowSelect(flow.id)}
-                                        className={`py-2 px-1 rounded-2xl text-[11px] font-bold transition flex flex-col items-center justify-center space-y-1 active:scale-95 border ${
-                                            isSelected
-                                                ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
-                                                : 'bg-slate-50 hover:bg-rose-50/50 text-slate-700 border-slate-200/80'
-                                        }`}
-                                    >
-                                        <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white' : flow.dot}`} />
-                                        <span>{flow.label}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Quick Symptom Chips */}
-                    <div>
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5">
-                            Quick Symptoms & Feelings
-                        </span>
-                        <div className="flex flex-wrap gap-1.5">
-                            {[
-                                { id: 'Cramps', label: 'Cramps', icon: Zap },
-                                { id: 'Headache', label: 'Headache', icon: Activity },
-                                { id: 'Backache', label: 'Backache', icon: ShieldCheck },
-                                { id: 'Fatigue', label: 'Tired', icon: Moon },
-                                { id: 'Happy', label: 'Energetic', icon: Sparkles },
-                            ].map((sym) => {
-                                const SymIcon = sym.icon;
-                                const isSelected = activeSymptoms.includes(sym.id);
-                                return (
-                                    <button
-                                        key={sym.id}
-                                        type="button"
-                                        disabled={isSubmittingQuickLog}
-                                        onClick={() => handleToggleSymptom(sym.id)}
-                                        className={`px-3 py-1.5 rounded-xl text-[11px] font-semibold transition active:scale-95 border flex items-center space-x-1.5 ${
-                                            isSelected
-                                                ? 'bg-rose-50 border-rose-400 text-rose-700 font-bold'
-                                                : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600'
-                                        }`}
-                                    >
-                                        <SymIcon className={`w-3 h-3 ${isSelected ? 'text-rose-600' : 'text-slate-400'}`} />
-                                        <span>{sym.label}</span>
-                                        {isSelected && <span className="text-rose-600 ml-0.5">✓</span>}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-                ) : usePage().props?.auth?.tierPolicy?.is_tier_1 ? (
-                    <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-150/80 space-y-2.5">
-                        <div className="flex items-center space-x-2">
-                            <div className="w-7 h-7 rounded-xl bg-rose-50 text-[#BE123C] flex items-center justify-center">
-                                <BookOpen className="w-4 h-4" />
-                            </div>
-                            <div>
-                                <h2 className="text-xs font-bold text-slate-900">Preparing for Your First Period</h2>
-                                <p className="text-[10px] text-slate-500">Learn about body changes, hygiene & reusable pad care</p>
-                            </div>
-                        </div>
-                        <div className="flex space-x-2 pt-1">
-                            <Link href="/learn" className="flex-1 py-2 text-center bg-[#BE123C] text-white rounded-xl text-xs font-bold">
-                                Explore Puberty Guides
-                            </Link>
-                            <Link href="/learn/myths-facts" className="flex-1 py-2 text-center bg-rose-50 text-[#BE123C] rounded-xl text-xs font-bold border border-rose-200">
-                                Myths vs Facts Game
-                            </Link>
-                        </div>
-                    </div>
-                ) : usePage().props?.auth?.tierPolicy?.can_view_shared_tracker ? (
-                    <Link
-                        href="/trusted-circle/companion"
-                        className="block bg-white rounded-3xl p-4 shadow-xs border border-rose-150/80 hover:border-[#BE123C] transition"
-                    >
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2.5">
-                                <div className="w-8 h-8 rounded-xl bg-rose-50 text-[#BE123C] flex items-center justify-center">
-                                    <Calendar className="w-4 h-4" />
-                                </div>
-                                <div>
-                                    <h2 className="text-xs font-bold text-slate-900">
-                                        {usePage().props?.auth?.tierPolicy?.shared_tracker_label || "Your Child's / Partner's Tracker"}
-                                    </h2>
-                                    <p className="text-[10px] text-slate-500">Shared with your consent-verified support circle</p>
-                                </div>
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-[#BE123C]" />
-                        </div>
-                    </Link>
-                ) : null}
-
-                {/* 3. ESSENTIAL SUPPORT & TOOLS (2x2 Native Grid) */}
-                <div>
-                    <div className="flex items-center justify-between mb-2.5 px-1">
-                        <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                            Support & Tools
-                        </h2>
-                        <span className="text-[10px] text-slate-400 font-medium">Quick Access</span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2.5">
-                        {/* 1. Request Emergency Supplies */}
-                        <Link
-                            href="/support/request"
-                            className="p-3.5 bg-white rounded-3xl shadow-xs hover:shadow-md transition active:scale-[0.98] border border-rose-150/70 flex flex-col justify-between group"
-                        >
-                            <div className="flex justify-between items-start mb-2">
-                                <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-xs">
-                                    <Heart className="w-4 h-4 text-rose-600" />
-                                </div>
-                                <span className="bg-rose-100 text-rose-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase">
-                                    Free
-                                </span>
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-xs text-slate-800 leading-tight group-hover:text-rose-600 transition">
-                                    Emergency Supplies
-                                </h3>
-                                <p className="text-[10px] text-slate-500 mt-0.5">School & hub pickup</p>
-                            </div>
-                        </Link>
-
-                        {/* 2. Find Nearby Hubs */}
-                        <Link
-                            href="/support/map"
-                            className="p-3.5 bg-white rounded-3xl shadow-xs hover:shadow-md transition active:scale-[0.98] border border-rose-150/70 flex flex-col justify-between group"
-                        >
-                            <div className="flex justify-between items-start mb-2">
-                                <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shadow-xs">
-                                    <MapPin className="w-4 h-4 text-teal-600" />
-                                </div>
-                                <span className="bg-teal-100 text-teal-800 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                                    {nearbyHubsCount} Hubs
-                                </span>
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-xs text-slate-800 leading-tight group-hover:text-teal-600 transition">
-                                    Nearby Hubs Map
-                                </h3>
-                                <p className="text-[10px] text-slate-500 mt-0.5">Live stock in Zambia</p>
-                            </div>
-                        </Link>
-
-                        {/* 3. Ask Luna AI Assistant */}
-                        <Link
-                            href="/luna"
-                            className="p-3.5 bg-white rounded-3xl shadow-xs hover:shadow-md transition active:scale-[0.98] border border-rose-150/70 flex flex-col justify-between group"
-                        >
-                            <div className="flex justify-between items-start mb-2">
-                                <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-xs">
-                                    <Sparkles className="w-4 h-4 text-purple-600" />
-                                </div>
-                                <span className="bg-purple-100 text-purple-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase">
-                                    AI 24/7
-                                </span>
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-xs text-slate-800 leading-tight group-hover:text-purple-600 transition">
-                                    Ask Luna AI
-                                </h3>
-                                <p className="text-[10px] text-slate-500 mt-0.5">Safe medical answers</p>
-                            </div>
-                        </Link>
-
-                        {/* 4. Pad Washing Guide */}
-                        <Link
-                            href="/learn/article/washing-drying-reusable-pads-in-dignity"
-                            className="p-3.5 bg-white rounded-3xl shadow-xs hover:shadow-md transition active:scale-[0.98] border border-rose-150/70 flex flex-col justify-between group"
-                        >
-                            <div className="flex justify-between items-start mb-2">
-                                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-xs">
-                                    <Package className="w-4 h-4 text-amber-600" />
-                                </div>
-                                <span className="bg-amber-100 text-amber-800 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase">
-                                    Guide
-                                </span>
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-xs text-slate-800 leading-tight group-hover:text-amber-600 transition">
-                                    Reusable Pad Care
-                                </h3>
-                                <p className="text-[10px] text-slate-500 mt-0.5">Hygienic sun drying</p>
-                            </div>
-                        </Link>
-                    </div>
-
-                    {/* 5. Sponsor a Girl Banner (Full width Card - hidden for Tier 1 & Tier 2 minors) */}
-                    {(usePage().props?.auth?.tierPolicy?.can_view_sponsor_portal ?? true) && (
-                    <Link
-                        href="/support/sponsor"
-                        className="mt-2.5 p-3.5 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 rounded-3xl shadow-sm hover:shadow-md transition flex items-center justify-between text-white group"
-                    >
-                        <div className="flex items-center space-x-3">
-                            <div className="w-9 h-9 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shrink-0 border border-white/20">
-                                <Heart className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-xs text-white">
-                                    Sponsor a Girl in School
-                                </h3>
-                                <p className="text-[10px] text-rose-100">Provide 1 year of reusable pads & dignity packs</p>
-                            </div>
-                        </div>
-                        <ArrowUpRight className="w-4 h-4 text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition" />
-                    </Link>
-                    )}
-                </div>
-
-                {/* 4. FEATURED HEALTH ARTICLE */}
-                {featuredArticle && (
-                    <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-100/80">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-[9px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-full">
-                                Verified Health Guide
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-medium flex items-center space-x-1">
-                                <Clock className="w-3 h-3" />
-                                <span>{featuredArticle.read_time_minutes} min read</span>
-                            </span>
-                        </div>
-
-                        <h3 className="font-bold text-xs sm:text-sm text-slate-900 mb-1 leading-snug">
-                            {featuredArticle.title}
-                        </h3>
-
-                        <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed mb-3">
-                            {featuredArticle.summary}
-                        </p>
-
-                        <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
-                            <span className="text-[10px] font-medium text-emerald-700 flex items-center space-x-1">
-                                <CheckCircle className="w-3 h-3 text-emerald-600" />
-                                <span>Verified by Health Partners</span>
-                            </span>
-
-                            <Link
-                                href={`/learn/article/${featuredArticle.slug}`}
-                                className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center space-x-0.5"
-                            >
-                                <span>Read</span>
-                                <ChevronRight className="w-3.5 h-3.5" />
-                            </Link>
                         </div>
                     </div>
                 )}
 
-                {/* 5. RECENT EMERGENCY REQUEST OR COMMUNITY CARD */}
-                {recentRequests.length > 0 ? (
-                    <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-100/80">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-bold text-slate-800">Active Supply Request</span>
-                            <span className="text-[10px] font-mono text-slate-500 uppercase bg-slate-100 px-2 py-0.5 rounded-md">
-                                {recentRequests[0].request_code}
-                            </span>
-                        </div>
-                        <div className="p-3 rounded-2xl bg-rose-50/50 border border-rose-100 flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-bold text-slate-900 capitalize">
+                {/* 6. CONTEXTUAL HIGHLIGHT (Active Request OR Recommended Read) */}
+                {!isPartner && !isSponsor && (
+                    recentRequests.length > 0 ? (
+                        <div className="bg-white/85 backdrop-blur-xl rounded-[24px] p-4 shadow-[0_6px_24px_-12px_rgba(45,38,56,0.08)] border border-white flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                                <span className="text-[10.5px] font-medium text-[#8A7F99] block">
+                                    Active Supply Request · {recentRequests[0].request_code}
+                                </span>
+                                <p className="text-[13px] font-semibold text-[#2D2638] capitalize truncate mt-0.5">
                                     {recentRequests[0].request_type?.replace('_', ' ')}
                                 </p>
-                                <p className="text-[10px] text-slate-500">
-                                    Pickup: {recentRequests[0].hub?.organization_name || 'Community Hub'}
+                                <p className="text-[11px] text-[#7A6F8A] truncate">
+                                    {recentRequests[0].hub?.organization_name || 'Community Hub'}
                                 </p>
                             </div>
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                                recentRequests[0].status === 'ready_for_pickup' 
-                                    ? 'bg-emerald-100 text-emerald-800' 
-                                    : 'bg-rose-100 text-rose-800'
-                            }`}>
+                            <span
+                                className={`px-2.5 py-1 rounded-full text-[10px] font-semibold capitalize shrink-0 ${
+                                    recentRequests[0].status === 'ready_for_pickup'
+                                        ? 'bg-emerald-50 text-emerald-700'
+                                        : 'bg-purple-50 text-[#7C3AED]'
+                                }`}
+                            >
                                 {recentRequests[0].status?.replace('_', ' ')}
                             </span>
                         </div>
-                    </div>
-                ) : (
-                    <div className="bg-white rounded-3xl p-4 shadow-xs border border-rose-100/80">
-                        <div className="flex items-center justify-between mb-1.5">
-                            <span className="text-[9px] font-bold uppercase tracking-wider text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">
-                                Trusted Family Circle
-                            </span>
-                            <span className="text-[10px] text-emerald-600 font-bold flex items-center space-x-1">
-                                <ShieldCheck className="w-3 h-3" />
-                                <span>Encrypted</span>
+                    ) : featuredArticle ? (
+                        <Link
+                            href={`/learn/article/${featuredArticle.slug}`}
+                            className="flex items-start space-x-3 p-4 bg-white/85 backdrop-blur-xl rounded-[24px] shadow-[0_6px_24px_-12px_rgba(45,38,56,0.08)] border border-white hover:bg-white transition group"
+                        >
+                            <div className="w-10 h-10 rounded-2xl bg-purple-50 text-[#7C3AED] flex items-center justify-center shrink-0 mt-0.5">
+                                <FileText className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0 space-y-0.5">
+                                <div className="flex items-center space-x-1.5 text-[10.5px] text-[#8A7F99] font-medium">
+                                    <span className="text-[#7C3AED] font-semibold">Recommended</span>
+                                    <span>·</span>
+                                    <span className="inline-flex items-center space-x-0.5">
+                                        <Clock className="w-3 h-3" />
+                                        <span>{featuredArticle.read_time_minutes} min</span>
+                                    </span>
+                                </div>
+                                <h3 className="font-semibold text-[13px] text-[#2D2638] group-hover:text-[#7C3AED] transition line-clamp-1">
+                                    {featuredArticle.title}
+                                </h3>
+                                <p className="text-[11px] text-[#7A6F8A] line-clamp-1">
+                                    {featuredArticle.summary}
+                                </p>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-[#C2B9CE] shrink-0 mt-1 group-hover:translate-x-0.5 transition" />
+                        </Link>
+                    ) : null
+                )}
+
+                {/* 7. SUBTLE SPONSOR STRIP (Adults only) */}
+                {!isPartner && !isSponsor && !isReviewer && canViewSponsor && (
+                    <Link
+                        href="/support/sponsor"
+                        className="flex items-center justify-between px-4 py-3 bg-white/70 backdrop-blur-xl rounded-full border border-white hover:bg-white transition group"
+                    >
+                        <div className="flex items-center space-x-2.5 min-w-0">
+                            <Heart className="w-4 h-4 text-rose-500 shrink-0" />
+                            <span className="text-xs font-medium text-[#2D2638] truncate">
+                                Sponsor a girl&apos;s dignity pack
                             </span>
                         </div>
-                        <h4 className="font-bold text-xs text-slate-900 mb-1">
-                            Share Cycle Alerts Discreetly
-                        </h4>
-                        <p className="text-[11px] text-slate-600 leading-relaxed mb-3">
-                            Send gentle reminders to a trusted parent or sister without revealing sensitive journal entries.
-                        </p>
-                        <Link 
-                            href="/trusted-circle" 
-                            className="text-xs font-bold text-rose-600 hover:underline flex items-center space-x-1"
-                        >
-                            <span>Manage Trusted Circle</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
-                        </Link>
-                    </div>
+                        <ArrowUpRight className="w-4 h-4 text-[#8A7F99] group-hover:text-[#2D2638] shrink-0" />
+                    </Link>
+                )}
+
+                {/* 8. QUIET FOOTER NOTE (Personal/Companion users) */}
+                {!isPartner && !isSponsor && !isAdmin && dailyTip && (
+                    <p className="text-center text-[11px] text-[#8A7F99] italic px-4 pt-1 leading-relaxed">
+                        &ldquo;{dailyTip}&rdquo;
+                    </p>
                 )}
             </div>
         </MobileAppLayout>

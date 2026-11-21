@@ -5,6 +5,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CycleController;
 use App\Http\Controllers\LearnController;
+use App\Http\Controllers\EducatorController;
 use App\Http\Controllers\LunaAiController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\CommunityController;
@@ -61,9 +62,21 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [LearnController::class, 'index'])->name('index');
         Route::get('/myths-facts', [LearnController::class, 'mythsFacts'])->name('myths');
         Route::get('/article/{slug}', [LearnController::class, 'show'])->name('show');
+        Route::get('/attachments/{attachment}/download', [LearnController::class, 'downloadAttachment'])->name('attachments.download');
         Route::post('/progress', [LearnController::class, 'updateProgress'])->name('progress');
         Route::delete('/progress/{resource}', [LearnController::class, 'destroyProgress'])->name('progress.destroy');
         Route::post('/bookmark', [LearnController::class, 'toggleBookmark'])->name('bookmark');
+    });
+
+    // 3.5 Educator Application & Content Creation CRUD Engine
+    Route::prefix('educator')->name('educator.')->group(function () {
+        Route::get('/', [EducatorController::class, 'studio'])->name('studio');
+        Route::post('/apply', [EducatorController::class, 'apply'])->name('apply');
+        Route::post('/resources', [EducatorController::class, 'storeResource'])->name('resources.store');
+        Route::patch('/resources/{resource}', [EducatorController::class, 'updateResource'])->name('resources.update');
+        Route::delete('/resources/{resource}', [EducatorController::class, 'destroyResource'])->name('resources.destroy');
+        Route::post('/resources/{resource}/attachments', [EducatorController::class, 'storeAttachment'])->name('attachments.store');
+        Route::delete('/attachments/{attachment}', [EducatorController::class, 'destroyAttachment'])->name('attachments.destroy');
     });
 
     // 4. Luna AI Assistant
@@ -163,10 +176,14 @@ Route::middleware(['auth'])->group(function () {
         Route::middleware(['role:health_reviewer,admin'])->group(function () {
             Route::get('/reviewer', [PortalController::class, 'reviewerDashboard'])->name('reviewer');
             Route::post('/reviewer/approve/{resource}', [PortalController::class, 'approveResource'])->name('reviewer.approve');
+            Route::post('/reviewer/reject/{resource}', [PortalController::class, 'rejectResource'])->name('reviewer.reject');
+            Route::post('/educators/{user}/review', [PortalController::class, 'reviewEducatorApplication'])->name('educators.review');
 
             Route::post('/reviewer/resources', [PortalController::class, 'storeReviewerResource'])->name('reviewer.resources.store');
             Route::patch('/reviewer/resources/{resource}', [PortalController::class, 'updateReviewerResource'])->name('reviewer.resources.update');
             Route::delete('/reviewer/resources/{resource}', [PortalController::class, 'destroyReviewerResource'])->name('reviewer.resources.destroy');
+            Route::post('/reviewer/resources/{resource}/attachments', [PortalController::class, 'storeResourceAttachment'])->name('reviewer.attachments.store');
+            Route::delete('/reviewer/attachments/{attachment}', [PortalController::class, 'destroyResourceAttachment'])->name('reviewer.attachments.destroy');
 
             Route::post('/reviewer/resources/{resource}/translations', [PortalController::class, 'storeTranslation'])->name('reviewer.translations.store');
             Route::delete('/reviewer/translations/{translation}', [PortalController::class, 'destroyTranslation'])->name('reviewer.translations.destroy');

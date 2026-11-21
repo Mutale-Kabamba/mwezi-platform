@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\EducationalCategory;
 use App\Models\EducationalResource;
+use App\Models\EducationalResourceAttachment;
 use App\Models\EducationalResourceTranslation;
 use App\Models\MythAndFact;
 use App\Models\UserLearningProgress;
@@ -84,7 +86,7 @@ class LearnController extends Controller
 
         $resource = EducationalResource::where('slug', $slug)
             ->where('review_status', 'approved')
-            ->with(['category', 'author', 'reviewer', 'translations' => function ($q) use ($locale) {
+            ->with(['category', 'author', 'reviewer', 'attachments', 'translations' => function ($q) use ($locale) {
                 $q->where('locale', $locale);
             }])
             ->firstOrFail();
@@ -196,6 +198,32 @@ class LearnController extends Controller
             ->delete();
 
         return back()->with('success', 'Learning progress and quiz scores reset.');
+    }
+
+    /**
+     * Download an attached document material for a lesson.
+     */
+    public function downloadAttachment(Request $request, EducationalResourceAttachment $attachment)
+    {
+        $user = $request->user();
+        $resource = $attachment->resource;
+
+        if (!$resource) {
+            abort(404);
+        }
+
+        $canAccessUnapproved = in_array($user->role, ['admin', 'health_reviewer'], true)
+            || $resource->author_id === $user->id;
+
+        if ($resource->review_status !== 'approved' && !$canAccessUnapproved) {
+            abort(403);
+        }
+
+        if (!Storage::disk('local')->exists($attachment->file_path)) {
+            abort(404, 'Material file not found.');
+        }
+
+        return Storage::disk('local')->download($attachment->file_path, $attachment->original_name);
     }
 }
 

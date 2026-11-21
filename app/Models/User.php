@@ -26,6 +26,11 @@ class User extends Authenticatable
         'district',
         'default_hub_id',
         'clinical_specialty',
+        'educator_status',
+        'educator_bio',
+        'educator_applied_at',
+        'educator_approved_at',
+        'educator_approved_by',
         'hpcz_registration_number',
         'hpcz_verification_status',
         'hpcz_verified_at',
@@ -61,6 +66,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'educator_applied_at' => 'datetime',
+            'educator_approved_at' => 'datetime',
             'password' => 'hashed',
             'discreet_mode_enabled' => 'boolean',
         'has_personal_cycle' => 'boolean',
@@ -202,6 +209,20 @@ class User extends Authenticatable
             'can_share_externally' => !$isTier1,
             'luna_ai_level' => $lunaAiLevel,
             'anonymous_alias' => 'Learner_' . str_pad((string) $this->id, 2, '0', STR_PAD_LEFT),
+            'educator_status' => $this->educator_status ?? 'none',
+            'can_create_learning_content' => $this->isApprovedEducator(),
+            'can_approve_learning_content' => $this->canApproveLearningContent(),
         ];
+    }
+
+    public function isApprovedEducator(): bool
+    {
+        return $this->educator_status === 'approved' || $this->role === 'admin';
+    }
+
+    public function canApproveLearningContent(): bool
+    {
+        return $this->role === 'admin'
+            || ($this->role === 'health_reviewer' && $this->hpcz_verification_status === 'verified');
     }
 }

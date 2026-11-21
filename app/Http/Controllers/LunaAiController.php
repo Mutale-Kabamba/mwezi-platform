@@ -77,6 +77,13 @@ class LunaAiController extends Controller
             'is_ephemeral' => false,
         ]);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'conversation' => $conversation,
+            ]);
+        }
+
         return redirect()->route('luna.chat', $conversation->id);
     }
 
@@ -101,9 +108,19 @@ class LunaAiController extends Controller
             'Explain the 4 phases of my menstrual cycle.',
         ];
 
+        $conversations = LunaConversation::where('user_id', $request->user()->id)
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->map(fn ($conv) => [
+                'id' => $conv->id,
+                'title' => $conv->title ?: 'Health Consultation',
+                'updated_at' => $conv->updated_at->diffForHumans(),
+            ]);
+
         return Inertia::render('Luna/Chat', [
             'conversation' => $conversation,
             'messages' => $messages,
+            'conversations' => $conversations,
             'suggestedPrompts' => $suggestedPrompts,
         ]);
     }

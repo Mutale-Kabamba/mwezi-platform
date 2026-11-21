@@ -1,129 +1,199 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
 import { useTranslation } from '@/i18n/LanguageContext';
-import { 
-    Search, 
-    BookOpen, 
-    CheckCircle2, 
-    Sparkles, 
-    Heart, 
-    Package, 
-    Users, 
-    ChevronRight, 
-    Globe, 
-    CheckCircle, 
-    Bookmark,
-    ArrowRight
+import {
+    Search,
+    CheckCircle2,
+    ChevronRight,
+    Play,
+    FileText,
+    ListChecks,
+    Image as ImageIcon,
+    Volume2,
+    Sparkles,
+    BookOpen,
 } from 'lucide-react';
 
-export default function LearnIndex({ 
-    categories = [], 
-    resources = [], 
-    userProgress = {}, 
-    selectedCategory = null, 
-    search = '', 
+const FORMAT_META = {
+    video: {
+        label: 'Video',
+        icon: Play,
+        tint: 'bg-purple-50 text-[#7C3AED]',
+    },
+    checklist: {
+        label: 'Checklist',
+        icon: ListChecks,
+        tint: 'bg-emerald-50 text-emerald-600',
+    },
+    infographic: {
+        label: 'Visual',
+        icon: ImageIcon,
+        tint: 'bg-amber-50 text-amber-600',
+    },
+    audio_guide: {
+        label: 'Audio',
+        icon: Volume2,
+        tint: 'bg-rose-50 text-rose-500',
+    },
+    article: {
+        label: 'Read',
+        icon: FileText,
+        tint: 'bg-slate-100/90 text-[#5E546B]',
+    },
+};
+
+export default function LearnIndex({
+    categories = [],
+    resources = [],
+    userProgress = {},
+    selectedCategory = null,
+    search = '',
     currentLocale = 'en',
-    mythsCount = 4
+    mythsCount = 4,
 }) {
-    const { locale, setLocale, t } = useTranslation();
+    const { locale, setLocale } = useTranslation();
     const [searchTerm, setSearchTerm] = useState(search);
 
     useEffect(() => {
         if (locale && locale !== currentLocale) {
-            router.get(route('learn.index'), {
-                category: selectedCategory,
-                search: searchTerm,
-                locale: locale,
-            }, { preserveState: true, preserveScroll: true });
+            router.get(
+                route('learn.index'),
+                {
+                    category: selectedCategory,
+                    search: searchTerm,
+                    locale: locale,
+                },
+                { preserveState: true, preserveScroll: true }
+            );
         }
     }, [locale]);
 
     const handleSearch = (e) => {
         e.preventDefault();
-        router.get(route('learn.index'), {
-            category: selectedCategory,
-            search: searchTerm,
-            locale: locale || currentLocale,
-        }, { preserveState: true });
+        router.get(
+            route('learn.index'),
+            {
+                category: selectedCategory,
+                search: searchTerm,
+                locale: locale || currentLocale,
+            },
+            { preserveState: true }
+        );
     };
 
     const handleCategoryClick = (slug) => {
         const newCategory = selectedCategory === slug ? null : slug;
-        router.get(route('learn.index'), {
-            category: newCategory,
-            search: searchTerm,
-            locale: locale || currentLocale,
-        }, { preserveState: true });
+        router.get(
+            route('learn.index'),
+            {
+                category: newCategory,
+                search: searchTerm,
+                locale: locale || currentLocale,
+            },
+            { preserveState: true }
+        );
     };
 
     const handleLocaleChange = (e) => {
         const newLocale = e.target.value;
         setLocale(newLocale);
-        router.get(route('learn.index'), {
-            category: selectedCategory,
-            search: searchTerm,
-            locale: newLocale,
-        }, { preserveState: true });
+        router.get(
+            route('learn.index'),
+            {
+                category: selectedCategory,
+                search: searchTerm,
+                locale: newLocale,
+            },
+            { preserveState: true }
+        );
     };
 
-    return (
-        <MobileAppLayout title="Learn">
-            <Head title="Learn Hub & Reusable Pad Guides - Mwezi" />
+    const { completedCount, progressPercent } = useMemo(() => {
+        const total = resources.length || 0;
+        const done = resources.filter((r) => Boolean(userProgress[r.id]?.completed_at)).length;
+        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+        return { completedCount: done, progressPercent: pct };
+    }, [resources, userProgress]);
 
-            <div className="space-y-4">
-                
-                {/* 1. SEARCH & LANGUAGE SELECTION BAR */}
+    return (
+        <MobileAppLayout title="Learn" subtitle="Verified guides & lessons">
+            <Head title="Learn - Mwezi" />
+
+            <div className="space-y-4 pb-8">
+                {/* 1. MINIMAL SEARCH & LANGUAGE BAR */}
                 <div className="flex items-center space-x-2">
                     <form onSubmit={handleSearch} className="flex-1 relative">
-                        <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                        <Search className="w-4 h-4 text-[#9B90AB] absolute left-3.5 top-3" />
                         <input
                             type="text"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Search guides, pad care, cramps..."
-                            className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-[16px] text-xs focus:ring-2 focus:ring-mwezi-accent focus:border-transparent"
+                            placeholder="Search lessons..."
+                            className="w-full pl-10 pr-4 py-2.5 bg-white/85 backdrop-blur-xl border border-white rounded-full text-xs text-[#2D2638] placeholder:text-[#9B90AB] focus:outline-none focus:bg-white focus:ring-2 focus:ring-purple-200/80 shadow-[0_4px_16px_-8px_rgba(45,38,56,0.08)] transition"
                         />
                     </form>
 
-                    <div className="relative shrink-0">
-                        <select
-                            value={locale || currentLocale}
-                            onChange={handleLocaleChange}
-                            aria-label="Language selector"
-                            className="py-2 pl-2.5 pr-6 bg-white border border-gray-200 rounded-[16px] text-xs font-semibold text-mwezi-tertiary focus:ring-2 focus:ring-mwezi-accent"
-                        >
-                            <option value="en">English (EN)</option>
-                            <option value="bem">Icibemba (BEM)</option>
-                            <option value="nya">Chinyanja (NYA)</option>
-                            <option value="toi">Chitonga (TOI)</option>
-                            <option value="loz">Silozi (LOZ)</option>
-                        </select>
-                    </div>
+                    <select
+                        value={locale || currentLocale}
+                        onChange={handleLocaleChange}
+                        aria-label="Language selector"
+                        className="py-2.5 pl-3 pr-7 bg-white/85 backdrop-blur-xl border border-white rounded-full text-xs font-medium text-[#5E546B] focus:outline-none focus:ring-2 focus:ring-purple-200/80 shadow-[0_4px_16px_-8px_rgba(45,38,56,0.08)] shrink-0"
+                    >
+                        <option value="en">EN</option>
+                        <option value="bem">BEM</option>
+                        <option value="nya">NYA</option>
+                        <option value="toi">TOI</option>
+                        <option value="loz">LOZ</option>
+                    </select>
                 </div>
 
-                {/* 2. CATEGORY PILLS FILTER */}
-                <div className="flex items-center space-x-2 overflow-x-auto hide-scrollbar py-1">
+                {/* 2. SLEEK FEATURED QUIZ CARD (Myths vs Facts) */}
+                <Link
+                    href="/learn/myths-facts"
+                    className="flex items-center justify-between p-4 bg-gradient-to-br from-[#7C3AED] via-[#6D28D9] to-[#5B21B6] rounded-[24px] text-white shadow-[0_12px_28px_-10px_rgba(124,58,237,0.45)] group transition active:scale-[0.99]"
+                >
+                    <div className="space-y-1 min-w-0 pr-3">
+                        <span className="inline-flex items-center space-x-1 text-[10px] font-medium text-purple-200">
+                            <Sparkles className="w-3 h-3" />
+                            <span>Interactive Quiz • {mythsCount} myths</span>
+                        </span>
+                        <h2 className="font-semibold text-[15px] leading-snug">
+                            Busting Myths vs. Facts
+                        </h2>
+                        <p className="text-[11px] text-purple-100/85">
+                            Test your knowledge &amp; unlock badges
+                        </p>
+                    </div>
+                    <div className="w-9 h-9 rounded-full bg-white/15 border border-white/20 flex items-center justify-center shrink-0 group-hover:bg-white/25 transition">
+                        <ChevronRight className="w-4 h-4 text-white" />
+                    </div>
+                </Link>
+
+                {/* 3. SUBTLE CATEGORY PILLS */}
+                <div className="flex items-center space-x-1.5 overflow-x-auto hide-scrollbar py-0.5">
                     <button
+                        type="button"
                         onClick={() => handleCategoryClick(null)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${
-                            !selectedCategory 
-                                ? 'bg-mwezi-accent text-white shadow-sm' 
-                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                        className={`px-3.5 py-1.5 rounded-full text-[11.5px] font-medium whitespace-nowrap transition ${
+                            !selectedCategory
+                                ? 'bg-[#2D2638] text-white shadow-2xs'
+                                : 'bg-white/70 text-[#6E637C] hover:bg-white border border-white/90'
                         }`}
                     >
-                        All Topics
+                        All
                     </button>
                     {categories.map((cat) => {
                         const active = selectedCategory === cat.slug;
                         return (
                             <button
                                 key={cat.id}
+                                type="button"
                                 onClick={() => handleCategoryClick(cat.slug)}
-                                className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${
-                                    active 
-                                        ? 'bg-mwezi-accent text-white shadow-sm' 
-                                        : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                                className={`px-3.5 py-1.5 rounded-full text-[11.5px] font-medium whitespace-nowrap transition ${
+                                    active
+                                        ? 'bg-[#2D2638] text-white shadow-2xs'
+                                        : 'bg-white/70 text-[#6E637C] hover:bg-white border border-white/90'
                                 }`}
                             >
                                 {cat.name}
@@ -132,88 +202,123 @@ export default function LearnIndex({
                     })}
                 </div>
 
-                {/* 3. GAMIFIED MYTHS VS FACTS HERO TEASER */}
-                <Link
-                    href="/learn/myths-facts"
-                    className="p-4 bg-gradient-to-r from-mwezi-secondary to-mwezi-primary rounded-[20px] shadow-sm hover:shadow-md transition flex items-center justify-between border border-white group"
-                >
-                    <div className="flex items-center space-x-3">
-                        <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-mwezi-tertiary shadow-sm shrink-0">
-                            <CheckCircle2 className="w-6 h-6 text-mwezi-tertiary" />
-                        </div>
-                        <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-mwezi-tertiary">Interactive Stigma Buster</span>
-                            <h3 className="font-heading font-bold text-sm text-mwezi-tertiary">
-                                Busting Menstrual Myths vs. Facts
-                            </h3>
-                            <p className="text-[10px] text-gray-700">Tap to flip & test {mythsCount} common Zambian taboos</p>
-                        </div>
+                {/* 4. SUBTLE PROGRESS LINE & LESSON COUNT */}
+                <div className="px-1 space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-semibold text-[#2D2638]">
+                            Lessons
+                        </span>
+                        <span className="text-[#8A7F99] font-medium">
+                            {completedCount}/{resources.length} completed
+                        </span>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-mwezi-tertiary group-hover:translate-x-1 transition" />
-                </Link>
-
-                {/* 4. ARTICLES & GUIDES LIST */}
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between px-1">
-                        <h2 className="font-heading font-bold text-xs text-mwezi-tertiary uppercase tracking-wider">
-                            Verified Educational Articles
-                        </h2>
-                        <span className="text-[10px] text-gray-500 font-medium">{resources.length} Available</span>
-                    </div>
-
-                    {resources.map((res) => {
-                        const progress = userProgress[res.id];
-                        const translation = res.translations?.[0];
-                        const title = translation?.translated_title || res.title;
-                        const summary = translation?.translated_summary || res.summary;
-
-                        return (
-                            <Link
-                                key={res.id}
-                                href={`/learn/article/${res.slug}`}
-                                className="block p-4 bg-white rounded-[20px] shadow-sm hover:shadow-md border border-gray-100 transition group"
-                            >
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <span className="text-[10px] font-bold text-mwezi-tertiary bg-mwezi-primary/40 px-2 py-0.5 rounded-full capitalize">
-                                        {res.category?.name || 'Guide'}
-                                    </span>
-                                    <span className="text-[10px] text-gray-500 font-medium">
-                                        {res.read_time_minutes} min read
-                                    </span>
-                                </div>
-
-                                <h3 className="font-heading font-bold text-sm text-gray-900 group-hover:text-mwezi-accent transition leading-snug mb-1">
-                                    {title}
-                                </h3>
-
-                                <p className="text-xs text-gray-600 line-clamp-2 mb-3">
-                                    {summary}
-                                </p>
-
-                                <div className="flex items-center justify-between pt-2 border-t border-gray-50 text-[10px]">
-                                    <span className="text-emerald-700 font-medium flex items-center space-x-1">
-                                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                                        <span>Medically Verified</span>
-                                    </span>
-
-                                    {progress?.completed_at ? (
-                                        <span className="text-emerald-600 font-bold flex items-center space-x-0.5">
-                                            <CheckCircle2 className="w-3.5 h-3.5" />
-                                            <span>Completed</span>
-                                        </span>
-                                    ) : (
-                                        <span className="text-mwezi-accent font-bold flex items-center space-x-0.5">
-                                            <span>Start Reading</span>
-                                            <ChevronRight className="w-3 h-3" />
-                                        </span>
-                                    )}
-                                </div>
-                            </Link>
-                        );
-                    })}
+                    {resources.length > 0 && (
+                        <div className="w-full h-1 bg-white/75 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-[#7C3AED] rounded-full transition-all duration-300"
+                                style={{ width: `${progressPercent}%` }}
+                            />
+                        </div>
+                    )}
                 </div>
+
+                {/* 5. MINIMAL, WELL-CRAFTED LESSON CARDS */}
+                {resources.length === 0 ? (
+                    <div className="bg-white/80 backdrop-blur-xl rounded-[24px] p-8 border border-white text-center space-y-1.5">
+                        <BookOpen className="w-6 h-6 text-[#9B90AB] mx-auto" />
+                        <p className="text-xs font-semibold text-[#2D2638]">No lessons found</p>
+                        <p className="text-[11px] text-[#8A7F99]">
+                            Try clearing your search or switching topics.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="space-y-2.5">
+                        {resources.map((res) => {
+                            const progress = userProgress[res.id];
+                            const isCompleted = Boolean(progress?.completed_at);
+                            const pct = progress?.progress_percent || (isCompleted ? 100 : 0);
+                            const translation = res.translations?.[0];
+                            const title = translation?.translated_title || res.title;
+                            const summary = translation?.translated_summary || res.summary;
+                            const meta = FORMAT_META[res.format] || FORMAT_META.article;
+                            const FormatIcon = meta.icon;
+
+                            return (
+                                <Link
+                                    key={res.id}
+                                    href={`/learn/article/${res.slug}`}
+                                    className="block p-3.5 bg-white/85 backdrop-blur-xl rounded-[24px] border border-white shadow-[0_6px_24px_-12px_rgba(45,38,56,0.08)] hover:bg-white transition group active:scale-[0.99]"
+                                >
+                                    <div className="flex items-start space-x-3">
+                                        {/* Subtle Pastel Format Icon */}
+                                        <div
+                                            className={`w-11 h-11 rounded-2xl ${meta.tint} flex items-center justify-center shrink-0 mt-0.5`}
+                                        >
+                                            <FormatIcon className="w-4 h-4" strokeWidth={2} />
+                                        </div>
+
+                                        {/* Clean Content Stack */}
+                                        <div className="flex-1 min-w-0 space-y-1">
+                                            {/* Subtle Format Type & Meta */}
+                                            <div className="flex items-center space-x-1.5 text-[10.5px] text-[#8A7F99] font-medium">
+                                                <span className="text-[#6E637C] font-semibold">
+                                                    {meta.label}
+                                                </span>
+                                                <span>·</span>
+                                                <span className="truncate">
+                                                    {res.category?.name || 'Guide'}
+                                                </span>
+                                                <span>·</span>
+                                                <span className="shrink-0">
+                                                    {res.read_time_minutes || 4} min
+                                                </span>
+                                            </div>
+
+                                            {/* Title */}
+                                            <h3 className="font-semibold text-[13.5px] text-[#2D2638] group-hover:text-[#7C3AED] transition leading-snug line-clamp-2">
+                                                {title}
+                                            </h3>
+
+                                            {/* Subtle 1-Line Summary */}
+                                            {summary && (
+                                                <p className="text-[11.5px] text-[#7A6F8A] line-clamp-1 leading-relaxed">
+                                                    {summary}
+                                                </p>
+                                            )}
+
+                                            {/* Hairline Progress Bar (Only if started/completed) */}
+                                            {pct > 0 && (
+                                                <div className="pt-1.5 flex items-center space-x-2">
+                                                    <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                                        <div
+                                                            className={`h-full rounded-full ${
+                                                                isCompleted ? 'bg-emerald-500' : 'bg-[#7C3AED]'
+                                                            }`}
+                                                            style={{ width: `${pct}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-[10px] text-[#8A7F99] font-medium">
+                                                        {isCompleted ? 'Done' : `${pct}%`}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Right Status Indicator */}
+                                        <div className="pt-1 shrink-0">
+                                            {isCompleted ? (
+                                                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                            ) : (
+                                                <ChevronRight className="w-4 h-4 text-[#C2B9CE] group-hover:text-[#7C3AED] group-hover:translate-x-0.5 transition" />
+                                            )}
+                                        </div>
+                                    </div>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </MobileAppLayout>
     );
 }
-

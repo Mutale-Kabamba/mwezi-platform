@@ -9,6 +9,7 @@ use App\Models\CommunityServiceHub;
 use App\Models\ProductAndEmergencyRequest;
 use App\Models\EducationalResource;
 use App\Models\EducationalCategory;
+use App\Models\EducationalResourceAttachment;
 use App\Models\EducationalResourceTranslation;
 use App\Models\SponsorshipCampaign;
 use App\Models\Donation;
@@ -26,6 +27,7 @@ use App\Models\SupportTicket;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PortalController extends Controller
@@ -367,19 +369,22 @@ class PortalController extends Controller
     public function reviewerDashboard(Request $request): Response
     {
         $pendingArticles = EducationalResource::where('review_status', 'pending_medical_review')
-            ->with(['category', 'author'])
+            ->with(['category', 'author', 'attachments'])
             ->latest()
             ->get();
 
         $approvedArticles = EducationalResource::where('review_status', 'approved')
-            ->with(['category', 'author', 'reviewer', 'translations'])
+            ->with(['category', 'author', 'reviewer', 'translations', 'attachments'])
             ->latest()
             ->get();
 
-        $myths = MythAndFact::with(['category', 'verifier'])->latest()->get();
+        $myths = MythAndFact::with(['category', 'verifiedBy'])->latest()->get();
         $knowledgeChunks = LunaKnowledgeChunk::with('resource')->latest()->get();
         $referrals = HealthReferral::with(['hub', 'user:id,name,phone,province,district'])->latest()->get();
         $categories = EducationalCategory::all();
+        $educatorApplications = User::whereIn('educator_status', ['pending', 'approved'])
+            ->latest('educator_applied_at')
+            ->get(['id', 'name', 'email', 'role', 'educator_status', 'educator_bio', 'educator_applied_at']);
 
         return Inertia::render('Portal/MedicalReview', [
             'pendingArticles' => $pendingArticles,
@@ -388,12 +393,16 @@ class PortalController extends Controller
             'knowledgeChunks' => $knowledgeChunks,
             'referrals' => $referrals,
             'categories' => $categories,
+            'educatorApplications' => $educatorApplications,
         ]);
     }
 
     public function approveResource(Request $request, EducationalResource $resource)
     {
         $user = $request->user();
+        if (!$user->canApproveLearningContent()) {
+            abort(403, 'Only Admins or verified health personnel can approve learning content.');
+        }
 
         $resource->update([
             'review_status' => 'approved',
@@ -401,6 +410,41 @@ class PortalController extends Controller
         ]);
 
         return back()->with('success', "Medical clearance granted for '{$resource->title}'.");
+    }
+
+    public function rejectResource(Request $request, EducationalResource $resource)
+    {
+        $user = $request->user();
+        if (!$user->canApproveLearningContent()) {
+            abort(403, 'Only Admins or verified health personnel can review learning content.');
+        }
+
+        $resource->update([
+            'review_status' => 'draft',
+            'reviewed_by_health_pro_id' => $user->id,
+        ]);
+
+        return back()->with('success', "'{$resource->title}' returned to educator as draft.");
+    }
+
+    public function reviewEducatorApplication(Request $request, User $user)
+    {
+        $reviewer = $request->user();
+        if (!$reviewer->canApproveLearningContent()) {
+            abort(403, 'Only Admins or verified health personnel can approve educator applications.');
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:approved,rejected',
+        ]);
+
+        $user->update([
+            'educator_status' => $validated['status'],
+            'educator_approved_at' => $validated['status'] === 'approved' ? now() : null,
+            'educator_approved_by' => $validated['status'] === 'approved' ? $reviewer->id : null,
+        ]);
+
+        return back()->with('success', "Educator application for {$user->name} marked as {$validated['status']}.");
     }
 
     public function storeReviewerResource(Request $request)
@@ -411,11 +455,20 @@ class PortalController extends Controller
             'title' => 'required|string|max:200',
             'summary' => 'required|string|max:500',
             'body_content' => 'required|string',
-            'format' => 'required|in:article,checklist,infographic,audio_guide',
+            'format' => 'required|in:article,checklist,infographic,audio_guide,video',
+            'video_url' => 'nullable|url|max:500',
             'read_time_minutes' => 'nullable|integer|min:1',
+            'quiz_questions' => 'nullable|array',
+            'quiz_questions.*.question' => 'required|string|max:500',
+            'quiz_questions.*.options' => 'required|array|min:2|max:6',
+            'quiz_questions.*.options.*' => 'required|string|max:250',
+            'quiz_questions.*.correct_index' => 'required|integer|min:0',
+            'quiz_questions.*.explanation' => 'nullable|string|max:500',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,csv,txt,odt,ods,odp|max:20480',
         ]);
 
-        EducationalResource::create([
+        $resource = EducationalResource::create([
             'category_id' => $validated['category_id'],
             'author_id' => $user->id,
             'reviewed_by_health_pro_id' => $user->id,
@@ -424,9 +477,26 @@ class PortalController extends Controller
             'summary' => $validated['summary'],
             'body_content' => $validated['body_content'],
             'format' => $validated['format'],
+            'video_url' => $validated['video_url'] ?? null,
+            'quiz_questions' => $validated['quiz_questions'] ?? null,
             'read_time_minutes' => $validated['read_time_minutes'] ?? 4,
             'review_status' => 'approved',
         ]);
+
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('lesson-materials', 'local');
+                $resource->attachments()->create([
+                    'uploaded_by' => $user->id,
+                    'title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+                    'original_name' => $file->getClientOriginalName(),
+                    'file_path' => $path,
+                    'file_extension' => strtolower($file->getClientOriginalExtension()),
+                    'mime_type' => $file->getClientMimeType(),
+                    'file_size' => $file->getSize(),
+                ]);
+            }
+        }
 
         return back()->with('success', 'Clinical resource published directly.');
     }
@@ -437,9 +507,16 @@ class PortalController extends Controller
             'title' => 'required|string|max:200',
             'summary' => 'required|string|max:500',
             'body_content' => 'required|string',
-            'format' => 'required|in:article,checklist,infographic,audio_guide',
+            'format' => 'required|in:article,checklist,infographic,audio_guide,video',
+            'video_url' => 'nullable|url|max:500',
             'read_time_minutes' => 'nullable|integer|min:1',
             'review_status' => 'required|in:draft,pending_medical_review,approved,archived',
+            'quiz_questions' => 'nullable|array',
+            'quiz_questions.*.question' => 'required|string|max:500',
+            'quiz_questions.*.options' => 'required|array|min:2|max:6',
+            'quiz_questions.*.options.*' => 'required|string|max:250',
+            'quiz_questions.*.correct_index' => 'required|integer|min:0',
+            'quiz_questions.*.explanation' => 'nullable|string|max:500',
         ]);
 
         $resource->update([
@@ -452,8 +529,41 @@ class PortalController extends Controller
 
     public function destroyReviewerResource(Request $request, EducationalResource $resource)
     {
+        foreach ($resource->attachments as $attachment) {
+            Storage::disk('local')->delete($attachment->file_path);
+        }
         $resource->delete();
         return back()->with('success', 'Resource deleted.');
+    }
+
+    public function storeResourceAttachment(Request $request, EducationalResource $resource)
+    {
+        $validated = $request->validate([
+            'title' => 'nullable|string|max:200',
+            'file' => 'required|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,csv,txt,odt,ods,odp|max:20480',
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->store('lesson-materials', 'local');
+
+        $resource->attachments()->create([
+            'uploaded_by' => $request->user()->id,
+            'title' => $validated['title'] ?: pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+            'original_name' => $file->getClientOriginalName(),
+            'file_path' => $path,
+            'file_extension' => strtolower($file->getClientOriginalExtension()),
+            'mime_type' => $file->getClientMimeType(),
+            'file_size' => $file->getSize(),
+        ]);
+
+        return back()->with('success', 'Document material attached to lesson.');
+    }
+
+    public function destroyResourceAttachment(Request $request, EducationalResourceAttachment $attachment)
+    {
+        Storage::disk('local')->delete($attachment->file_path);
+        $attachment->delete();
+        return back()->with('success', 'Document material removed.');
     }
 
     public function storeTranslation(Request $request, EducationalResource $resource)
@@ -614,12 +724,21 @@ class PortalController extends Controller
             ->get();
         $faqs = Faq::orderBy('sort_order')->get();
         $tickets = SupportTicket::with('user:id,name,email,phone')->latest()->get();
+        $educatorApplications = User::whereIn('educator_status', ['pending', 'approved'])
+            ->latest('educator_applied_at')
+            ->get(['id', 'name', 'email', 'role', 'educator_status', 'educator_bio', 'educator_applied_at']);
+        $pendingArticles = EducationalResource::where('review_status', 'pending_medical_review')
+            ->with(['category', 'author', 'attachments'])
+            ->latest()
+            ->get();
 
         return Inertia::render('Portal/AdminDashboard', [
             'kpis' => $kpis,
             'campaign' => $campaign,
             'telemetry' => $recentTelemetry,
             'users' => $users,
+            'educatorApplications' => $educatorApplications,
+            'pendingArticles' => $pendingArticles,
             'allHubs' => $allHubs,
             'campaigns' => $campaigns,
             'topics' => $topics,

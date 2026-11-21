@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useTranslation } from '@/i18n/LanguageContext';
+import { LunaFloralBackdrop } from '@/Components/LunaSideDrawer';
 import { ZAMBIA_PROVINCES, PROVINCE_NAMES } from '@/constants/zambiaLocations';
-import { 
-    ChevronLeft, 
-    Eye, 
-    EyeOff, 
+import {
+    ChevronLeft,
+    Eye,
+    EyeOff,
     Globe,
     Heart,
     HeartHandshake,
@@ -24,10 +25,10 @@ import {
 export default function Register({ initialInviteCode = '' }) {
     const { t, locale, setLocale, languages } = useTranslation();
     const [showLangMenu, setShowLangMenu] = useState(false);
-    
+
     // Step 1: Role Selection | Step 2: Role-Specific Form
     const [step, setStep] = useState(initialInviteCode ? 2 : 1);
-    
+
     const [rawIdentifier, setRawIdentifier] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -157,41 +158,41 @@ export default function Register({ initialInviteCode = '' }) {
     };
 
     const roles = [
-        { 
-            id: 'primary_user', 
-            label: 'Girl / Teen / Woman', 
+        {
+            id: 'primary_user',
+            label: 'Girl / Teen / Woman',
             desc: 'Track cycle safely, ask Luna AI, and request dignity supplies',
-            icon: Heart 
+            icon: Heart
         },
-        { 
-            id: 'parent_guardian', 
-            label: 'Parent / Guardian', 
+        {
+            id: 'parent_guardian',
+            label: 'Parent / Guardian',
             desc: 'Register & manage ages 10–13 or link ages 14–19 with consent',
-            icon: ShieldCheck 
+            icon: ShieldCheck
         },
-        { 
-            id: 'trusted_contact', 
-            label: 'Trusted Companion', 
+        {
+            id: 'trusted_contact',
+            label: 'Trusted Companion',
             desc: 'Support a daughter, sister, or partner using an invite code',
-            icon: HeartHandshake 
+            icon: HeartHandshake
         },
-        { 
-            id: 'community_partner', 
-            label: 'School / NGO Hub', 
+        {
+            id: 'community_partner',
+            label: 'School / NGO Hub',
             desc: 'Manage local stock and distribute emergency hygiene packs',
-            icon: Building2 
+            icon: Building2
         },
-        { 
-            id: 'health_reviewer', 
-            label: 'Clinician / Midwife', 
+        {
+            id: 'health_reviewer',
+            label: 'Clinician / Midwife',
             desc: 'Verify medical guides and provide clinical review support',
-            icon: Stethoscope 
+            icon: Stethoscope
         },
-        { 
-            id: 'donor_sponsor', 
-            label: 'Dignity Sponsor', 
+        {
+            id: 'donor_sponsor',
+            label: 'Dignity Sponsor',
             desc: 'Directly fund reusable pad kits for Zambian schoolgirls',
-            icon: Sparkles 
+            icon: Sparkles
         },
     ];
 
@@ -281,12 +282,13 @@ export default function Register({ initialInviteCode = '' }) {
 
             {/* Minimal Frosted Glass Card */}
             <div className="relative z-10 w-full max-w-[430px] max-h-[92vh] rounded-[36px] bg-white/45 backdrop-blur-2xl border border-white/80 shadow-[0_24px_60px_-15px_rgba(92,71,112,0.16)] px-7 py-6 flex flex-col justify-between overflow-hidden">
-                
+                <LunaFloralBackdrop />
+
                 {/* 1. TOP MINIMAL UTILITY & BRAND HEADER */}
                 <div className="shrink-0 select-none pb-3">
                     <div className="flex items-center justify-between text-xs">
                         {step === 2 ? (
-                            <button 
+                            <button
                                 type="button"
                                 onClick={() => setStep(1)}
                                 className="p-2 -ml-2 rounded-full text-[#5E546B] hover:text-[#2D2638] hover:bg-white/60 transition active:scale-95"
@@ -295,8 +297,8 @@ export default function Register({ initialInviteCode = '' }) {
                                 <ChevronLeft className="w-5 h-5" />
                             </button>
                         ) : (
-                            <Link 
-                                href="/" 
+                            <Link
+                                href="/"
                                 className="p-2 -ml-2 rounded-full text-[#5E546B] hover:text-[#2D2638] hover:bg-white/60 transition active:scale-95"
                                 aria-label="Back"
                             >
@@ -329,9 +331,8 @@ export default function Register({ initialInviteCode = '' }) {
                                                         setLocale(lang.code);
                                                         setShowLangMenu(false);
                                                     }}
-                                                    className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition ${
-                                                        locale === lang.code ? 'bg-purple-50 text-[#2D2638] font-bold' : 'text-[#5E546B] hover:bg-slate-50/80'
-                                                    }`}
+                                                    className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition ${locale === lang.code ? 'bg-purple-50 text-[#2D2638] font-bold' : 'text-[#5E546B] hover:bg-slate-50/80'
+                                                        }`}
                                                 >
                                                     <div className="flex items-center space-x-2">
                                                         <span>{lang.flag}</span>
@@ -347,8 +348,8 @@ export default function Register({ initialInviteCode = '' }) {
                                 )}
                             </div>
 
-                            <Link 
-                                href="/login" 
+                            <Link
+                                href="/login"
                                 className="rounded-full bg-white/60 hover:bg-white/85 border border-white/85 px-3 py-1 text-[11px] font-semibold text-[#2D2638] transition active:scale-95"
                             >
                                 {t('auth_log_in', 'Log in')}
@@ -372,7 +373,7 @@ export default function Register({ initialInviteCode = '' }) {
 
                 {/* 2. MAIN CONTENT AREA */}
                 <div className="flex-1 min-h-0 flex flex-col justify-between overflow-y-auto hide-scrollbar pr-0.5 z-10">
-                    
+
                     {/* STEP 1: ROLE SELECTION (Appears BEFORE the registration form) */}
                     {step === 1 && (
                         <div className="space-y-4 animate-fadeIn">
@@ -395,16 +396,14 @@ export default function Register({ initialInviteCode = '' }) {
                                             key={r.id}
                                             type="button"
                                             onClick={() => setData('role', r.id)}
-                                            className={`w-full p-3 rounded-2xl text-left transition border flex items-center justify-between group ${
-                                                isSelected
-                                                    ? 'bg-white/85 border-[#9B7BB8] shadow-xs'
-                                                    : 'bg-white/55 border-white/85 hover:bg-white/75'
-                                            }`}
+                                            className={`w-full p-3 rounded-2xl text-left transition border flex items-center justify-between group ${isSelected
+                                                ? 'bg-white/85 border-[#9B7BB8] shadow-xs'
+                                                : 'bg-white/55 border-white/85 hover:bg-white/75'
+                                                }`}
                                         >
                                             <div className="flex items-center space-x-3 min-w-0 pr-2">
-                                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${
-                                                    isSelected ? 'bg-[#3D334D] text-white shadow-xs' : 'bg-white/80 text-[#5E546B] group-hover:bg-white'
-                                                }`}>
+                                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition ${isSelected ? 'bg-[#3D334D] text-white shadow-xs' : 'bg-white/80 text-[#5E546B] group-hover:bg-white'
+                                                    }`}>
                                                     <IconComponent className="w-4 h-4" />
                                                 </div>
                                                 <div className="min-w-0">
@@ -418,11 +417,10 @@ export default function Register({ initialInviteCode = '' }) {
                                             </div>
 
                                             {/* Selection Radio Indicator */}
-                                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition ${
-                                                isSelected 
-                                                    ? 'border-[#3D334D] bg-[#3D334D]' 
-                                                    : 'border-[#B9AEC7] bg-white/70'
-                                            }`}>
+                                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition ${isSelected
+                                                ? 'border-[#3D334D] bg-[#3D334D]'
+                                                : 'border-[#B9AEC7] bg-white/70'
+                                                }`}>
                                                 {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                                             </div>
                                         </button>
@@ -445,8 +443,8 @@ export default function Register({ initialInviteCode = '' }) {
                             {/* Sublink */}
                             <div className="text-center pt-0.5 text-xs text-[#5E546B]">
                                 <span>{t('auth_already_have_account', 'Have an account?')} </span>
-                                <Link 
-                                    href="/login" 
+                                <Link
+                                    href="/login"
                                     className="text-[#2D2638] font-bold hover:underline"
                                 >
                                     {t('auth_log_in', 'Log in')}
@@ -568,8 +566,8 @@ export default function Register({ initialInviteCode = '' }) {
                                             {data.role === 'trusted_contact' ? 'Set Your Password' : roleDetails.title}
                                         </h1>
                                         <p className="text-xs text-slate-500 font-normal mt-0.5">
-                                            {data.role === 'trusted_contact' 
-                                                ? 'Create your password to complete setup and activate companion view' 
+                                            {data.role === 'trusted_contact'
+                                                ? 'Create your password to complete setup and activate companion view'
                                                 : roleDetails.subtitle
                                             }
                                         </p>
@@ -691,22 +689,20 @@ export default function Register({ initialInviteCode = '' }) {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setData('has_started_period', true)}
-                                                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
-                                                                    data.has_started_period
-                                                                        ? 'bg-[#C81E3D] text-white'
-                                                                        : 'bg-white text-slate-600 border border-slate-200'
-                                                                }`}
+                                                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${data.has_started_period
+                                                                    ? 'bg-[#C81E3D] text-white'
+                                                                    : 'bg-white text-slate-600 border border-slate-200'
+                                                                    }`}
                                                             >
                                                                 Yes
                                                             </button>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setData('has_started_period', false)}
-                                                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
-                                                                    !data.has_started_period
-                                                                        ? 'bg-[#C81E3D] text-white'
-                                                                        : 'bg-white text-slate-600 border border-slate-200'
-                                                                }`}
+                                                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${!data.has_started_period
+                                                                    ? 'bg-[#C81E3D] text-white'
+                                                                    : 'bg-white text-slate-600 border border-slate-200'
+                                                                    }`}
                                                             >
                                                                 Not yet
                                                             </button>
@@ -794,11 +790,10 @@ export default function Register({ initialInviteCode = '' }) {
                                                                                         : [...data.typical_symptoms, sym];
                                                                                     setData('typical_symptoms', next);
                                                                                 }}
-                                                                                className={`px-2 py-1 rounded-lg text-[10px] font-semibold border transition ${
-                                                                                    active
-                                                                                        ? 'bg-[#C81E3D] text-white border-[#C81E3D]'
-                                                                                        : 'bg-white text-slate-600 border-slate-200'
-                                                                                }`}
+                                                                                className={`px-2 py-1 rounded-lg text-[10px] font-semibold border transition ${active
+                                                                                    ? 'bg-[#C81E3D] text-white border-[#C81E3D]'
+                                                                                    : 'bg-white text-slate-600 border-slate-200'
+                                                                                    }`}
                                                                             >
                                                                                 {sym}
                                                                             </button>
@@ -876,11 +871,10 @@ export default function Register({ initialInviteCode = '' }) {
                                                                 key={opt.id}
                                                                 type="button"
                                                                 onClick={() => setData('child_tier_group', opt.id)}
-                                                                className={`py-1.5 px-2 rounded-lg text-[11px] font-bold border transition ${
-                                                                    data.child_tier_group === opt.id
-                                                                        ? 'bg-[#C81E3D] text-white border-[#C81E3D]'
-                                                                        : 'bg-white text-slate-600 border-slate-200'
-                                                                }`}
+                                                                className={`py-1.5 px-2 rounded-lg text-[11px] font-bold border transition ${data.child_tier_group === opt.id
+                                                                    ? 'bg-[#C81E3D] text-white border-[#C81E3D]'
+                                                                    : 'bg-white text-slate-600 border-slate-200'
+                                                                    }`}
                                                             >
                                                                 {opt.label}
                                                             </button>
@@ -1087,11 +1081,10 @@ export default function Register({ initialInviteCode = '' }) {
                                                                             : [...data.review_locales, loc];
                                                                         setData('review_locales', next.length ? next : ['en']);
                                                                     }}
-                                                                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase border transition ${
-                                                                        active
-                                                                            ? 'bg-[#C81E3D] text-white border-[#C81E3D]'
-                                                                            : 'bg-white text-slate-600 border-slate-200'
-                                                                    }`}
+                                                                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase border transition ${active
+                                                                        ? 'bg-[#C81E3D] text-white border-[#C81E3D]'
+                                                                        : 'bg-white text-slate-600 border-slate-200'
+                                                                        }`}
                                                                 >
                                                                     {loc}
                                                                 </button>
@@ -1203,8 +1196,8 @@ export default function Register({ initialInviteCode = '' }) {
                                                 className="w-full rounded-full bg-white/80 hover:bg-white border border-white/95 shadow-[0_10px_28px_-8px_rgba(92,71,112,0.18)] px-6 py-3.5 flex items-center justify-between text-[#2D2638] font-semibold text-sm transition active:scale-[0.99] disabled:opacity-60"
                                             >
                                                 <span>
-                                                    {processing 
-                                                        ? t('loading', 'Creating account...') 
+                                                    {processing
+                                                        ? t('loading', 'Creating account...')
                                                         : (data.role === 'trusted_contact' ? 'Create Password & Done' : t('auth_create_account', 'Create account'))
                                                     }
                                                 </span>
@@ -1231,8 +1224,8 @@ export default function Register({ initialInviteCode = '' }) {
                                         {/* Direct Sublink */}
                                         <div className="text-center pt-0.5 text-xs text-[#5E546B]">
                                             <span>{t('auth_already_have_account', 'Have an account?')} </span>
-                                            <Link 
-                                                href="/login" 
+                                            <Link
+                                                href="/login"
                                                 className="text-[#2D2638] font-bold hover:underline"
                                             >
                                                 {t('auth_log_in', 'Log in')}
@@ -1265,10 +1258,10 @@ export default function Register({ initialInviteCode = '' }) {
                                     title="Sign up with Google"
                                 >
                                     <svg className="w-5 h-5" viewBox="0 0 24 24">
-                                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z"/>
-                                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.27v3.15C3.25 21.37 7.31 24 12 24z"/>
-                                        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.27C.46 8.2.01 10.04.01 12c0 1.96.45 3.8 1.26 5.42l4.01-3.15z"/>
-                                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.63 1.27 6.58l4.01 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z" />
+                                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.27v3.15C3.25 21.37 7.31 24 12 24z" />
+                                        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.27C.46 8.2.01 10.04.01 12c0 1.96.45 3.8 1.26 5.42l4.01-3.15z" />
+                                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.63 1.27 6.58l4.01 3.15c.95-2.83 3.6-4.98 6.72-4.98z" />
                                     </svg>
                                 </Link>
                                 <span className="text-[11px] text-[#5E546B] font-medium">Google</span>

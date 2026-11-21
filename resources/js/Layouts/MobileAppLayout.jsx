@@ -29,12 +29,14 @@ import {
     ShieldCheck
 } from 'lucide-react';
 import { useTranslation } from '@/i18n/LanguageContext';
+import { LunaFloralBackdrop } from '@/Components/LunaSideDrawer';
 
 export default function MobileAppLayout({
     children,
     title = 'Mwezi',
     subtitle = '',
     showNav = true,
+    hideHeader = false,
     actionButton = null,
     fullHeight = false,
     backUrl = null,
@@ -158,35 +160,163 @@ export default function MobileAppLayout({
         }
     };
 
-    const navItems = [
-        { name: t('nav_home', 'Home'), href: '/dashboard', icon: Home, match: '/dashboard' },
-        ...(canUsePersonalTracker
-            ? [{ name: t('nav_track', 'Track'), href: '/cycle', icon: Calendar, match: '/cycle' }]
-            : canViewSharedTracker
-                ? [{ name: sharedTrackerLabel, href: '/trusted-circle/companion', icon: Calendar, match: '/trusted-circle/companion' }]
-                : []),
-        { name: t('nav_learn', 'Learn'), href: '/learn', icon: BookOpen, match: '/learn' },
-        { name: t('nav_luna', 'Luna AI'), href: '/luna', icon: Sparkles, match: '/luna' },
-        { name: t('nav_support', 'Support'), href: '/support', icon: MapPin, match: '/support' },
-    ];
+    const role = user?.role || 'primary_user';
+    const isPartner = role === 'community_partner';
+    const isReviewer = role === 'health_reviewer';
+    const isSponsor = role === 'donor_sponsor';
+    const isAdmin = role === 'admin';
+    const isTrustedContact = role === 'trusted_contact';
+    const canCreateLearningContent = Boolean(auth?.tierPolicy?.can_create_learning_content);
+    const educatorDrawerItem = !isTier1 || canCreateLearningContent
+        ? {
+            name: canCreateLearningContent ? 'Educator Studio' : 'Become an Educator',
+            href: '/educator',
+            icon: BookOpen,
+        }
+        : null;
 
-    const drawerNavItems = [
-        { name: t('drawer_home', 'Home Dashboard'), href: '/dashboard', icon: Home },
-        ...(canUsePersonalTracker
-            ? [{ name: t('drawer_cycle', 'Cycle Tracker & Logs'), href: '/cycle', icon: Calendar }]
-            : canViewSharedTracker
-                ? [{ name: sharedTrackerLabel, href: '/trusted-circle/companion', icon: Calendar }]
-                : []),
-        { name: t('drawer_learn', 'Learn Hub & Guides'), href: '/learn', icon: BookOpen },
-        { name: t('drawer_myths', 'Busting Myths vs Facts'), href: '/learn/myths-facts', icon: CheckCircle2 },
-        { name: t('drawer_luna', 'Ask Luna AI Assistant'), href: '/luna', icon: Sparkles },
-        ...(!isTier1 ? [{ name: t('drawer_community', 'Community Discussions'), href: '/community', icon: Users }] : []),
-        { name: t('drawer_emergency', 'Emergency Supplies'), href: '/support/request', icon: Heart },
-        { name: t('drawer_map', 'Find Pad Hubs & Clinics'), href: '/support/map', icon: MapPin },
-        ...(canViewSponsor ? [{ name: t('drawer_sponsor', 'Sponsor a Girl'), href: '/support/sponsor', icon: Heart }] : []),
-        { name: t('drawer_circle', 'Trusted Family Circle'), href: '/trusted-circle', icon: Users },
-        { name: t('drawer_profile', 'Profile & Privacy Settings'), href: '/profile', icon: Settings },
-    ];
+    const trackerNavItem = canUsePersonalTracker
+        ? { name: t('nav_track', 'Track'), href: '/cycle', icon: Calendar, match: '/cycle' }
+        : canViewSharedTracker
+            ? {
+                name: sharedTrackerLabel.includes('Child')
+                    ? "Child's"
+                    : sharedTrackerLabel.includes('Partner')
+                        ? "Partner's"
+                        : 'Tracker',
+                href: '/trusted-circle/companion',
+                icon: Calendar,
+                match: '/trusted-circle/companion',
+            }
+            : null;
+
+    const trackerDrawerItem = canUsePersonalTracker
+        ? { name: t('drawer_cycle', 'Cycle Tracker & Logs'), href: '/cycle', icon: Calendar }
+        : canViewSharedTracker
+            ? { name: sharedTrackerLabel, href: '/trusted-circle/companion', icon: Calendar }
+            : null;
+
+    const getNavItems = () => {
+        if (isPartner) {
+            return [
+                { name: t('nav_home', 'Home'), href: '/dashboard', icon: Home, match: '/dashboard' },
+                { name: 'Hub Ops', href: '/portal/partner', icon: Building, match: '/portal/partner' },
+                { name: 'Hub Map', href: '/support/map', icon: MapPin, match: '/support/map' },
+                { name: 'Profile', href: '/profile', icon: Settings, match: '/profile' },
+            ];
+        }
+
+        if (isReviewer) {
+            return [
+                { name: t('nav_home', 'Home'), href: '/dashboard', icon: Home, match: '/dashboard' },
+                { name: 'Review', href: '/portal/reviewer', icon: Stethoscope, match: '/portal/reviewer' },
+                ...(trackerNavItem ? [trackerNavItem] : []),
+                { name: t('nav_learn', 'Learn'), href: '/learn', icon: BookOpen, match: '/learn' },
+                { name: 'Profile', href: '/profile', icon: Settings, match: '/profile' },
+            ];
+        }
+
+        if (isSponsor) {
+            return [
+                { name: t('nav_home', 'Home'), href: '/dashboard', icon: Home, match: '/dashboard' },
+                { name: 'Sponsor', href: '/support/sponsor', icon: Heart, match: '/support/sponsor' },
+                { name: 'Hub Map', href: '/support/map', icon: MapPin, match: '/support/map' },
+                ...(trackerNavItem ? [trackerNavItem] : []),
+                { name: 'Profile', href: '/profile', icon: Settings, match: '/profile' },
+            ];
+        }
+
+        if (isAdmin) {
+            return [
+                { name: t('nav_home', 'Home'), href: '/dashboard', icon: Home, match: '/dashboard' },
+                { name: 'Admin', href: '/portal/admin', icon: ShieldCheck, match: '/portal/admin' },
+                { name: 'Partners', href: '/portal/partner', icon: Building, match: '/portal/partner' },
+                { name: 'Review', href: '/portal/reviewer', icon: Stethoscope, match: '/portal/reviewer' },
+                { name: 'Profile', href: '/profile', icon: Settings, match: '/profile' },
+            ];
+        }
+
+        return [
+            { name: t('nav_home', 'Home'), href: '/dashboard', icon: Home, match: '/dashboard' },
+            ...(trackerNavItem
+                ? [trackerNavItem]
+                : isTrustedContact
+                    ? [{ name: 'Circle', href: '/trusted-circle', icon: Users, match: '/trusted-circle' }]
+                    : []),
+            { name: t('nav_learn', 'Learn'), href: '/learn', icon: BookOpen, match: '/learn' },
+            { name: t('nav_luna', 'Luna AI'), href: '/luna', icon: Sparkles, match: '/luna' },
+            { name: t('nav_support', 'Support'), href: '/support', icon: MapPin, match: '/support' },
+        ];
+    };
+
+    const getDrawerNavItems = () => {
+        if (isPartner) {
+            return [
+                { name: t('drawer_home', 'Home Dashboard'), href: '/dashboard', icon: Home },
+                { name: 'Hub & Inventory Management', href: '/portal/partner', icon: Building },
+                { name: t('drawer_map', 'Find Pad Hubs & Clinics'), href: '/support/map', icon: MapPin },
+                { name: t('nav_support', 'Support Hub'), href: '/support', icon: Heart },
+                { name: t('drawer_profile', 'Profile & Privacy Settings'), href: '/profile', icon: Settings },
+            ];
+        }
+
+        if (isReviewer) {
+            return [
+                { name: t('drawer_home', 'Home Dashboard'), href: '/dashboard', icon: Home },
+                { name: 'Medical Review Workspace', href: '/portal/reviewer', icon: Stethoscope },
+                ...(educatorDrawerItem ? [educatorDrawerItem] : []),
+                ...(trackerDrawerItem ? [trackerDrawerItem] : []),
+                { name: t('drawer_learn', 'Learn Hub & Guides'), href: '/learn', icon: BookOpen },
+                { name: t('drawer_myths', 'Busting Myths vs Facts'), href: '/learn/myths-facts', icon: CheckCircle2 },
+                { name: t('drawer_map', 'Find Pad Hubs & Clinics'), href: '/support/map', icon: MapPin },
+                { name: t('drawer_profile', 'Profile & Privacy Settings'), href: '/profile', icon: Settings },
+            ];
+        }
+
+        if (isSponsor) {
+            return [
+                { name: t('drawer_home', 'Home Dashboard'), href: '/dashboard', icon: Home },
+                { name: t('drawer_sponsor', 'Sponsor a Girl'), href: '/support/sponsor', icon: Heart },
+                { name: t('nav_support', 'Support Hub'), href: '/support', icon: HeartHandshake },
+                { name: t('drawer_map', 'Find Pad Hubs & Clinics'), href: '/support/map', icon: MapPin },
+                ...(trackerDrawerItem ? [trackerDrawerItem] : []),
+                { name: t('drawer_profile', 'Profile & Privacy Settings'), href: '/profile', icon: Settings },
+            ];
+        }
+
+        if (isAdmin) {
+            return [
+                { name: t('drawer_home', 'Home Dashboard'), href: '/dashboard', icon: Home },
+                { name: 'Admin & M&E Dashboard', href: '/portal/admin', icon: ShieldCheck },
+                { name: 'Hub & Inventory Management', href: '/portal/partner', icon: Building },
+                { name: 'Medical Review Workspace', href: '/portal/reviewer', icon: Stethoscope },
+                ...(educatorDrawerItem ? [educatorDrawerItem] : []),
+                { name: 'Companion Care Hub', href: '/trusted-circle/companion', icon: HeartHandshake },
+                { name: t('drawer_learn', 'Learn Hub & Guides'), href: '/learn', icon: BookOpen },
+                { name: t('drawer_community', 'Community Discussions'), href: '/community', icon: Users },
+                { name: t('drawer_map', 'Find Pad Hubs & Clinics'), href: '/support/map', icon: MapPin },
+                { name: t('drawer_profile', 'Profile & Privacy Settings'), href: '/profile', icon: Settings },
+            ];
+        }
+
+        return [
+            { name: t('drawer_home', 'Home Dashboard'), href: '/dashboard', icon: Home },
+            ...(trackerDrawerItem ? [trackerDrawerItem] : []),
+            { name: t('drawer_learn', 'Learn Hub & Guides'), href: '/learn', icon: BookOpen },
+            ...(educatorDrawerItem ? [educatorDrawerItem] : []),
+            { name: t('drawer_myths', 'Busting Myths vs Facts'), href: '/learn/myths-facts', icon: CheckCircle2 },
+            { name: t('drawer_luna', 'Ask Luna AI Assistant'), href: '/luna', icon: Sparkles },
+            ...(!isTier1 ? [{ name: t('drawer_community', 'Community Discussions'), href: '/community', icon: Users }] : []),
+            { name: t('drawer_emergency', 'Emergency Supplies'), href: '/support/request', icon: Heart },
+            { name: t('drawer_map', 'Find Pad Hubs & Clinics'), href: '/support/map', icon: MapPin },
+            ...(canViewSponsor ? [{ name: t('drawer_sponsor', 'Sponsor a Girl'), href: '/support/sponsor', icon: Heart }] : []),
+            { name: t('drawer_circle', 'Trusted Family Circle'), href: '/trusted-circle', icon: Users },
+            { name: t('drawer_profile', 'Profile & Privacy Settings'), href: '/profile', icon: Settings },
+        ];
+    };
+
+    const navItems = getNavItems();
+    const drawerNavItems = getDrawerNavItems();
 
     return (
         <div className="relative min-h-screen w-full overflow-hidden bg-[#F8EAE6] flex items-center justify-center p-0 sm:py-6 sm:px-4 font-sans selection:bg-purple-200/60 selection:text-[#2D2638]">
@@ -201,6 +331,7 @@ export default function MobileAppLayout({
 
             {/* FROSTED GLASS APP SHELL */}
             <div className="relative z-10 w-full max-w-[440px] h-screen sm:h-[860px] sm:max-h-[92vh] bg-white/50 backdrop-blur-2xl sm:rounded-[36px] shadow-[0_24px_60px_-15px_rgba(92,71,112,0.16)] sm:border sm:border-white/80 flex flex-col overflow-hidden [transform:translateZ(0)]">
+                {!discreetMode && <LunaFloralBackdrop />}
 
                 {discreetMode ? (
                     /* DISCREET STUDY MODE SCREEN (Fully fits inside phone mockup, authentic school revision) */
@@ -334,6 +465,7 @@ export default function MobileAppLayout({
                 ) : (
                     <>
                         {/* 2. MINIMAL FROSTED TOP BAR */}
+                        {!hideHeader && (
                         <header className="bg-white/60 backdrop-blur-xl px-4 py-3 border-b border-white/75 flex items-center justify-between sticky top-0 z-40 shrink-0 gap-2">
                             {/* Left: Back Button OR Brand Icon + Title */}
                             <div className="flex items-center space-x-2.5 min-w-0 flex-1">
@@ -386,11 +518,14 @@ export default function MobileAppLayout({
                                 </button>
                             </div>
                         </header>
+                        )}
 
                         {/* 3. NATIVE SCROLLABLE APP BODY */}
                         <main className={`flex-1 min-h-0 w-full min-w-0 overflow-x-hidden ${
                             fullHeight
-                                ? `flex flex-col overflow-hidden px-3 pt-2 ${showNav ? 'pb-20' : 'pb-2'}`
+                                ? hideHeader
+                                    ? `flex flex-col overflow-hidden ${showNav ? 'pb-20' : ''}`
+                                    : `flex flex-col overflow-hidden px-3 pt-2 ${showNav ? 'pb-20' : 'pb-2'}`
                                 : `overflow-y-auto px-4 pt-4 hide-scrollbar ${showNav ? 'pb-24' : 'pb-4'}`
                         }`}>
                             {children}
@@ -437,7 +572,8 @@ export default function MobileAppLayout({
                         onClick={() => setDrawerOpen(false)}
                     />
                     <div className="relative w-full h-full bg-white/90 backdrop-blur-2xl p-5 flex flex-col justify-between z-10 overflow-y-auto hide-scrollbar">
-                    <div>
+                    <LunaFloralBackdrop />
+                    <div className="relative z-10">
                         {/* Drawer User Header */}
                         <div className="flex items-center justify-between pb-4 border-b border-rose-100 mb-4">
                             <div className="flex items-center space-x-3">
@@ -521,50 +657,18 @@ export default function MobileAppLayout({
                             </div>
                         </div>
 
-                        {/* Special Operational Functions & Management */}
-                        {(user?.role === 'admin' || user?.role === 'community_partner' || user?.role === 'health_reviewer' || user?.role === 'trusted_contact') && (
+                        {/* Companion Care Shortcut for Trusted Contacts */}
+                        {isTrustedContact && (
                             <div className="mt-4 pt-3 border-t border-rose-100">
-                                <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider px-2">Operational Functions & Management</span>
-                                {user?.role === 'community_partner' && (
-                                    <Link
-                                        href="/portal/partner"
-                                        className="flex items-center space-x-2.5 px-3 py-2.5 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-950 font-semibold text-xs mt-1.5 transition active:scale-95"
-                                        onClick={() => setDrawerOpen(false)}
-                                    >
-                                        <Building className="w-4 h-4 text-amber-700" />
-                                        <span>Hub & Inventory Management</span>
-                                    </Link>
-                                )}
-                                {user?.role === 'health_reviewer' && (
-                                    <Link
-                                        href="/portal/reviewer"
-                                        className="flex items-center space-x-2.5 px-3 py-2.5 rounded-2xl bg-teal-50 hover:bg-teal-100 text-teal-950 font-semibold text-xs mt-1.5 transition active:scale-95"
-                                        onClick={() => setDrawerOpen(false)}
-                                    >
-                                        <Stethoscope className="w-4 h-4 text-teal-700" />
-                                        <span>Medical Review Workspace</span>
-                                    </Link>
-                                )}
-                                {(user?.role === 'trusted_contact' || user?.role === 'admin') && (
-                                    <Link
-                                        href="/trusted-circle/companion"
-                                        className="flex items-center space-x-2.5 px-3 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-950 font-semibold text-xs mt-1.5 transition active:scale-95"
-                                        onClick={() => setDrawerOpen(false)}
-                                    >
-                                        <HeartHandshake className="w-4 h-4 text-rose-600" />
-                                        <span>Companion Care Hub</span>
-                                    </Link>
-                                )}
-                                {user?.role === 'admin' && (
-                                    <Link
-                                        href="/portal/admin"
-                                        className="flex items-center space-x-2.5 px-3 py-2.5 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-950 font-semibold text-xs mt-1.5 transition active:scale-95"
-                                        onClick={() => setDrawerOpen(false)}
-                                    >
-                                        <ShieldCheck className="w-4 h-4 text-purple-700" />
-                                        <span>Admin & M&E Dashboard</span>
-                                    </Link>
-                                )}
+                                <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider px-2">Companion Care</span>
+                                <Link
+                                    href="/trusted-circle/companion"
+                                    className="flex items-center space-x-2.5 px-3 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-950 font-semibold text-xs mt-1.5 transition active:scale-95"
+                                    onClick={() => setDrawerOpen(false)}
+                                >
+                                    <HeartHandshake className="w-4 h-4 text-rose-600" />
+                                    <span>Companion Care Hub</span>
+                                </Link>
                             </div>
                         )}
                     </div>

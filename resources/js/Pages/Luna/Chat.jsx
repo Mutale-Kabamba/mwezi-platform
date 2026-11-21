@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import MobileAppLayout from '@/Layouts/MobileAppLayout';
+import LunaSideDrawer, { MweziMoonIcon, LunaFloralBackdrop } from '@/Components/LunaSideDrawer';
 import { useTranslation } from '@/i18n/LanguageContext';
 import {
     Sparkles,
@@ -24,7 +25,11 @@ import {
     VolumeX,
     AlertCircle,
     Loader2,
-    File
+    File,
+    Plus,
+    Menu,
+    SquarePen,
+    Camera
 } from 'lucide-react';
 
 // Helper to format bytes into readable KB / MB
@@ -299,10 +304,13 @@ function AudioPlayerBubble({ src, duration = null, isUser = false }) {
 export default function LunaChat({
     conversation,
     messages: initialMessages = [],
+    conversations = [],
     suggestedPrompts = []
 }) {
     const { t, locale } = useTranslation();
     const [messages, setMessages] = useState(initialMessages);
+    const [showSideNav, setShowSideNav] = useState(false);
+    const [showPlusMenu, setShowPlusMenu] = useState(false);
     const [inputText, setInputText] = useState('');
     const [isSending, setIsSending] = useState(false);
     const [isEphemeral, setIsEphemeral] = useState(conversation?.is_ephemeral || false);
@@ -312,6 +320,8 @@ export default function LunaChat({
     const [attachedFiles, setAttachedFiles] = useState([]);
     const [fileError, setFileError] = useState('');
     const fileInputRef = useRef(null);
+    const cameraInputRef = useRef(null);
+    const galleryInputRef = useRef(null);
 
     // Audio Recording State
     const [isRecording, setIsRecording] = useState(false);
@@ -570,8 +580,20 @@ export default function LunaChat({
         }
     };
 
+    const handleStartNewChat = () => {
+        router.post(route('luna.conversation.create'), { prompt: '' });
+    };
+
+    const handleDeleteConversation = (e, conversationId) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (confirm(t('luna_delete_confirm', 'Delete this conversation history?'))) {
+            router.delete(route('luna.conversation.destroy', conversationId));
+        }
+    };
+
     const handleClearHistory = () => {
-        if (confirm('Clear messages in this consultation?')) {
+        if (confirm('Clear all conversation history with Luna?')) {
             router.delete(route('luna.clear'), {
                 onSuccess: () => setMessages([]),
             });
@@ -583,234 +605,327 @@ export default function LunaChat({
             title={conversation?.title || 'Luna AI'}
             backUrl={route('luna.index')}
             showNav={false}
+            hideHeader={true}
             fullHeight={true}
         >
             <Head title={`Luna AI - ${conversation?.title || 'Chat'}`} />
 
-            <div className="flex flex-col h-full w-full min-w-0 overflow-hidden">
+            <div className="relative flex flex-col h-full w-full min-w-0 overflow-hidden bg-white/80 backdrop-blur-xl">
+                {/* Soft bottom pastel ambient wash */}
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#E6DAFF]/65 via-[#F8DCEF]/35 to-transparent" />
+                <LunaFloralBackdrop />
+
+                {/* GEMINI MOBILE TOP BAR (Left Side-Nav Menu • Luna AI • New Chat) */}
+                <div className="relative z-10 flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
+                    <button
+                        type="button"
+                        onClick={() => setShowSideNav(true)}
+                        className="relative w-10 h-10 rounded-full bg-white/95 hover:bg-white border border-white shadow-xs flex items-center justify-center text-[#3C334B] transition active:scale-95"
+                        title="Open chats"
+                    >
+                        <Menu className="w-5 h-5" />
+                        {conversations.length > 0 && (
+                            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#7C3AED] text-white text-[10px] font-bold flex items-center justify-center">
+                                {conversations.length}
+                            </span>
+                        )}
+                    </button>
+
+                    <div className="px-3.5 py-1.5 rounded-full bg-white/85 border border-white text-sm font-semibold text-[#2D2638] flex items-center space-x-1.5 shadow-2xs max-w-[210px]">
+                        <span className="truncate">{conversation?.title || 'Luna AI'}</span>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={handleStartNewChat}
+                        className="w-10 h-10 rounded-full bg-white/95 hover:bg-white border border-white shadow-xs flex items-center justify-center text-[#3C334B] transition active:scale-95"
+                        title="New chat"
+                    >
+                        <SquarePen className="w-5 h-5" />
+                    </button>
+                </div>
 
                 {/* 1. CHAT SCROLL AREA */}
-                <div className="flex-1 min-h-0 overflow-y-auto space-y-3.5 pr-1 hide-scrollbar min-w-0 w-full pb-2">
-                    {/* Privacy Note */}
-                    <div className="flex justify-center pt-1 pb-0.5">
-                        <span className="inline-flex items-center space-x-1 text-[10px] text-slate-400 bg-slate-100/70 px-2.5 py-0.5 rounded-full font-medium">
-                            <Lock className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-                            <span>Private & Encrypted Health AI</span>
-                        </span>
-                    </div>
-
-                    {/* Welcome Bubble from Luna */}
-                    <div className="flex items-start space-x-2.5 w-full min-w-0">
-                        <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-white shrink-0 shadow-xs mt-0.5">
-                            <Sparkles className="w-4 h-4" />
+                <div className="relative z-10 flex-1 min-h-0 overflow-y-auto space-y-4 px-4 pt-2 pb-2 hide-scrollbar min-w-0 w-full flex flex-col">
+                    {messages.length === 0 ? (
+                        /* CENTERED EMPTY STATE WITH MWEZI ICON */
+                        <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
+                            <MweziMoonIcon className="w-14 h-14 mb-4 drop-shadow-sm" />
+                            <h1 className="text-[26px] font-semibold tracking-tight text-[#2D2638] leading-snug max-w-[270px]">
+                                {t('luna_focus_prompt', 'What should we focus on?')}
+                            </h1>
+                            <span className="mt-3.5 inline-flex items-center space-x-1 text-[11px] text-[#7A6F8A] bg-white/85 px-3 py-1 rounded-full border border-white">
+                                <Lock className="w-3 h-3 shrink-0" />
+                                <span>Private &amp; Encrypted Health AI</span>
+                            </span>
                         </div>
-                        <div className="bg-white p-3.5 rounded-2xl rounded-tl-xs text-xs text-slate-800 leading-relaxed shadow-2xs border border-rose-100/90 flex-1 min-w-0">
-                            <p className="font-bold text-rose-700 mb-1">
-                                {t('luna_welcome_title', "Hello, I'm Luna!")}
-                            </p>
-                            <p className="text-slate-600">
-                                {t('luna_welcome_desc', "I'm your confidential companion. Ask me anything, attach photos/reports (up to 5 files, 2MB each), or record a voice note. How can I support you today?")}
-                            </p>
-                        </div>
-                    </div>
+                    ) : (
+                        <>
+                            {/* Subtle Privacy Pill */}
+                            <div className="flex justify-center pt-0.5 pb-1">
+                                <span className="inline-flex items-center space-x-1 text-[10px] text-[#7A6F8A] bg-white/75 px-2.5 py-0.5 rounded-full font-medium border border-white">
+                                    <Lock className="w-2.5 h-2.5 shrink-0" />
+                                    <span>Private &amp; Encrypted</span>
+                                </span>
+                            </div>
 
-                    {/* Messages Render */}
-                    {messages.map((msg, idx) => {
-                        const isUser = msg.sender === 'user';
+                            {/* Messages Render */}
+                            {messages.map((msg, idx) => {
+                                const isUser = msg.sender === 'user';
 
-                        return (
-                            <div key={idx} className={`flex flex-col w-full min-w-0 ${isUser ? 'items-end' : 'items-start'}`}>
-                                <div className={`flex items-start space-x-2 max-w-[88%] min-w-0 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                                    {!isUser && (
-                                        <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-white shrink-0 shadow-2xs mt-0.5">
-                                            <Sparkles className="w-3.5 h-3.5" />
+                                return (
+                                    <div key={idx} className={`flex flex-col w-full min-w-0 ${isUser ? 'items-end' : 'items-start'}`}>
+                                        <div className={`flex items-start space-x-2 max-w-[90%] min-w-0 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                                            {!isUser && (
+                                                <div className="w-7 h-7 rounded-full bg-white border border-purple-100 flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
+                                                    <MweziMoonIcon className="w-4 h-4" />
+                                                </div>
+                                            )}
+
+                                            <div
+                                                className={`px-4 py-3.5 rounded-3xl text-sm leading-relaxed min-w-0 break-words ${isUser
+                                                    ? 'bg-[#EDE9FE]/95 text-[#2D2638] rounded-tr-md font-medium shadow-2xs'
+                                                    : 'bg-white/90 backdrop-blur-md text-[#2D2638] rounded-tl-md border border-white shadow-2xs'
+                                                    }`}
+                                            >
+                                                {/* Audio Voice Note Bubble */}
+                                                {msg.audio_url && (
+                                                    <div className="mb-2">
+                                                        <AudioPlayerBubble
+                                                            src={msg.audio_url}
+                                                            duration={msg.audio_duration}
+                                                            isUser={isUser}
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                {/* Attachments Preview (Images / Documents) */}
+                                                {msg.attachments && msg.attachments.length > 0 && (
+                                                    <div className="mb-2 space-y-1.5">
+                                                        <div className="grid grid-cols-2 gap-1.5">
+                                                            {msg.attachments.map((att, aIdx) => (
+                                                                att.is_image ? (
+                                                                    <a
+                                                                        key={aIdx}
+                                                                        href={att.url}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="block rounded-2xl overflow-hidden border border-black/10 hover:opacity-90 transition"
+                                                                    >
+                                                                        <img
+                                                                            src={att.url}
+                                                                            alt={att.name}
+                                                                            className="w-full h-24 object-cover"
+                                                                        />
+                                                                    </a>
+                                                                ) : (
+                                                                    <a
+                                                                        key={aIdx}
+                                                                        href={att.url}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        download
+                                                                        className="flex items-center space-x-1.5 p-2 rounded-xl text-[10px] font-medium border truncate transition bg-white/80 border-purple-100 text-[#2D2638] hover:bg-white"
+                                                                    >
+                                                                        <FileText className="w-3.5 h-3.5 text-[#7C3AED] shrink-0" />
+                                                                        <span className="truncate">{att.name}</span>
+                                                                    </a>
+                                                                )
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Text content */}
+                                                {msg.message_text && (!msg.audio_url || msg.message_text !== 'Voice message') && (
+                                                    <FormattedMessage content={msg.message_text} isUser={isUser} />
+                                                )}
+
+                                                {/* Audio Playback of Luna's Response (Speech Synthesis) */}
+                                                {!isUser && msg.message_text && (
+                                                    <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => toggleSpeechSynthesis(msg.id || idx, msg.message_text)}
+                                                            className="inline-flex items-center space-x-1 text-[10px] font-bold text-[#7C3AED] hover:text-[#6D28D9] transition"
+                                                        >
+                                                            {speakingMsgId === (msg.id || idx) ? (
+                                                                <>
+                                                                    <VolumeX className="w-3.5 h-3.5 animate-pulse" />
+                                                                    <span>Stop</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Volume2 className="w-3.5 h-3.5" />
+                                                                    <span>Listen</span>
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                        <span className="text-[9px] text-[#8A7F99] font-medium">Grounded AI</span>
+                                                    </div>
+                                                )}
+
+                                                {/* CRITICAL SAFETY ESCALATION CARD */}
+                                                {msg.escalation && (
+                                                    <div className="mt-3 p-3 bg-gradient-to-r from-rose-700 to-red-800 text-white rounded-2xl shadow-md space-y-2">
+                                                        <div className="flex items-center space-x-2 font-bold text-xs text-white">
+                                                            <ShieldAlert className="w-4 h-4 text-amber-300 shrink-0" />
+                                                            <span className="truncate">{msg.escalation.title || 'Medical Escalation Advice'}</span>
+                                                        </div>
+
+                                                        <p className="text-xs text-white/95 leading-relaxed">
+                                                            {msg.escalation.advice}
+                                                        </p>
+
+                                                        {msg.escalation.facility && (
+                                                            <div className="text-[11px] text-white/90 bg-white/10 p-2 rounded-xl border border-white/10">
+                                                                <p className="font-bold">{msg.escalation.facility}</p>
+                                                                <p className="text-white/80">{msg.escalation.address} • {msg.escalation.phone}</p>
+                                                            </div>
+                                                        )}
+
+                                                        {msg.escalation.phone_1 && (
+                                                            <div className="pt-1">
+                                                                <a
+                                                                    href="tel:116"
+                                                                    className="block text-center py-2 bg-white text-rose-800 rounded-xl font-bold text-xs hover:bg-rose-50 transition shadow-xs"
+                                                                >
+                                                                    Call Toll-Free 116 (Childline Zambia)
+                                                                </a>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Grounded Resource Reference Pills */}
+                                                {msg.referenced_resources?.length > 0 && (
+                                                    <div className="mt-3 pt-2 border-t border-slate-100 space-y-1.5">
+                                                        <span className="text-[10px] font-bold text-[#7C3AED] uppercase tracking-wider block">
+                                                            Verified Knowledge Reference
+                                                        </span>
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {msg.referenced_resources.map((ref, rIdx) => (
+                                                                <Link
+                                                                    key={rIdx}
+                                                                    href={`/learn/article/${ref.slug}`}
+                                                                    className="inline-flex items-center space-x-1 text-xs font-semibold text-[#2D2638] bg-purple-50 hover:bg-purple-100 border border-purple-100 px-2.5 py-0.5 rounded-full transition"
+                                                                >
+                                                                    <BookOpen className="w-3 h-3 text-[#7C3AED] shrink-0" />
+                                                                    <span className="truncate max-w-[170px]">{ref.title}</span>
+                                                                    <ChevronRight className="w-3 h-3 text-[#7A6F8A] shrink-0" />
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                    )}
-
-                                    <div
-                                        className={`p-3.5 rounded-2xl text-xs leading-relaxed shadow-2xs min-w-0 break-words ${isUser
-                                            ? 'bg-rose-600 text-white rounded-tr-xs shadow-rose-200/50'
-                                            : 'bg-white text-slate-800 rounded-tl-xs border border-rose-100/90'
-                                            }`}
-                                    >
-                                        {/* Audio Voice Note Bubble */}
-                                        {msg.audio_url && (
-                                            <div className="mb-2">
-                                                <AudioPlayerBubble
-                                                    src={msg.audio_url}
-                                                    duration={msg.audio_duration}
-                                                    isUser={isUser}
-                                                />
-                                            </div>
-                                        )}
-
-                                        {/* Attachments Preview (Images / Documents) */}
-                                        {msg.attachments && msg.attachments.length > 0 && (
-                                            <div className="mb-2 space-y-1.5">
-                                                <div className="grid grid-cols-2 gap-1.5">
-                                                    {msg.attachments.map((att, aIdx) => (
-                                                        att.is_image ? (
-                                                            <a
-                                                                key={aIdx}
-                                                                href={att.url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="block rounded-xl overflow-hidden border border-black/10 hover:opacity-90 transition"
-                                                            >
-                                                                <img
-                                                                    src={att.url}
-                                                                    alt={att.name}
-                                                                    className="w-full h-24 object-cover"
-                                                                />
-                                                            </a>
-                                                        ) : (
-                                                            <a
-                                                                key={aIdx}
-                                                                href={att.url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                download
-                                                                className={`flex items-center space-x-1.5 p-2 rounded-xl text-[10px] font-medium border truncate transition ${isUser
-                                                                    ? 'bg-white/15 border-white/20 text-white hover:bg-white/25'
-                                                                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                                                                    }`}
-                                                            >
-                                                                <FileText className="w-3.5 h-3.5 shrink-0" />
-                                                                <span className="truncate">{att.name}</span>
-                                                            </a>
-                                                        )
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Text content */}
-                                        {msg.message_text && (!msg.audio_url || msg.message_text !== 'Voice message') && (
-                                            <FormattedMessage content={msg.message_text} isUser={isUser} />
-                                        )}
-
-                                        {/* Audio Playback of Luna's Response (Speech Synthesis) */}
-                                        {!isUser && msg.message_text && (
-                                            <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => toggleSpeechSynthesis(msg.id || idx, msg.message_text)}
-                                                    className="inline-flex items-center space-x-1 text-[10px] font-bold text-rose-600 hover:text-rose-700 transition"
-                                                >
-                                                    {speakingMsgId === (msg.id || idx) ? (
-                                                        <>
-                                                            <VolumeX className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
-                                                            <span>Stop Listening</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Volume2 className="w-3.5 h-3.5 text-rose-600" />
-                                                            <span>Listen to Luna</span>
-                                                        </>
-                                                    )}
-                                                </button>
-                                                <span className="text-[9px] text-slate-400 font-medium">Grounded AI</span>
-                                            </div>
-                                        )}
-
-                                        {/* CRITICAL SAFETY ESCALATION CARD */}
-                                        {msg.escalation && (
-                                            <div className="mt-3 p-3 bg-gradient-to-r from-rose-700 to-red-800 text-white rounded-2xl shadow-md space-y-2">
-                                                <div className="flex items-center space-x-2 font-bold text-xs text-white">
-                                                    <ShieldAlert className="w-4 h-4 text-amber-300 shrink-0" />
-                                                    <span className="truncate">{msg.escalation.title || 'Medical Escalation Advice'}</span>
-                                                </div>
-
-                                                <p className="text-xs text-white/95 leading-relaxed">
-                                                    {msg.escalation.advice}
-                                                </p>
-
-                                                {msg.escalation.facility && (
-                                                    <div className="text-[11px] text-white/90 bg-white/10 p-2 rounded-xl border border-white/10">
-                                                        <p className="font-bold">{msg.escalation.facility}</p>
-                                                        <p className="text-white/80">{msg.escalation.address} • {msg.escalation.phone}</p>
-                                                    </div>
-                                                )}
-
-                                                {msg.escalation.phone_1 && (
-                                                    <div className="pt-1">
-                                                        <a
-                                                            href="tel:116"
-                                                            className="block text-center py-2 bg-white text-rose-800 rounded-xl font-bold text-xs hover:bg-rose-50 transition shadow-xs"
-                                                        >
-                                                            Call Toll-Free 116 (Childline Zambia)
-                                                        </a>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Grounded Resource Reference Pills */}
-                                        {msg.referenced_resources?.length > 0 && (
-                                            <div className="mt-3 pt-2 border-t border-slate-100 space-y-1.5">
-                                                <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider block">
-                                                    Verified Knowledge Reference
-                                                </span>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {msg.referenced_resources.map((ref, rIdx) => (
-                                                        <Link
-                                                            key={rIdx}
-                                                            href={`/learn/article/${ref.slug}`}
-                                                            className="inline-flex items-center space-x-1 text-xs font-semibold text-slate-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/60 px-2.5 py-0.5 rounded-full transition"
-                                                        >
-                                                            <BookOpen className="w-3 h-3 text-rose-600 shrink-0" />
-                                                            <span className="truncate max-w-[170px]">{ref.title}</span>
-                                                            <ChevronRight className="w-3 h-3 text-slate-400 shrink-0" />
-                                                        </Link>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
-                                </div>
-                            </div>
-                        );
-                    })}
+                                );
+                            })}
 
-                    {isSending && (
-                        <div className="flex items-center space-x-2 text-xs text-slate-500 italic py-1 pl-1">
-                            <div className="w-6 h-6 rounded-xl bg-rose-100 flex items-center justify-center animate-pulse shrink-0">
-                                <Sparkles className="w-3.5 h-3.5 text-rose-600" />
-                            </div>
-                            <span>Luna is thinking safely...</span>
-                        </div>
+                            {isSending && (
+                                <div className="flex items-center space-x-2 text-xs text-[#6E637C] py-1 pl-1">
+                                    <div className="w-6 h-6 rounded-full bg-white border border-purple-100 flex items-center justify-center animate-pulse shrink-0">
+                                        <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" />
+                                    </div>
+                                    <span>Luna is thinking...</span>
+                                </div>
+                            )}
+                        </>
                     )}
 
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* 3. INPUT DOCK PINNED AT BOTTOM */}
-                <div className="space-y-2 pt-1.5 shrink-0 w-full min-w-0 bg-[#FAF6F7]">
+                {/* 3. FLOATING GEMINI PILL COMPOSER AT BOTTOM */}
+                <div className="relative z-10 space-y-2.5 px-3.5 pb-4 pt-1 shrink-0 w-full min-w-0">
+
+                    {/* Media & Capture Action Popover (When '+' is tapped) */}
+                    {showPlusMenu && (
+                        <div className="p-3.5 rounded-3xl bg-white/95 backdrop-blur-2xl border border-white shadow-xl space-y-2.5 animate-fadeIn">
+                            <div className="flex items-center justify-between px-1">
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-[#7C3AED]">
+                                    Add Media or Capture
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPlusMenu(false)}
+                                    className="p-1 text-[#7A6F8A] hover:text-[#2D2638]"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowPlusMenu(false);
+                                        cameraInputRef.current?.click();
+                                    }}
+                                    className="flex flex-col items-center justify-center py-3 px-2 rounded-2xl bg-purple-50/90 hover:bg-purple-100 text-[#2D2638] transition active:scale-95"
+                                >
+                                    <div className="w-9 h-9 rounded-full bg-white text-[#7C3AED] flex items-center justify-center shadow-2xs mb-1.5">
+                                        <Camera className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-xs font-bold">Camera</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowPlusMenu(false);
+                                        galleryInputRef.current?.click();
+                                    }}
+                                    className="flex flex-col items-center justify-center py-3 px-2 rounded-2xl bg-rose-50/90 hover:bg-rose-100 text-[#2D2638] transition active:scale-95"
+                                >
+                                    <div className="w-9 h-9 rounded-full bg-white text-rose-500 flex items-center justify-center shadow-2xs mb-1.5">
+                                        <ImageIcon className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-xs font-bold">Gallery</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowPlusMenu(false);
+                                        fileInputRef.current?.click();
+                                    }}
+                                    className="flex flex-col items-center justify-center py-3 px-2 rounded-2xl bg-teal-50/90 hover:bg-teal-100 text-[#2D2638] transition active:scale-95"
+                                >
+                                    <div className="w-9 h-9 rounded-full bg-white text-teal-600 flex items-center justify-center shadow-2xs mb-1.5">
+                                        <FileText className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-xs font-bold">Files</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* File Attachment Previews Shelf (Max 5 files, 2MB each) */}
                     {attachedFiles.length > 0 && (
-                        <div className="bg-white p-2.5 rounded-2xl border border-rose-100 shadow-2xs space-y-1 animate-fadeIn">
-                            <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
+                        <div className="bg-white/95 backdrop-blur-xl p-2.5 rounded-2xl border border-white shadow-sm space-y-1 animate-fadeIn">
+                            <div className="flex items-center justify-between text-[11px] font-bold text-[#5E546B] px-1">
                                 <span>Attached Files ({attachedFiles.length}/5)</span>
-                                <span className="text-[10px] text-slate-400 font-normal">Max 2MB each</span>
+                                <span className="text-[10px] text-[#8A7F99] font-normal">Max 2MB each</span>
                             </div>
                             <div className="flex flex-wrap gap-1.5">
                                 {attachedFiles.map((file, idx) => (
                                     <div
                                         key={idx}
-                                        className="flex items-center space-x-1.5 pl-2 pr-1.5 py-1 bg-rose-50 border border-rose-200/80 rounded-xl text-xs text-slate-800"
+                                        className="flex items-center space-x-1.5 pl-2 pr-1.5 py-1 bg-purple-50 border border-purple-100 rounded-xl text-xs text-[#2D2638]"
                                     >
                                         {file.type.startsWith('image/') ? (
-                                            <ImageIcon className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                                            <ImageIcon className="w-3.5 h-3.5 text-[#7C3AED] shrink-0" />
                                         ) : (
-                                            <FileText className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                                            <FileText className="w-3.5 h-3.5 text-[#7C3AED] shrink-0" />
                                         )}
                                         <span className="truncate max-w-[110px] text-[11px] font-medium">{file.name}</span>
-                                        <span className="text-[9.5px] text-slate-400">({formatFileSize(file.size)})</span>
+                                        <span className="text-[9.5px] text-[#8A7F99]">({formatFileSize(file.size)})</span>
                                         <button
                                             type="button"
                                             onClick={() => removeAttachedFile(idx)}
-                                            className="p-0.5 rounded-full hover:bg-rose-200 text-rose-700 transition"
+                                            className="p-0.5 rounded-full hover:bg-purple-200 text-[#7C3AED] transition"
                                         >
                                             <X className="w-3 h-3" />
                                         </button>
@@ -822,29 +937,45 @@ export default function LunaChat({
 
                     {/* Error Notice */}
                     {fileError && (
-                        <div className="px-3 py-1.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center space-x-1.5">
+                        <div className="px-3 py-1.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs flex items-center space-x-1.5">
                             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                             <span>{fileError}</span>
                         </div>
                     )}
 
-                    {/* Hidden File Input */}
+                    {/* Hidden Media & Capture Inputs */}
+                    <input
+                        ref={cameraInputRef}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                        onChange={handleFileSelect}
+                    />
+                    <input
+                        ref={galleryInputRef}
+                        type="file"
+                        multiple
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="hidden"
+                        onChange={handleFileSelect}
+                    />
                     <input
                         ref={fileInputRef}
                         type="file"
                         multiple
-                        accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.doc,.docx,.txt"
+                        accept="application/pdf,.doc,.docx,.txt"
                         className="hidden"
                         onChange={handleFileSelect}
                     />
 
                     {/* LIVE AUDIO RECORDING BAR (Active Mode) */}
                     {isRecording ? (
-                        <div className="flex items-center justify-between bg-gradient-to-r from-red-600 to-rose-600 text-white p-2 px-4 rounded-2xl shadow-md animate-pulse">
+                        <div className="flex items-center justify-between bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white py-3 px-4 rounded-full shadow-md min-h-[58px]">
                             <div className="flex items-center space-x-2">
-                                <span className="w-3 h-3 rounded-full bg-white animate-ping" />
-                                <span className="font-bold text-xs">Recording Voice Note</span>
-                                <span className="font-mono text-xs font-black bg-black/20 px-2 py-0.5 rounded-md">
+                                <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
+                                <span className="font-bold text-sm">Recording</span>
+                                <span className="font-mono text-xs font-black bg-black/20 px-2.5 py-0.5 rounded-full">
                                     {formatDuration(recordingTime)}
                                 </span>
                             </div>
@@ -853,50 +984,40 @@ export default function LunaChat({
                                 <button
                                     type="button"
                                     onClick={cancelRecording}
-                                    className="px-2.5 py-1 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-semibold transition"
+                                    className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-full text-xs font-semibold transition"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="button"
                                     onClick={stopRecording}
-                                    className="px-3 py-1 bg-white text-rose-700 rounded-xl text-xs font-bold shadow-xs hover:bg-rose-50 transition"
+                                    className="px-3.5 py-1.5 bg-white text-[#7C3AED] rounded-full text-xs font-bold shadow-xs hover:bg-purple-50 transition"
                                 >
-                                    Send Voice Note
+                                    Send
                                 </button>
                             </div>
                         </div>
                     ) : (
-                        /* STANDARD INPUT DOCK */
-                        <div className="flex items-center space-x-1.5 bg-white p-1.5 pl-2 rounded-2xl shadow-xs border border-rose-200/80 focus-within:border-rose-400 focus-within:ring-2 focus-within:ring-rose-100 transition w-full min-w-0">
+                        /* BIGGER FLOATING PILL INPUT DOCK */
+                        <div className="flex items-center space-x-2 bg-white/95 backdrop-blur-2xl px-3 py-2.5 min-h-[58px] rounded-full shadow-[0_12px_32px_-8px_rgba(124,58,237,0.22)] border border-white transition w-full min-w-0">
 
-                            {/* File Attachment Button */}
+                            {/* '+' Media & Capture Menu Button */}
                             <button
                                 type="button"
-                                onClick={() => fileInputRef.current?.click()}
+                                onClick={() => setShowPlusMenu((v) => !v)}
                                 disabled={attachedFiles.length >= 5}
-                                className={`p-2 rounded-xl transition shrink-0 relative ${attachedFiles.length > 0
-                                    ? 'bg-rose-100 text-rose-700'
-                                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800'
-                                    }`}
-                                title="Attach files (Max 5, 2MB each)"
+                                className={`w-10 h-10 rounded-full flex items-center justify-center transition shrink-0 relative ${showPlusMenu || attachedFiles.length > 0
+                                    ? 'bg-purple-100 text-[#7C3AED]'
+                                    : 'text-[#5E546B] hover:bg-slate-100'
+                                    } ${showPlusMenu ? 'rotate-45' : ''}`}
+                                title="Add photo, capture, or file"
                             >
-                                <Paperclip className="w-4 h-4" />
-                                {attachedFiles.length > 0 && (
-                                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center">
+                                <Plus className="w-5 h-5" />
+                                {attachedFiles.length > 0 && !showPlusMenu && (
+                                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#7C3AED] text-white text-[9px] font-bold flex items-center justify-center">
                                         {attachedFiles.length}
                                     </span>
                                 )}
-                            </button>
-
-                            {/* Audio Record Button */}
-                            <button
-                                type="button"
-                                onClick={startRecording}
-                                className="p-2 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 transition shrink-0"
-                                title="Record voice note"
-                            >
-                                <Mic className="w-4 h-4" />
                             </button>
 
                             {/* Text Input */}
@@ -905,22 +1026,44 @@ export default function LunaChat({
                                 value={inputText}
                                 onChange={(e) => setInputText(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                                placeholder={t('luna_input_placeholder', 'Ask Luna about cramps, flow, or pads...')}
-                                className="flex-1 min-w-0 border-0 focus:ring-0 text-xs px-2 py-1 placeholder-slate-400 font-sans bg-transparent"
+                                placeholder={t('luna_ask_placeholder', 'Ask Luna')}
+                                className="flex-1 min-w-0 border-0 focus:ring-0 text-[15px] px-1 py-1 text-[#2D2638] placeholder-[#7A6F8A] font-sans bg-transparent"
                             />
+
+                            {/* Audio Record Button */}
+                            <button
+                                type="button"
+                                onClick={startRecording}
+                                className="w-10 h-10 rounded-full text-[#5E546B] hover:bg-slate-100 flex items-center justify-center transition shrink-0"
+                                title="Record voice note"
+                            >
+                                <Mic className="w-5 h-5" />
+                            </button>
 
                             {/* Send Button */}
                             <button
                                 type="button"
                                 onClick={() => handleSendMessage()}
                                 disabled={(!inputText.trim() && attachedFiles.length === 0) || isSending}
-                                className="p-2.5 rounded-xl bg-[#BE123C] hover:bg-[#9F1239] active:scale-95 text-white disabled:opacity-40 transition shadow-2xs shrink-0"
+                                className="w-10 h-10 rounded-full bg-purple-100/90 hover:bg-[#7C3AED] text-[#7C3AED] hover:text-white active:scale-95 disabled:opacity-40 flex items-center justify-center transition shrink-0"
+                                title="Send message"
                             >
-                                {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-4 h-4" />}
                             </button>
                         </div>
                     )}
                 </div>
+
+                {/* LEFT SLIDE-IN CHATS SIDE NAV */}
+                <LunaSideDrawer
+                    open={showSideNav}
+                    onClose={() => setShowSideNav(false)}
+                    conversations={conversations}
+                    activeConversationId={conversation?.id}
+                    onNewChat={handleStartNewChat}
+                    onDeleteConversation={handleDeleteConversation}
+                    onClearAll={handleClearHistory}
+                />
             </div>
         </MobileAppLayout>
     );

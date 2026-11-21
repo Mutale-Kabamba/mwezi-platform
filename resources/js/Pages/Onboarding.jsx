@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { useTranslation } from '@/i18n/LanguageContext';
+import { LunaFloralBackdrop } from '@/Components/LunaSideDrawer';
 import {
     Calendar,
     BookOpen,
@@ -106,8 +107,9 @@ export default function Onboarding() {
             <div
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
-                className="relative z-10 w-full max-w-[400px] min-h-[680px] sm:min-h-[740px] rounded-[36px] bg-white/45 backdrop-blur-2xl border border-white/80 shadow-[0_24px_60px_-15px_rgba(92,71,112,0.16)] px-7 py-7 flex flex-col justify-between"
+                className="relative z-10 w-full max-w-[400px] min-h-[680px] sm:min-h-[740px] rounded-[36px] bg-white/45 backdrop-blur-2xl border border-white/80 shadow-[0_24px_60px_-15px_rgba(92,71,112,0.16)] px-7 py-7 flex flex-col justify-between overflow-hidden"
             >
+                <LunaFloralBackdrop />
                 {/* Top Utility Bar: Region + Language */}
                 <div className="flex items-center justify-between text-[11px] text-[#5E546B]">
                     <span className="font-semibold tracking-wider uppercase text-[10px] text-[#6E637C]/85">
